@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Lint
+        run: dotnet format --verify-no-changes
+
+      - name: Restore
+        run: dotnet restore Knarr.slnx
+
+      - name: Build
+        run: dotnet build Knarr.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Knarr.slnx -c Release --no-build --verbosity normal

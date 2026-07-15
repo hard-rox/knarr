@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Knarr — UI Mockup</title>
+<style>
+  :root {
+    --bg: #0f1116;
+    --surface: #171a21;
+    --surface-2: #1e222b;
+    --surface-3: #262b36;
+    --border: #2b303c;
+    --text: #e6e9ef;
+    --text-dim: #9aa3b2;
+    --accent: #4f8cff;
+    --accent-2: #7c5cff;
+    --green: #3fb950;
+    --amber: #d29922;
+    --red: #f85149;
+    --mono: "Cascadia Code", "SF Mono", Consolas, monospace;
+    --sans: "Segoe UI", -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: #05070b;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .window {
+    width: 1200px;
+    height: 780px;
+    background: var(--bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .titlebar {
+    height: 40px; background: var(--surface); display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; border-bottom: 1px solid var(--border); -webkit-user-select: none;
+  }
+  .traffic { display: flex; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .titlebar .title { font-size: 13px; color: var(--text-dim); font-weight: 600; letter-spacing: .3px; }
+  .titlebar .platform {
+    margin-left: auto; font-size: 11px; color: var(--text-dim); background: var(--surface-3);
+    padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer;
+  }
+  .platform .badge-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:6px; }
+
+  .body { flex: 1; display: flex; min-height: 0; }
+
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 10px; }
+  .brand { display:flex; align-items:center; gap:10px; padding: 4px 10px 18px; }
+  .brand .logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+  .brand .name { font-size: 18px; font-weight: 700; }
+  .brand .ver { font-size: 10px; color: var(--text-dim); }
+  .nav { display:flex; flex-direction:column; gap:2px; }
+  .nav-item { display:flex; align-items:center; gap:11px; padding: 9px 12px; border-radius: 8px; color: var(--text-dim); font-size: 14px; cursor: pointer; font-weight: 500; }
+  .nav-item .ic { width:18px; text-align:center; opacity:.9; }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: var(--surface-3); color: var(--text); }
+  .nav-item .count { margin-left:auto; font-size:11px; background: var(--surface-3); color: var(--text-dim); padding: 1px 7px; border-radius: 10px; }
+  .nav-item.active .count { background: var(--accent); color:#fff; }
+  .sidebar .spacer { flex:1; }
+  .health { margin: 4px 10px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+  .health .row { display:flex; align-items:center; gap:8px; color: var(--text-dim); }
+  .health .row + .row { margin-top:6px; }
+  .health .ok { color: var(--green); }
+
+  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .toolbar { height: 56px; border-bottom: 1px solid var(--border); display:flex; align-items:center; gap: 12px; padding: 0 20px; background: var(--bg); }
+  .toolbar h1 { font-size: 18px; font-weight: 700; }
+  .search { margin-left: auto; display:flex; align-items:center; gap:8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; width: 240px; color: var(--text-dim); font-size: 13px; }
+  .search input { background:none; border:none; outline:none; color: var(--text); flex:1; font-size:13px; }
+  .btn { display:inline-flex; align-items:center; gap:7px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+  .btn:hover { background: var(--surface-3); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color:#fff; }
+  .btn.primary:hover { background: #3f7cf0; }
+
+  .content { flex:1; overflow:auto; padding: 20px; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  .table { width:100%; border-collapse: collapse; font-size: 13px; }
+  .table th { text-align:left; color: var(--text-dim); font-weight:600; font-size:11px; text-transform: uppercase; letter-spacing:.5px; padding: 10px 12px; border-bottom:1px solid var(--border); }
+  .table td { padding: 12px; border-bottom: 1px solid var(--surface-2); }
+  .table tr:hover td { background: var(--surface); }
+  .cname { font-weight:600; }
+  .cid { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; padding: 3px 9px; border-radius: 20px; }
+  .pill .d { width:7px; height:7px; border-radius:50%; }
+  .pill.running { background: rgba(63,185,80,.12); color: var(--green); } .pill.running .d { background: var(--green); }
+  .pill.stopped { background: rgba(248,81,73,.12); color: var(--red); } .pill.stopped .d { background: var(--red); }
+  .pill.paused { background: rgba(210,153,34,.12); color: var(--amber); } .pill.paused .d { background: var(--amber); }
+  .mono { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .row-actions { display:flex; gap:6px; justify-content:flex-end; }
+  .icon-btn { width: 30px; height: 30px; border-radius:7px; border:1px solid var(--border); background: var(--surface-2); color: var(--text-dim); cursor:pointer; font-size: 13px; display:flex; align-items:center; justify-content:center; }
+  .icon-btn:hover { background: var(--surface-3); color: var(--text); }
+
+  .cards { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin-bottom: 20px; }
+  .card { background: var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; }
+  .card .label { font-size:12px; color: var(--text-dim); margin-bottom:8px; }
+  .card .value { font-size:28px; font-weight:700; }
+  .card .sub { font-size:11px; color: var(--text-dim); margin-top:4px; }
+
+  .section-title { font-size:13px; font-weight:700; color: var(--text-dim); text-transform:uppercase; letter-spacing:.5px; margin: 4px 0 12px; }
+  .panel { background: var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .two-col { display:grid; grid-template-columns: 1.3fr 1fr; gap:16px; }
+
+  .feed .item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--surface-2); font-size:13px; }
+  .feed .item:last-child { border-bottom:none; }
+  .feed .when { margin-left:auto; color:var(--text-dim); font-size:11px; }
+  .feed .badge { font-family:var(--mono); font-size:11px; color:var(--accent); }
+
+  .bars { display:flex; align-items:flex-end; gap:8px; height:120px; padding-top:10px; }
+  .bars .bar { flex:1; background: linear-gradient(180deg, var(--accent), var(--accent-2)); border-radius:4px 4px 0 0; opacity:.85; }
+
+  .form-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-2); }
+  .form-row:last-child { border-bottom:none; }
+  .form-row .lbl { font-size:13px; } .form-row .desc { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  select, .input { background: var(--surface-2); color: var(--text); border:1px solid var(--border); border-radius:7px; padding:7px 10px; font-size:13px; outline:none; }
+  .switch { width:42px; height:24px; border-radius:20px; background: var(--surface-3); position:relative; cursor:pointer; border:1px solid var(--border); }
+  .switch.on { background: var(--accent); }
+  .switch .knob { position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.15s; }
+  .switch.on .knob { left:20px; }
+
+  .console { border-top: 1px solid var(--border); background: #0a0c11; height: 140px; display:flex; flex-direction:column; }
+  .console-head { display:flex; align-items:center; gap:10px; padding: 8px 16px; border-bottom:1px solid var(--border); font-size: 12px; color: var(--text-dim); }
+  .console-head .lbl { font-weight:600; color: var(--text); }
+  .console-head .copy { margin-left:auto; }
+  .console-body { flex:1; overflow:auto; padding: 10px 16px; font-family: var(--mono); font-size:12px; line-height:1.7; }
+  .console-body .cmd { color: var(--accent); }
+  .console-body .out { color: var(--text-dim); }
+  .console-body .prompt { color: var(--green); }
+
+  .modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:10; }
+  .modal-overlay.show { display:flex; }
+  .modal { width:560px; max-height:640px; overflow:auto; background: var(--bg); border:1px solid var(--border); border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  .modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+  .modal-head h2 { font-size:16px; } .modal-head .x { margin-left:auto; cursor:pointer; color:var(--text-dim); font-size:18px; }
+  .modal-body { padding:20px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px; }
+  .field .input, .field select { width:100%; }
+  .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-foot { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
+  .preview-cmd { font-family:var(--mono); font-size:12px; background:#0a0c11; border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--accent); margin-top:6px; word-break:break-all; }
+</style>
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">
+      <div class="traffic"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <span class="title">Knarr</span>
+      <span class="platform" id="platformBadge" onclick="togglePlatform()" title="Click to switch platform"><span class="badge-dot"></span>Windows · wslc v1.0.3</span>
+    </div>
+
+    <div class="body">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">K</div>
+          <div><div class="name">Knarr</div><div class="ver">v1.0.0</div></div>
+        </div>
+        <nav class="nav" id="nav">
+          <div class="nav-item active" data-page="dashboard"><span class="ic">▦</span> Dashboard</div>
+          <div class="nav-item" data-page="containers"><span class="ic">▣</span> Containers <span class="count">4</span></div>
+          <div class="nav-item" data-page="images"><span class="ic">◱</span> Images <span class="count">7</span></div>
+          <div class="nav-item" data-page="networks"><span class="ic">⬡</span> Networks <span class="count">3</span></div>
+          <div class="nav-item" data-page="volumes"><span class="ic">▤</span> Volumes <span class="count">5</span></div>
+          <div class="nav-item" data-page="registries"><span class="ic">⚿</span> Registries</div>
+          <div class="nav-item" data-page="settings"><span class="ic">⚙</span> Settings</div>
+        </nav>
+        <div class="spacer"></div>
+        <div class="health">
+          <div class="row"><span class="ok">●</span> <span id="backendLabel">WSL backend running</span></div>
+          <div class="row"><span class="ok">●</span> <span id="cliLabel">wslc reachable</span></div>
+          <div class="row">⟳ Auto-refresh: 5s</div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="toolbar">
+          <h1 id="pageTitle">Dashboard</h1>
+          <div class="search">🔍 <input placeholder="Search…" /></div>
+          <button class="btn">⟳ Refresh</button>
+          <button class="btn primary" onclick="openRun()">▶ Run container</button>
+        </div>
+
+        <div class="content">
+          <!-- DASHBOARD -->
+          <section class="page active" id="page-dashboard">
+            <div class="cards">
+              <div class="card"><div class="label">Containers running</div><div class="value" style="color:var(--green)">3</div><div class="sub">of 4 total</div></div>
+              <div class="card"><div class="label">CPU (all)</div><div class="value">18%</div><div class="sub">4 cores allocated</div></div>
+              <div class="card"><div class="label">Memory</div><div class="value">2.1<span style="font-size:16px">GB</span></div><div class="sub">of 8 GB limit</div></div>
+              <div class="card"><div class="label">Disk (images)</div><div class="value">3.4<span style="font-size:16px">GB</span></div><div class="sub">7 images · 5 volumes</div></div>
+            </div>
+            <div class="two-col">
+              <div class="panel">
+                <div class="section-title">CPU usage · last 15 min</div>
+                <div class="bars">
+                  <div class="bar" style="height:35%"></div><div class="bar" style="height:52%"></div><div class="bar" style="height:41%"></div>
+                  <div class="bar" style="height:68%"></div><div class="bar" style="height:55%"></div><div class="bar" style="height:80%"></div>
+                  <div class="bar" style="height:47%"></div><div class="bar" style="height:62%"></div><div class="bar" style="height:38%"></div>
+                  <div class="bar" style="height:72%"></div><div class="bar" style="height:58%"></div><div class="bar" style="height:44%"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="section-title">Recent activity</div>
+                <div class="feed">
+                  <div class="item"><span class="badge">run</span> Started <b>web-api</b><span class="when">2m ago</span></div>
+                  <div class="item"><span class="badge">pull</span> Pulled <b>redis:7-alpine</b><span class="when">48m ago</span></div>
+                  <div class="item"><span class="badge">build</span> Built <b>worker:dev</b><span class="when">1h ago</span></div>
+                  <div class="item"><span class="badge">stop</span> Stopped <b>batch-worker</b><span class="when">1h ago</span></div>
+                  <div class="item"><span class="badge">login</span> Registry <b>ghcr.io</b><span class="when">3h ago</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="section-title">System</div>
+              <div class="form-row"><div><div class="lbl">Backend</div><div class="desc" id="dashBackend">WSL2 · kernel 5.15 · Ubuntu-24.04</div></div><span class="pill running"><span class="d"></span>Healthy</span></div>
+              <div class="form-row"><div><div class="lbl">CLI</div><div class="desc" id="dashCli">wslc v1.0.3</div></div><span class="mono">available on PATH</span></div>
+            </div>
+          </section>
+
+          <!-- CONTAINERS -->
+          <section class="page" id="page-containers">
+            <table class="table">
+              <thead><tr><th style="width:26px"></th><th>Name</th><th>Image</th><th>Status</th><th>Ports</th><th>CPU / Mem</th><th>Uptime</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody>
+                <tr><td><input type="checkbox"/></td><td><div class="cname">web-api</div><div class="cid">a1b2c3d4e5f6</div></td><td class="mono">nginx:latest</td><td><span class="pill running"><span class="d"></span>Running</span></td><td class="mono">8080→80</td><td class="mono">6% · 128MB</td><td>2h 14m</td><td><div class="row-actions"><button class="icon-btn" title="Logs">▤</button><button class="icon-btn" title="Exec">›_</button><button class="icon-btn" title="Stop">■</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td><div class="cname">postgres-db</div><div class="cid">f6e5d4c3b2a1</div></td><td class="mono">postgres:16</td><td><span class="pill running"><span class="d"></span>Running</span></td><td class="mono">5432→5432</td><td class="mono">9% · 512MB</td><td>2h 14m</td><td><div class="row-actions"><button class="icon-btn" title="Logs">▤</button><button class="icon-btn" title="Exec">›_</button><button class="icon-btn" title="Stop">■</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td><div class="cname">redis-cache</div><div class="cid">99aa88bb77cc</div></td><td class="mono">redis:7-alpine</td><td><span class="pill running"><span class="d"></span>Running</span></td><td class="mono">6379→6379</td><td class="mono">3% · 64MB</td><td>48m</td><td><div class="row-actions"><button class="icon-btn" title="Logs">▤</button><button class="icon-btn" title="Exec">›_</button><button class="icon-btn" title="Stop">■</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td><div class="cname">batch-worker</div><div class="cid">1234abcd5678</div></td><td class="mono">worker:dev</td><td><span class="pill stopped"><span class="d"></span>Exited (0)</span></td><td class="mono">—</td><td class="mono">— · —</td><td>—</td><td><div class="row-actions"><button class="icon-btn" title="Logs">▤</button><button class="icon-btn" title="Start">▶</button><button class="icon-btn" title="Inspect">ⓘ</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- IMAGES -->
+          <section class="page" id="page-images">
+            <div style="display:flex; gap:10px; margin-bottom:16px">
+              <button class="btn primary">🔨 Build</button><button class="btn">⬇ Pull</button><button class="btn">⬆ Push</button><button class="btn">📥 Import</button><button class="btn">🧹 Prune</button>
+            </div>
+            <table class="table">
+              <thead><tr><th style="width:26px"></th><th>Repository</th><th>Tag</th><th>Image ID</th><th>Created</th><th>Size</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody>
+                <tr><td><input type="checkbox"/></td><td class="cname">nginx</td><td class="mono">latest</td><td class="cid">sha256:9c7a54…</td><td>3 days ago</td><td class="mono">187 MB</td><td><div class="row-actions"><button class="icon-btn" title="Run">▶</button><button class="icon-btn" title="Tag">🏷</button><button class="icon-btn" title="Push">⬆</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td class="cname">postgres</td><td class="mono">16</td><td class="cid">sha256:b1f2e3…</td><td>1 week ago</td><td class="mono">438 MB</td><td><div class="row-actions"><button class="icon-btn" title="Run">▶</button><button class="icon-btn" title="Tag">🏷</button><button class="icon-btn" title="Push">⬆</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td class="cname">redis</td><td class="mono">7-alpine</td><td class="cid">sha256:44de9a…</td><td>2 weeks ago</td><td class="mono">41 MB</td><td><div class="row-actions"><button class="icon-btn" title="Run">▶</button><button class="icon-btn" title="Tag">🏷</button><button class="icon-btn" title="Push">⬆</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td class="cname">worker</td><td class="mono">dev</td><td class="cid">sha256:0a11cc…</td><td>1 hour ago</td><td class="mono">312 MB</td><td><div class="row-actions"><button class="icon-btn" title="Run">▶</button><button class="icon-btn" title="Tag">🏷</button><button class="icon-btn" title="Push">⬆</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td><input type="checkbox"/></td><td class="cname">ubuntu</td><td class="mono">24.04</td><td class="cid">sha256:c2d3e4…</td><td>1 month ago</td><td class="mono">78 MB</td><td><div class="row-actions"><button class="icon-btn" title="Run">▶</button><button class="icon-btn" title="Tag">🏷</button><button class="icon-btn" title="Push">⬆</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- NETWORKS -->
+          <section class="page" id="page-networks">
+            <div style="display:flex; gap:10px; margin-bottom:16px"><button class="btn primary">＋ Create network</button><button class="btn">🧹 Prune</button></div>
+            <table class="table">
+              <thead><tr><th>Name</th><th>Driver</th><th>Scope</th><th>Subnet</th><th>Containers</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody>
+                <tr><td class="cname">bridge</td><td class="mono">bridge</td><td>local</td><td class="mono">172.17.0.0/16</td><td>2</td><td><div class="row-actions"><button class="icon-btn" title="Inspect">ⓘ</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td class="cname">app-net</td><td class="mono">bridge</td><td>local</td><td class="mono">172.20.0.0/16</td><td>2</td><td><div class="row-actions"><button class="icon-btn" title="Inspect">ⓘ</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td class="cname">host</td><td class="mono">host</td><td>local</td><td class="mono">—</td><td>0</td><td><div class="row-actions"><button class="icon-btn" title="Inspect">ⓘ</button></div></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- VOLUMES -->
+          <section class="page" id="page-volumes">
+            <div style="display:flex; gap:10px; margin-bottom:16px"><button class="btn primary">＋ Create volume</button><button class="btn">🧹 Prune</button></div>
+            <table class="table">
+              <thead><tr><th>Name</th><th>Driver</th><th>Mountpoint</th><th>Used by</th><th>Size</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody>
+                <tr><td class="cname">pgdata</td><td class="mono">local</td><td class="mono">/var/lib/wslc/volumes/pgdata</td><td>postgres-db</td><td class="mono">1.2 GB</td><td><div class="row-actions"><button class="icon-btn" title="Inspect">ⓘ</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td class="cname">redis-data</td><td class="mono">local</td><td class="mono">/var/lib/wslc/volumes/redis-data</td><td>redis-cache</td><td class="mono">64 MB</td><td><div class="row-actions"><button class="icon-btn" title="Inspect">ⓘ</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+                <tr><td class="cname">app-cache</td><td class="mono">local</td><td class="mono">/var/lib/wslc/volumes/app-cache</td><td>—</td><td class="mono">210 MB</td><td><div class="row-actions"><button class="icon-btn" title="Inspect">ⓘ</button><button class="icon-btn" title="Remove">🗑</button></div></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- REGISTRIES -->
+          <section class="page" id="page-registries">
+            <div style="display:flex; gap:10px; margin-bottom:16px"><button class="btn primary">🔑 Login to registry</button></div>
+            <div class="panel">
+              <div class="section-title">Authenticated registries</div>
+              <table class="table">
+                <thead><tr><th>Registry</th><th>Username</th><th>Credential store</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+                <tbody>
+                  <tr><td class="cname">ghcr.io</td><td class="mono">devuser</td><td>Windows Credential Manager</td><td><span class="pill running"><span class="d"></span>Logged in</span></td><td><div class="row-actions"><button class="icon-btn" title="Logout">⎋</button></div></td></tr>
+                  <tr><td class="cname">docker.io</td><td class="mono">team-svc</td><td>Windows Credential Manager</td><td><span class="pill running"><span class="d"></span>Logged in</span></td><td><div class="row-actions"><button class="icon-btn" title="Logout">⎋</button></div></td></tr>
+                  <tr><td class="cname">registry.internal:5000</td><td class="mono">—</td><td>—</td><td><span class="pill stopped"><span class="d"></span>Not authenticated</span></td><td><div class="row-actions"><button class="icon-btn" title="Login">🔑</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- SETTINGS -->
+          <section class="page" id="page-settings">
+            <div class="panel">
+              <div class="section-title">Appearance</div>
+              <div class="form-row"><div><div class="lbl">Theme</div><div class="desc">Match the OS or force light/dark</div></div><select><option>System</option><option selected>Dark</option><option>Light</option></select></div>
+              <div class="form-row"><div><div class="lbl">Show command console</div><div class="desc">Display the exact CLI command for every action</div></div><div class="switch on" onclick="this.classList.toggle('on')"><span class="knob"></span></div></div>
+            </div>
+            <div class="panel">
+              <div class="section-title">Behavior</div>
+              <div class="form-row"><div><div class="lbl">Auto-refresh interval</div><div class="desc">How often lists poll the CLI</div></div><select><option>2s</option><option selected>5s</option><option>10s</option><option>Off</option></select></div>
+              <div class="form-row"><div><div class="lbl">Confirm destructive actions</div><div class="desc">Prompt before remove / prune / kill</div></div><div class="switch on" onclick="this.classList.toggle('on')"><span class="knob"></span></div></div>
+              <div class="form-row"><div><div class="lbl">Default registry</div><div class="desc">Used for pull/push when unspecified</div></div><input class="input" value="ghcr.io" style="width:180px"/></div>
+            </div>
+            <div class="panel">
+              <div class="section-title">Platform</div>
+              <div class="form-row"><div><div class="lbl">Active CLI</div><div class="desc" id="setCli">wslc (Windows) · v1.0.3</div></div><button class="btn">Open settings file</button></div>
+              <div class="form-row"><div><div class="lbl">Telemetry</div><div class="desc">Send anonymous usage data</div></div><div class="switch" onclick="this.classList.toggle('on')"><span class="knob"></span></div></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="console">
+          <div class="console-head">
+            <span class="lbl">Command output</span><span>· mapped to host CLI</span>
+            <button class="btn copy">⧉ Copy command</button>
+          </div>
+          <div class="console-body" id="consoleBody">
+            <div><span class="prompt">$</span> <span class="cmd">wslc run -d --name web-api -p 8080:80 --memory 512M nginx:latest</span></div>
+            <div class="out">a1b2c3d4e5f6789012ab34cd56ef7890</div>
+            <div><span class="prompt">$</span> <span class="cmd">wslc list --format json</span></div>
+            <div class="out">Fetched 4 containers · 3 running, 1 exited</div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- RUN WIZARD MODAL -->
+    <div class="modal-overlay" id="runModal">
+      <div class="modal">
+        <div class="modal-head"><h2>Run a container</h2><span class="x" onclick="closeRun()">✕</span></div>
+        <div class="modal-body">
+          <div class="field"><label>Image</label><input class="input" id="f-image" value="nginx:latest" oninput="updateCmd()"/></div>
+          <div class="field-grid">
+            <div class="field"><label>Container name</label><input class="input" id="f-name" value="web-api" oninput="updateCmd()"/></div>
+            <div class="field"><label>Run mode</label><select id="f-detach" onchange="updateCmd()"><option value="-d" selected>Detached (-d)</option><option value="">Foreground</option></select></div>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label>Port mapping (host→container)</label><input class="input" id="f-port" value="8080:80" oninput="updateCmd()"/></div>
+            <div class="field"><label>Volume mount</label><input class="input" id="f-vol" placeholder="host:/path" oninput="updateCmd()"/></div>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label>Memory limit</label><input class="input" id="f-mem" value="512M" oninput="updateCmd()"/></div>
+            <div class="field"><label>CPUs</label><input class="input" id="f-cpu" placeholder="e.g. 1.5" oninput="updateCmd()"/></div>
+          </div>
+          <div class="field"><label>Environment variable (KEY=VALUE)</label><input class="input" id="f-env" placeholder="NODE_ENV=production" oninput="updateCmd()"/></div>
+          <div class="field"><label>Command preview</label><div class="preview-cmd" id="cmdPreview">wslc run -d --name web-api -p 8080:80 --memory 512M nginx:latest</div></div>
+        </div>
+        <div class="modal-foot"><button class="btn" onclick="closeRun()">Cancel</button><button class="btn primary" onclick="closeRun()">▶ Run</button></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const titles = { dashboard:'Dashboard', containers:'Containers', images:'Images', networks:'Networks', volumes:'Volumes', registries:'Registries', settings:'Settings' };
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+      const page = el.dataset.page;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-'+page).classList.add('active');
+      document.getElementById('pageTitle').textContent = titles[page];
+    });
+  });
+
+  let isMac = false;
+  function togglePlatform() {
+    isMac = !isMac;
+    const b = document.getElementById('platformBadge');
+    if (isMac) {
+      b.innerHTML = '<span class="badge-dot"></span>macOS · container v0.4';
+      document.getElementById('backendLabel').textContent = 'Apple Container service running';
+      document.getElementById('cliLabel').textContent = 'container reachable';
+      document.getElementById('dashBackend').textContent = 'Apple Virtualization.framework · arm64';
+      document.getElementById('dashCli').textContent = 'container v0.4';
+      document.getElementById('setCli').textContent = 'container (macOS) · v0.4';
+    } else {
+      b.innerHTML = '<span class="badge-dot"></span>Windows · wslc v1.0.3';
+      document.getElementById('backendLabel').textContent = 'WSL backend running';
+      document.getElementById('cliLabel').textContent = 'wslc reachable';
+      document.getElementById('dashBackend').textContent = 'WSL2 · kernel 5.15 · Ubuntu-24.04';
+      document.getElementById('dashCli').textContent = 'wslc v1.0.3';
+      document.getElementById('setCli').textContent = 'wslc (Windows) · v1.0.3';
+    }
+    updateCmd();
+  }
+
+  function openRun(){ document.getElementById('runModal').classList.add('show'); updateCmd(); }
+  function closeRun(){ document.getElementById('runModal').classList.remove('show'); }
+  function updateCmd(){
+    const cli = isMac ? 'container' : 'wslc';
+    const g = id => (document.getElementById(id)||{}).value || '';
+    let parts = [cli, 'run'];
+    if (g('f-detach')) parts.push(g('f-detach'));
+    if (g('f-name')) parts.push('--name', g('f-name'));
+    if (g('f-port')) parts.push('-p', g('f-port'));
+    if (g('f-vol')) parts.push('-v', g('f-vol'));
+    if (g('f-mem')) parts.push('--memory', g('f-mem'));
+    if (g('f-cpu')) parts.push('--cpus', g('f-cpu'));
+    if (g('f-env')) parts.push('-e', g('f-env'));
+    parts.push(g('f-image'));
+    const el = document.getElementById('cmdPreview');
+    if (el) el.textContent = parts.join(' ');
+  }
+</script>
+</body>
+</html>

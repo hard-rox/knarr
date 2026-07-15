@@ -1,3 +1,8 @@
 <Solution>
-  <Project Path="Knarr.App/Knarr.App.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Knarr.App/Knarr.App.csproj"/>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Knarr.App.Tests/Knarr.App.Tests.csproj"/>
+  </Folder>
 </Solution>

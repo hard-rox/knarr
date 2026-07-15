@@ -1,5 +1,26 @@
+## .NET
 bin/
 obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+artifacts/
 /packages/
+
+## Rider / JetBrains
+.idea/
 riderModule.iml
 /_ReSharper.Caches/
+*.DotSettings.user
+
+## VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+## OS
+.DS_Store
+Thumbs.db
