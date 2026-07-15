@@ -23,9 +23,9 @@ public class MainWindowViewModelTests
     {
         var vm = CreateViewModel();
 
-        Assert.Equal(7, vm.NavigationItems.Count);
-        Assert.Equal("Dashboard", vm.NavigationItems[0].Title);
-        Assert.Equal("Settings", vm.NavigationItems[^1].Title);
+        Assert.Equal(7, vm.Sidebar.NavigationItems.Count);
+        Assert.Equal("Dashboard", vm.Sidebar.NavigationItems[0].Title);
+        Assert.Equal("Settings", vm.Sidebar.NavigationItems[^1].Title);
     }
 
     [Fact]
@@ -33,8 +33,8 @@ public class MainWindowViewModelTests
     {
         var vm = CreateViewModel();
 
-        Assert.Equal("board_regular", vm.NavigationItems[0].Icon);
-        Assert.Equal("settings_regular", vm.NavigationItems[^1].Icon);
+        Assert.Equal("board_regular", vm.Sidebar.NavigationItems[0].Icon);
+        Assert.Equal("settings_regular", vm.Sidebar.NavigationItems[^1].Icon);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class MainWindowViewModelTests
     {
         var vm = CreateViewModel();
 
-        Assert.True(vm.IsSidebarExpanded);
+        Assert.True(vm.Sidebar.IsSidebarExpanded);
     }
 
     [Fact]
@@ -50,11 +50,11 @@ public class MainWindowViewModelTests
     {
         var vm = CreateViewModel();
 
-        vm.ToggleSidebarCommand.Execute(null);
-        Assert.False(vm.IsSidebarExpanded);
+        vm.Sidebar.ToggleSidebarCommand.Execute(null);
+        Assert.False(vm.Sidebar.IsSidebarExpanded);
 
-        vm.ToggleSidebarCommand.Execute(null);
-        Assert.True(vm.IsSidebarExpanded);
+        vm.Sidebar.ToggleSidebarCommand.Execute(null);
+        Assert.True(vm.Sidebar.IsSidebarExpanded);
     }
 
     [Fact]
@@ -62,8 +62,8 @@ public class MainWindowViewModelTests
     {
         var vm = CreateViewModel();
 
-        Assert.NotNull(vm.SelectedItem);
-        Assert.Equal("Dashboard", vm.SelectedItem!.Title);
+        Assert.NotNull(vm.Sidebar.SelectedItem);
+        Assert.Equal("Dashboard", vm.Sidebar.SelectedItem!.Title);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class MainWindowViewModelTests
 
         var vm = CreateViewModel(platformInfo);
 
-        Assert.Equal("macOS", vm.PlatformName);
-        Assert.Equal("apple container", vm.CliName);
+        Assert.Equal("macOS", vm.Sidebar.PlatformName);
+        Assert.Equal("apple container", vm.Sidebar.CliName);
     }
 
     [Fact]
@@ -91,9 +91,9 @@ public class MainWindowViewModelTests
         await vm.InitializeAsync();
 
         await platformInfo.Received(1).RefreshCliInfoAsync(Arg.Any<CancellationToken>());
-        Assert.True(vm.IsCliReachable);
-        Assert.Equal("v1.0.0", vm.CliVersion);
-        Assert.Equal("apple container v1.0.0", vm.CliDisplay);
+        Assert.True(vm.Sidebar.IsCliReachable);
+        Assert.Equal("v1.0.0", vm.Sidebar.CliVersion);
+        Assert.Equal("apple container v1.0.0", vm.Sidebar.CliDisplay);
     }
 
     [Fact]
@@ -106,8 +106,8 @@ public class MainWindowViewModelTests
         var vm = CreateViewModel(platformInfo);
         await vm.InitializeAsync();
 
-        Assert.False(vm.IsCliReachable);
-        Assert.Equal("not detected", vm.CliVersion);
+        Assert.False(vm.Sidebar.IsCliReachable);
+        Assert.Equal("not detected", vm.Sidebar.CliVersion);
     }
 
     [Fact]
