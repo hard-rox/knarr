@@ -29,6 +29,35 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public void NavigationItems_UseIconResourceKeys()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal("board_regular", vm.NavigationItems[0].Icon);
+        Assert.Equal("settings_regular", vm.NavigationItems[^1].Icon);
+    }
+
+    [Fact]
+    public void Sidebar_IsExpandedByDefault()
+    {
+        var vm = CreateViewModel();
+
+        Assert.True(vm.IsSidebarExpanded);
+    }
+
+    [Fact]
+    public void ToggleSidebar_FlipsIsSidebarExpanded()
+    {
+        var vm = CreateViewModel();
+
+        vm.ToggleSidebarCommand.Execute(null);
+        Assert.False(vm.IsSidebarExpanded);
+
+        vm.ToggleSidebarCommand.Execute(null);
+        Assert.True(vm.IsSidebarExpanded);
+    }
+
+    [Fact]
     public void SelectedItem_DefaultsToDashboard()
     {
         var vm = CreateViewModel();

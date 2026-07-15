@@ -15,7 +15,7 @@ public sealed class NavigationItem
     /// <summary>Display label, e.g. "Containers".</summary>
     public string Title { get; }
 
-    /// <summary>Glyph shown to the left of the label.</summary>
+    /// <summary>Resource key of the icon geometry shown to the left of the label (e.g. "cube_regular").</summary>
     public string Icon { get; }
 
     /// <summary>Optional count/badge shown on the right; null hides it.</summary>

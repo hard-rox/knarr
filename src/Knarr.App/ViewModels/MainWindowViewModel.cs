@@ -23,13 +23,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
         NavigationItems =
         [
-            new NavigationItem("Dashboard", "\u25A6"),
-            new NavigationItem("Containers", "\u25A3", "4"),
-            new NavigationItem("Images", "\u25B1", "7"),
-            new NavigationItem("Networks", "\u2B21", "3"),
-            new NavigationItem("Volumes", "\u25A4", "5"),
-            new NavigationItem("Registries", "\u26BF"),
-            new NavigationItem("Settings", "\u2699"),
+            new NavigationItem("Dashboard", "board_regular"),
+            new NavigationItem("Containers", "cube_regular", "4"),
+            new NavigationItem("Images", "cloud_regular", "7"),
+            new NavigationItem("Networks", "globe_regular", "3"),
+            new NavigationItem("Volumes", "storage_regular", "5"),
+            new NavigationItem("Registries", "library_regular"),
+            new NavigationItem("Settings", "settings_regular"),
         ];
 
         _selectedItem = NavigationItems[0];
@@ -45,6 +45,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private NavigationItem? _selectedItem;
+
+    [ObservableProperty]
+    private bool _isSidebarExpanded = true;
 
     public string PlatformName { get; }
 
@@ -69,4 +72,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [RelayCommand]
     private void SetTheme(AppTheme theme) => _themeService.SetTheme(theme);
+
+    [RelayCommand]
+    private void ToggleSidebar() => IsSidebarExpanded = !IsSidebarExpanded;
 }
