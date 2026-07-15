@@ -1,4 +1,4 @@
-﻿namespace Knarr.App.ViewModels;
+namespace Knarr.App.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
