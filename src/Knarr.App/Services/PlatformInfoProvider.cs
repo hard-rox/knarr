@@ -58,7 +58,7 @@ public sealed partial class PlatformInfoProvider : IPlatformInfoProvider
                 FileName = _cliExecutable,
                 Arguments = "--version",
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
