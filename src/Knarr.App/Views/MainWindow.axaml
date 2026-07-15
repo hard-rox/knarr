@@ -1,20 +1,99 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Knarr.App.ViewModels"
+        xmlns:svc="using:Knarr.App.Services"
+    xmlns:views="using:Knarr.App.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
         x:Class="Knarr.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Knarr.App">
+        Icon="/Assets/knarr.ico"
+        Title="Knarr"
+        Width="1100" Height="720"
+        MinWidth="880" MinHeight="560"
+        TransparencyLevelHint="Mica,AcrylicBlur,Blur"
+        Background="Transparent">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <!-- <NativeMenuItem Header="File">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Refresh"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="Quit"/>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem> -->
+            <NativeMenuItem Header="View">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Theme">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="System"
+                                                    Command="{Binding SetThemeCommand}"
+                                                    CommandParameter="{x:Static svc:AppTheme.System}"/>
+                                    <NativeMenuItem Header="Light"
+                                                    Command="{Binding SetThemeCommand}"
+                                                    CommandParameter="{x:Static svc:AppTheme.Light}"/>
+                                    <NativeMenuItem Header="Dark"
+                                                    Command="{Binding SetThemeCommand}"
+                                                    CommandParameter="{x:Static svc:AppTheme.Dark}"/>
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <!-- <NativeMenuItem Header="Help">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="About Knarr"/>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem> -->
+        </NativeMenu>
+    </NativeMenu.Menu>
+
+    <Panel>
+        <!-- Liquid glass backdrop -->
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="{DynamicResource AcrylicTintColor}"
+                                             TintOpacity="1"
+                                             MaterialOpacity="0.6"/>
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <DockPanel>
+            <!-- Menu bar: in-window on Windows/Linux, system menu bar on macOS -->
+            <NativeMenuBar DockPanel.Dock="Top"/>
+
+            <!-- Body: sidebar + resizable content area -->
+            <Grid ColumnDefinitions="Auto,4,*">
+                <!-- LEFT SIDEBAR -->
+                <views:Sidebar Grid.Column="0" DataContext="{Binding Sidebar}"/>
+
+                <GridSplitter Grid.Column="1"
+                              ResizeDirection="Columns"
+                              Background="Transparent"/>
+
+                <!-- CONTENT PLACEHOLDER (out of scope for this task) -->
+                <Border Grid.Column="2" Background="Transparent">
+                    <TextBlock Text="{Binding Sidebar.SelectedItem.Title}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDimBrush}"/>
+                </Border>
+            </Grid>
+        </DockPanel>
+    </Panel>
 
 </Window>
