@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="Knarr.App/Views/MainWindow.axaml" value="Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Views/MainWindow.axaml" value="src/Knarr.App/Knarr.App.csproj" />
       </map>
     </option>
   </component>

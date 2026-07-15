@@ -1,20 +1,201 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Knarr.App.ViewModels"
+        xmlns:svc="using:Knarr.App.Services"
+        xmlns:models="using:Knarr.App.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
         x:Class="Knarr.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Knarr.App">
+        Icon="/Assets/knarr.ico"
+        Title="Knarr"
+        Width="1100" Height="720"
+        MinWidth="880" MinHeight="560"
+        TransparencyLevelHint="Mica,AcrylicBlur,Blur"
+        Background="Transparent">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="File">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Refresh"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="Quit"/>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="View">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Theme">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="System"
+                                                    Command="{Binding SetThemeCommand}"
+                                                    CommandParameter="{x:Static svc:AppTheme.System}"/>
+                                    <NativeMenuItem Header="Light"
+                                                    Command="{Binding SetThemeCommand}"
+                                                    CommandParameter="{x:Static svc:AppTheme.Light}"/>
+                                    <NativeMenuItem Header="Dark"
+                                                    Command="{Binding SetThemeCommand}"
+                                                    CommandParameter="{x:Static svc:AppTheme.Dark}"/>
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="Help">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="About Knarr"/>
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
+    <Window.Styles>
+        <!-- Sidebar navigation list -->
+        <Style Selector="ListBox.nav">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem">
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+    </Window.Styles>
+
+    <Panel>
+        <!-- Liquid glass backdrop -->
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="{DynamicResource AcrylicTintColor}"
+                                             TintOpacity="1"
+                                             MaterialOpacity="0.6"/>
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <DockPanel>
+            <!-- Menu bar: in-window on Windows/Linux, system menu bar on macOS -->
+            <NativeMenuBar DockPanel.Dock="Top"/>
+
+            <!-- Body: sidebar + resizable content area -->
+            <Grid ColumnDefinitions="240,4,*">
+                <!-- LEFT SIDEBAR -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource SidebarBrush}"
+                        BorderBrush="{DynamicResource StrokeBrush}"
+                        BorderThickness="0,0,1,0">
+                    <DockPanel Margin="12,16">
+                        <!-- Brand -->
+                        <StackPanel DockPanel.Dock="Top"
+                                    Orientation="Horizontal"
+                                    Spacing="12"
+                                    Margin="6,0,6,20">
+                            <Border Width="36" Height="36" CornerRadius="11"
+                                    Background="White" Padding="4">
+                                <Image Source="avares://Knarr.App/Assets/knarr-logo.png"
+                                       Stretch="Uniform"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Knarr"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Text="v1.0.0"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextDimBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Platform + CLI version footer -->
+                        <Border DockPanel.Dock="Bottom"
+                                Margin="4,8,4,0"
+                                Padding="12"
+                                CornerRadius="14"
+                                Background="{DynamicResource GlassFillBrush}"
+                                BorderBrush="{DynamicResource StrokeBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{Binding PlatformName}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Text="{Binding CliDisplay}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextDimBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Navigation -->
+                        <ListBox Classes="nav"
+                                 ItemsSource="{Binding NavigationItems}"
+                                 SelectedItem="{Binding SelectedItem}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:NavigationItem">
+                                    <Grid ColumnDefinitions="18,*,Auto">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Icon}"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Title}"
+                                                   Margin="11,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2"
+                                                IsVisible="{Binding HasBadge}"
+                                                Background="{DynamicResource GlassStrongBrush}"
+                                                CornerRadius="10"
+                                                Padding="8,1"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Badge}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextDimBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+
+                <GridSplitter Grid.Column="1"
+                              ResizeDirection="Columns"
+                              Background="Transparent"/>
+
+                <!-- CONTENT PLACEHOLDER (out of scope for this task) -->
+                <Border Grid.Column="2" Background="Transparent">
+                    <TextBlock Text="{Binding SelectedItem.Title}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDimBrush}"/>
+                </Border>
+            </Grid>
+        </DockPanel>
+    </Panel>
 
 </Window>

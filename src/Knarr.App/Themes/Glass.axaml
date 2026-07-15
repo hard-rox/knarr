@@ -1,0 +1,58 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      Theme-variant aware palette for Knarr's "liquid glass" shell.
+      Brushes are resolved via DynamicResource so they swap live when the
+      requested theme variant changes (System / Light / Dark).
+    -->
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="AccentColor">#0A84FF</Color>
+            <Color x:Key="Accent2Color">#BF5AF2</Color>
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+            <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
+
+            <SolidColorBrush x:Key="TextBrush" Color="#1C1C22" />
+            <SolidColorBrush x:Key="TextDimBrush" Color="#5B5F6B" />
+
+            <!-- Acrylic tint for the window backdrop -->
+            <Color x:Key="AcrylicTintColor">#F4F6FB</Color>
+
+            <!-- Frosted glass surfaces layered on top of the acrylic backdrop -->
+            <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.55" />
+            <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.72" />
+            <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.32" />
+            <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
+            <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
+            <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
+
+            <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
+            <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="AccentColor">#0A84FF</Color>
+            <Color x:Key="Accent2Color">#BF5AF2</Color>
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+            <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
+
+            <SolidColorBrush x:Key="TextBrush" Color="#F5F6FA" />
+            <SolidColorBrush x:Key="TextDimBrush" Color="#A0A4B0" />
+
+            <Color x:Key="AcrylicTintColor">#1B1D24</Color>
+
+            <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.08" />
+            <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.14" />
+            <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.05" />
+            <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
+            <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
+            <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
+
+            <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
+            <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

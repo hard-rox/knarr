@@ -4,6 +4,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using Knarr.App.Services;
 using Knarr.App.ViewModels;
 using Knarr.App.Views;
 
@@ -20,10 +21,17 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var platformInfo = new PlatformInfoProvider();
+            var themeService = new ThemeService();
+
+            var viewModel = new MainWindowViewModel(platformInfo, themeService);
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = viewModel,
             };
+
+            // Probe the CLI in the background; property updates marshal back to the UI thread.
+            _ = viewModel.InitializeAsync();
         }
 
         base.OnFrameworkInitializationCompleted();

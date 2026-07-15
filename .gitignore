@@ -11,15 +11,28 @@ artifacts/
 /packages/
 
 ## Rider / JetBrains
-.idea/
 riderModule.iml
 /_ReSharper.Caches/
 *.DotSettings.user
+
+# Ignore the Rider project folder, but keep shared (non-user-specific) settings.
+/.idea/*
+!/.idea/.idea.Knarr/
+/.idea/.idea.Knarr/*
+!/.idea/.idea.Knarr/.idea/
+/.idea/.idea.Knarr/.idea/*
+!/.idea/.idea.Knarr/.idea/.gitignore
+!/.idea/.idea.Knarr/.idea/.name
+!/.idea/.idea.Knarr/.idea/avalonia.xml
+!/.idea/.idea.Knarr/.idea/indexLayout.xml
+!/.idea/.idea.Knarr/.idea/vcs.xml
+!/.idea/.idea.Knarr/.idea/mcp.json
 
 ## VS Code
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+!.vscode/mcp.json
 
 ## OS
 .DS_Store
