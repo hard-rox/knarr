@@ -25,10 +25,18 @@ Directory.Packages.props       Central NuGet package versions
 docs/                          PRD and design mockups
 src/
   Knarr.App/                   Application project
-    Views/                     AXAML views
-    ViewModels/                State, commands, orchestration
+    Features/                  One folder per UI feature
+      Shell/                   Main window (view + view model)
+      Sidebar/                 Navigation sidebar (view + view model)
+    Common/                    Shared base types (ViewModelBase)
     Models/                    Domain/data types
+    Services/                  Platform service interfaces + implementations
+    Converters/                Avalonia value converters
+    Themes/                    Resource dictionaries
     Assets/                    Bundled resources
+tests/
+  Knarr.App.Tests/
+    Features/                  Tests mirroring src/Features layout
 ```
 
 ## Build & run

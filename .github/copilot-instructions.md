@@ -13,9 +13,14 @@ action maps 1:1 onto an underlying CLI command.
 
 ## Project layout
 - `src/Knarr.App/` — the application project
-  - `Views/` — AXAML views + minimal code-behind
-  - `ViewModels/` — state, commands, orchestration
+  - `Features/{Name}/` — one folder per UI feature; each contains the `.axaml` view, `.axaml.cs` code-behind, and `ViewModel`
+    - `Features/Shell/` — `MainWindow` (host window + view model)
+    - `Features/Sidebar/` — `Sidebar` (nav sidebar + view model)
+  - `Common/` — `ViewModelBase` and other shared base types
   - `Models/` — data/domain types
+  - `Services/` — platform service interfaces and implementations
+  - `Converters/` — Avalonia value converters
+  - `Themes/` — resource dictionaries (Glass, Icons)
   - `Assets/` — bundled resources
 - `docs/` — PRD and design mockups
 - `Directory.Packages.props` — central NuGet versions (add new versions here, not in `.csproj`)
@@ -45,6 +50,11 @@ action maps 1:1 onto an underlying CLI command.
 
 ## Package management
 - Add/upgrade packages by editing `Directory.Packages.props` (`<PackageVersion>`); reference them version-less in `.csproj`.
+
+## Adding a new feature
+- Use the `/add-feature` skill (`.github/skills/add-feature/SKILL.md`) to scaffold all required files.
+- `ViewLocator.cs` resolves views by reflection convention (`{Name}ViewModel` -> `{Name}View` in the same namespace), so no manual registration is needed as long as the view/view model follow the naming convention.
+- Do NOT add a `NavigationItem` to `SidebarViewModel` unless explicitly requested.
 
 ## Conventions
 - Respect `.editorconfig`: file-scoped namespaces, 4-space C# indent, 2-space AXAML/XML, `_camelCase` private fields, `I`-prefixed interfaces.

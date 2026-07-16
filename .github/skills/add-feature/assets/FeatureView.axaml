@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Knarr.App.Features.FEATURE_NAME"
+             x:Class="Knarr.App.Features.FEATURE_NAME.FEATURE_NAMEView"
+             x:DataType="vm:FEATURE_NAMEViewModel">
+
+    <Design.DataContext>
+        <vm:FEATURE_NAMEViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+        <TextBlock Text="FEATURE_NAME"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+    </Grid>
+
+</UserControl>

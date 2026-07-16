@@ -5,7 +5,7 @@
 | **Product name** | Knarr |
 | **Type** | Cross-platform desktop application |
 | **Platforms** | macOS (Apple Silicon + Intel), Windows 10/11 |
-| **Tech stack** | .NET 8, Avalonia UI, MVVM |
+| **Tech stack** | .NET 10, Avalonia UI, MVVM |
 | **Version** | 1.0 (Draft) |
 | **Date** | 2026-07-14 |
 
