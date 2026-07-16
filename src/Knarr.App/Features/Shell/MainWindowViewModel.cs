@@ -11,22 +11,20 @@ namespace Knarr.App.Features.Shell;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    private readonly IPlatformInfoProvider _platformInfo;
     private readonly IThemeService _themeService;
 
-    public MainWindowViewModel(IPlatformInfoProvider platformInfo, IThemeService themeService)
+    public MainWindowViewModel(IThemeService themeService, SidebarViewModel sidebar)
     {
-        _platformInfo = platformInfo;
         _themeService = themeService;
 
-        Sidebar = new SidebarViewModel(platformInfo.PlatformName, platformInfo.CliName);
+        Sidebar = sidebar;
         Sidebar.PropertyChanged += OnSidebarPropertyChanged;
         CurrentPage = Sidebar.SelectedItem?.CreatePage?.Invoke();
     }
 
     /// <summary>Design-time constructor; wires the concrete stub services for the previewer.</summary>
     public MainWindowViewModel()
-        : this(new PlatformInfoProvider(), new ThemeService())
+        : this(new ThemeService(), new SidebarViewModel())
     {
     }
 
@@ -37,11 +35,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private ViewModelBase? _currentPage;
 
     /// <summary>Probes the container CLI for its version. Call once after construction on the UI thread.</summary>
-    public async Task InitializeAsync(CancellationToken cancellationToken = default)
-    {
-        await _platformInfo.RefreshCliInfoAsync(cancellationToken).ConfigureAwait(true);
-        Sidebar.UpdateCliStatus(_platformInfo.IsCliReachable, _platformInfo.CliVersion);
-    }
+    public Task InitializeAsync(CancellationToken cancellationToken = default)
+        => Sidebar.InitializeAsync(cancellationToken);
 
     [RelayCommand]
     private void SetTheme(AppTheme theme) => _themeService.SetTheme(theme);

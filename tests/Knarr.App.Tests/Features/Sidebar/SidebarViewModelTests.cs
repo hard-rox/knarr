@@ -1,0 +1,109 @@
+using System.Threading;
+using System.Threading.Tasks;
+using Knarr.App.Features.Sidebar;
+using Knarr.App.Services;
+using NSubstitute;
+using Xunit;
+
+namespace Knarr.App.Tests.Features.Sidebar;
+
+public class SidebarViewModelTests
+{
+    private static SidebarViewModel CreateViewModel(IPlatformInfoProvider? platformInfo = null)
+    {
+        platformInfo ??= Substitute.For<IPlatformInfoProvider>();
+        return new SidebarViewModel(platformInfo);
+    }
+
+    [Fact]
+    public void NavigationItems_AreSeeded()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal(7, vm.NavigationItems.Count);
+        Assert.Equal("Dashboard", vm.NavigationItems[0].Title);
+        Assert.Equal("Settings", vm.NavigationItems[^1].Title);
+    }
+
+    [Fact]
+    public void NavigationItems_UseIconResourceKeys()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal("board_regular", vm.NavigationItems[0].Icon);
+        Assert.Equal("settings_regular", vm.NavigationItems[^1].Icon);
+    }
+
+    [Fact]
+    public void SelectedItem_DefaultsToDashboard()
+    {
+        var vm = CreateViewModel();
+
+        Assert.NotNull(vm.SelectedItem);
+        Assert.Equal("Dashboard", vm.SelectedItem!.Title);
+    }
+
+    [Fact]
+    public void IsExpandedByDefault()
+    {
+        var vm = CreateViewModel();
+
+        Assert.True(vm.IsSidebarExpanded);
+    }
+
+    [Fact]
+    public void ToggleSidebar_FlipsIsSidebarExpanded()
+    {
+        var vm = CreateViewModel();
+
+        vm.ToggleSidebarCommand.Execute(null);
+        Assert.False(vm.IsSidebarExpanded);
+
+        vm.ToggleSidebarCommand.Execute(null);
+        Assert.True(vm.IsSidebarExpanded);
+    }
+
+    [Fact]
+    public void PlatformInfo_IsSurfacedFromProvider()
+    {
+        var platformInfo = Substitute.For<IPlatformInfoProvider>();
+        platformInfo.PlatformName.Returns("macOS");
+        platformInfo.CliName.Returns("apple container");
+
+        var vm = CreateViewModel(platformInfo);
+
+        Assert.Equal("macOS", vm.PlatformName);
+        Assert.Equal("apple container", vm.CliName);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_SurfacesProbedCliVersion()
+    {
+        var platformInfo = Substitute.For<IPlatformInfoProvider>();
+        platformInfo.CliName.Returns("apple container");
+        platformInfo.IsCliReachable.Returns(true);
+        platformInfo.CliVersion.Returns("v1.0.0");
+
+        var vm = CreateViewModel(platformInfo);
+        await vm.InitializeAsync();
+
+        await platformInfo.Received(1).RefreshCliInfoAsync(Arg.Any<CancellationToken>());
+        Assert.True(vm.IsCliReachable);
+        Assert.Equal("v1.0.0", vm.CliVersion);
+        Assert.Equal("apple container v1.0.0", vm.CliDisplay);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_WhenCliUnreachable_ReportsNotReachable()
+    {
+        var platformInfo = Substitute.For<IPlatformInfoProvider>();
+        platformInfo.IsCliReachable.Returns(false);
+        platformInfo.CliVersion.Returns("not detected");
+
+        var vm = CreateViewModel(platformInfo);
+        await vm.InitializeAsync();
+
+        Assert.False(vm.IsCliReachable);
+        Assert.Equal("not detected", vm.CliVersion);
+    }
+}

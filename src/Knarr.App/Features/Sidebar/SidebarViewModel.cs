@@ -1,19 +1,25 @@
 using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Knarr.App.Common;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Settings;
 using Knarr.App.Models;
+using Knarr.App.Services;
 
 namespace Knarr.App.Features.Sidebar;
 
 public partial class SidebarViewModel : ViewModelBase
 {
-    public SidebarViewModel(string platformName, string cliName)
+    private readonly IPlatformInfoProvider _platformInfo;
+
+    public SidebarViewModel(IPlatformInfoProvider platformInfo)
     {
-        PlatformName = platformName;
-        CliName = cliName;
+        _platformInfo = platformInfo;
+        PlatformName = platformInfo.PlatformName;
+        CliName = platformInfo.CliName;
 
         NavigationItems =
         [
@@ -31,7 +37,7 @@ public partial class SidebarViewModel : ViewModelBase
 
     /// <summary>Design-time constructor with sample platform information.</summary>
     public SidebarViewModel()
-        : this("Windows", "wslc")
+        : this(new PlatformInfoProvider())
     {
     }
 
@@ -56,10 +62,12 @@ public partial class SidebarViewModel : ViewModelBase
 
     public string CliDisplay => $"{CliName} {CliVersion}";
 
-    public void UpdateCliStatus(bool isCliReachable, string cliVersion)
+    /// <summary>Probes the container CLI for its version. Call once after construction on the UI thread.</summary>
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        IsCliReachable = isCliReachable;
-        CliVersion = cliVersion;
+        await _platformInfo.RefreshCliInfoAsync(cancellationToken).ConfigureAwait(true);
+        IsCliReachable = _platformInfo.IsCliReachable;
+        CliVersion = _platformInfo.CliVersion;
     }
 
     [RelayCommand]

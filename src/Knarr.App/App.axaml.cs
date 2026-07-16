@@ -5,7 +5,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Knarr.App.Features.Shell;
-using Knarr.App.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Knarr.App;
 
@@ -20,10 +20,12 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var platformInfo = new PlatformInfoProvider();
-            var themeService = new ThemeService();
+            var collection = new ServiceCollection();
+            collection.AddCommonServices();
 
-            var viewModel = new MainWindowViewModel(platformInfo, themeService);
+            var services = collection.BuildServiceProvider();
+            var viewModel = services.GetRequiredService<MainWindowViewModel>();
+
             desktop.MainWindow = new MainWindow
             {
                 DataContext = viewModel,
