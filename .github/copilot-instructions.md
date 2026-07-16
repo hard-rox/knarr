@@ -53,7 +53,7 @@ action maps 1:1 onto an underlying CLI command.
 
 ## Adding a new feature
 - Use the `/add-feature` skill (`.github/skills/add-feature/SKILL.md`) to scaffold all required files.
-- Every new feature view model needs one new line added to the `ViewLocator.cs` pattern-matching switch.
+- `ViewLocator.cs` resolves views by reflection convention (`{Name}ViewModel` -> `{Name}View` in the same namespace), so no manual registration is needed as long as the view/view model follow the naming convention.
 - Do NOT add a `NavigationItem` to `SidebarViewModel` unless explicitly requested.
 
 ## Conventions

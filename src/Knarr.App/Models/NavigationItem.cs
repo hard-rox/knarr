@@ -1,3 +1,6 @@
+using System;
+using Knarr.App.Common;
+
 namespace Knarr.App.Models;
 
 /// <summary>
@@ -5,11 +8,16 @@ namespace Knarr.App.Models;
 /// </summary>
 public sealed class NavigationItem
 {
-    public NavigationItem(string title, string icon, string? badge = null)
+    public NavigationItem(
+        string title,
+        string icon,
+        string? badge = null,
+        Func<ViewModelBase>? createPage = null)
     {
         Title = title;
         Icon = icon;
         Badge = badge;
+        CreatePage = createPage;
     }
 
     /// <summary>Display label, e.g. "Containers".</summary>
@@ -20,6 +28,12 @@ public sealed class NavigationItem
 
     /// <summary>Optional count/badge shown on the right; null hides it.</summary>
     public string? Badge { get; }
+
+    /// <summary>
+    /// Factory that produces the page view model shown when this item is selected;
+    /// null for items that do not yet have a page.
+    /// </summary>
+    public Func<ViewModelBase>? CreatePage { get; }
 
     public bool HasBadge => !string.IsNullOrEmpty(Badge);
 }

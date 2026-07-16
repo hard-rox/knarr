@@ -1,5 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Knarr.App.Features.Dashboard;
+using Knarr.App.Features.Settings;
 using Knarr.App.Features.Shell;
 using Knarr.App.Services;
 using NSubstitute;
@@ -119,5 +121,34 @@ public class MainWindowViewModelTests
         vm.SetThemeCommand.Execute(AppTheme.Dark);
 
         themeService.Received(1).SetTheme(AppTheme.Dark);
+    }
+
+    [Fact]
+    public void CurrentPage_DefaultsToDashboardPage()
+    {
+        var vm = CreateViewModel();
+
+        Assert.IsType<DashboardViewModel>(vm.CurrentPage);
+    }
+
+    [Fact]
+    public void SelectingSettings_SwapsCurrentPageToSettings()
+    {
+        var vm = CreateViewModel();
+
+        vm.Sidebar.SelectedItem = vm.Sidebar.NavigationItems[^1];
+
+        Assert.IsType<SettingsViewModel>(vm.CurrentPage);
+    }
+
+    [Fact]
+    public void SelectingItemWithoutPage_ClearsCurrentPage()
+    {
+        var vm = CreateViewModel();
+
+        // "Containers" has no page factory yet.
+        vm.Sidebar.SelectedItem = vm.Sidebar.NavigationItems[1];
+
+        Assert.Null(vm.CurrentPage);
     }
 }

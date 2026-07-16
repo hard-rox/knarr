@@ -3,6 +3,7 @@
         xmlns:vm="using:Knarr.App.Features.Shell"
         xmlns:svc="using:Knarr.App.Services"
         xmlns:sidebar="using:Knarr.App.Features.Sidebar"
+        xmlns:aconv="using:Avalonia.Data.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
@@ -85,12 +86,22 @@
                               ResizeDirection="Columns"
                               Background="Transparent"/>
 
-                <!-- CONTENT PLACEHOLDER (out of scope for this task) -->
+                <!-- CONTENT AREA: swaps page views with a fade when the sidebar selection changes -->
                 <Border Grid.Column="2" Background="Transparent">
-                    <TextBlock Text="{Binding Sidebar.SelectedItem.Title}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource TextDimBrush}"/>
+                    <Panel>
+                        <TransitioningContentControl Content="{Binding CurrentPage}">
+                            <TransitioningContentControl.PageTransition>
+                                <CrossFade Duration="0:0:0.2"/>
+                            </TransitioningContentControl.PageTransition>
+                        </TransitioningContentControl>
+
+                        <!-- Fallback for nav items that do not yet have a page -->
+                        <TextBlock Text="{Binding Sidebar.SelectedItem.Title}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextDimBrush}"
+                                   IsVisible="{Binding CurrentPage, Converter={x:Static aconv:ObjectConverters.IsNull}}"/>
+                    </Panel>
                 </Border>
             </Grid>
         </DockPanel>

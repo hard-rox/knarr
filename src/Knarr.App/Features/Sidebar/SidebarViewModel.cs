@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Knarr.App.Common;
+using Knarr.App.Features.Dashboard;
+using Knarr.App.Features.Settings;
 using Knarr.App.Models;
 
 namespace Knarr.App.Features.Sidebar;
@@ -15,13 +17,13 @@ public partial class SidebarViewModel : ViewModelBase
 
         NavigationItems =
         [
-            new NavigationItem("Dashboard", "board_regular"),
+            new NavigationItem("Dashboard", "board_regular", createPage: () => new DashboardViewModel()),
             new NavigationItem("Containers", "cube_regular", "4"),
             new NavigationItem("Images", "cloud_regular", "7"),
             new NavigationItem("Networks", "globe_regular", "3"),
             new NavigationItem("Volumes", "storage_regular", "5"),
             new NavigationItem("Registries", "library_regular"),
-            new NavigationItem("Settings", "settings_regular"),
+            new NavigationItem("Settings", "settings_regular", createPage: () => new SettingsViewModel()),
         ];
 
         SelectedItem = NavigationItems[0];

@@ -42,15 +42,12 @@ Create `src/Knarr.App/Features/{FeatureName}/{FeatureName}ViewModel.cs` using [t
 
 Replace every occurrence of `FEATURE_NAME` with the actual `{FeatureName}`.
 
-### 5. Register in ViewLocator
+### 5. ViewLocator (no action required)
 
-Open `src/Knarr.App/ViewLocator.cs` and add:
-
-- A `using Knarr.App.Features.{FeatureName};` directive with the other feature usings.
-- A new line in the `Build` switch **before** the wildcard `_` arm:
-  ```csharp
-  {FeatureName}ViewModel => new {FeatureName}View(),
-  ```
+`src/Knarr.App/ViewLocator.cs` resolves views by reflection convention: it replaces
+`ViewModel` with `View` in the view model's full type name and instantiates the result.
+Because `{FeatureName}View` lives in the same namespace as `{FeatureName}ViewModel`, it is
+resolved automatically — **no manual registration is needed**.
 
 ### 6. Create the test file
 
