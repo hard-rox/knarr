@@ -1,12 +1,12 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Knarr.App.ViewModels"
+        xmlns:vm="using:Knarr.App.Features.Shell"
         xmlns:svc="using:Knarr.App.Services"
-    xmlns:views="using:Knarr.App.Views"
+        xmlns:sidebar="using:Knarr.App.Features.Sidebar"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
-        x:Class="Knarr.App.Views.MainWindow"
+        x:Class="Knarr.App.Features.Shell.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/knarr.ico"
         Title="Knarr"
@@ -79,7 +79,7 @@
             <!-- Body: sidebar + resizable content area -->
             <Grid ColumnDefinitions="Auto,4,*">
                 <!-- LEFT SIDEBAR -->
-                <views:Sidebar Grid.Column="0" DataContext="{Binding Sidebar}"/>
+                <sidebar:Sidebar Grid.Column="0" DataContext="{Binding Sidebar}"/>
 
                 <GridSplitter Grid.Column="1"
                               ResizeDirection="Columns"

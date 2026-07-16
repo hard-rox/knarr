@@ -4,9 +4,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Knarr.App.Features.Shell;
 using Knarr.App.Services;
-using Knarr.App.ViewModels;
-using Knarr.App.Views;
 
 namespace Knarr.App;
 

@@ -1,11 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Knarr.App.Features.Shell;
 using Knarr.App.Services;
-using Knarr.App.ViewModels;
 using NSubstitute;
 using Xunit;
 
-namespace Knarr.App.Tests.ViewModels;
+namespace Knarr.App.Tests.Features.Shell;
 
 public class MainWindowViewModelTests
 {

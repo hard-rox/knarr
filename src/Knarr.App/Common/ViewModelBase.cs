@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Knarr.App.ViewModels;
+namespace Knarr.App.Common;
 
 public abstract class ViewModelBase : ObservableObject
 {

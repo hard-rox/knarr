@@ -6,6 +6,7 @@
         "Knarr",
         "Mvvm",
         "slnx",
-        "wslc"
+        "wslc",
+        "Xunit"
     ]
 }

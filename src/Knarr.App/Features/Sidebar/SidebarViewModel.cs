@@ -1,9 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Knarr.App.Common;
 using Knarr.App.Models;
 
-namespace Knarr.App.ViewModels;
+namespace Knarr.App.Features.Sidebar;
 
 public partial class SidebarViewModel : ViewModelBase
 {

@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Knarr.App.Views;
+namespace Knarr.App.Features.Sidebar;
 
 public partial class Sidebar : UserControl
 {

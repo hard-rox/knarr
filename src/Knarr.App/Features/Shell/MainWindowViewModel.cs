@@ -1,9 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using Knarr.App.Common;
+using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
 
-namespace Knarr.App.ViewModels;
+namespace Knarr.App.Features.Shell;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
