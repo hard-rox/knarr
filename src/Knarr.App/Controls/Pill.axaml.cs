@@ -15,10 +15,6 @@ public enum PillStatus
     Paused
 }
 
-/// <summary>
-/// A small rounded status badge with a coloured dot and a label, matching the "pill" style
-/// from the Knarr glassmorphism mockup. Reusable across features (containers, registries, ...).
-/// </summary>
 public class Pill : TemplatedControl
 {
     public static readonly StyledProperty<string?> TextProperty =
@@ -62,3 +58,4 @@ public class Pill : TemplatedControl
         PseudoClasses.Set(":paused", Status == PillStatus.Paused);
     }
 }
+

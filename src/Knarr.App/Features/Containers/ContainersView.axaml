@@ -3,7 +3,6 @@
              xmlns:vm="using:Knarr.App.Features.Containers"
              xmlns:models="using:Knarr.App.Models"
              xmlns:controls="using:Knarr.App.Controls"
-             xmlns:conv="using:Knarr.App.Converters"
              x:Class="Knarr.App.Features.Containers.ContainersView"
              x:DataType="vm:ContainersViewModel">
 
@@ -100,7 +99,7 @@
                     <PathIcon Grid.Column="0"
                               Width="15" Height="15"
                               Foreground="{DynamicResource TextDimBrush}"
-                              Data="{StaticResource search_regular}"/>
+                              Data="{StaticResource SearchRegular}"/>
                     <TextBox Grid.Column="1"
                              Margin="8,0,0,0"
                              Background="Transparent"
@@ -115,7 +114,7 @@
                     Margin="0,0,10,0"
                     Command="{Binding RefreshCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="7">
-                    <PathIcon Width="15" Height="15" Data="{StaticResource arrow_clockwise_regular}"/>
+                    <PathIcon Width="15" Height="15" Data="{StaticResource ArrowClockwiseRegular}"/>
                     <TextBlock Text="Refresh" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
@@ -124,7 +123,7 @@
                     Classes="primary"
                     Command="{Binding RunContainerCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="7">
-                    <PathIcon Width="15" Height="15" Data="{StaticResource play_regular}"/>
+                    <PathIcon Width="15" Height="15" Data="{StaticResource PlayRegular}"/>
                     <TextBlock Text="Run container" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
@@ -178,8 +177,8 @@
                                                    Text="{Binding Image}"/>
 
                                         <controls:Pill Grid.Column="3"
-                                                       Text="{Binding StatusText}"
-                                                       Status="{Binding Status, Converter={x:Static conv:ContainerStatusToPillStatusConverter.Instance}}"/>
+                                            Text="{Binding StatusText}"
+                                            Status="{Binding PillStatus}"/>
 
                                         <TextBlock Grid.Column="4"
                                                    Classes="mono"
@@ -204,41 +203,41 @@
                                                     ToolTip.Tip="Logs"
                                                     Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).LogsCommand}"
                                                     CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource text_bullet_list_regular}"/>
+                                                <PathIcon Data="{StaticResource TextBulletListRegular}"/>
                                             </Button>
                                             <Button Classes="action"
                                                     ToolTip.Tip="Exec"
                                                     IsVisible="{Binding IsRunning}"
                                                     Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).ExecCommand}"
                                                     CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource code_regular}"/>
+                                                <PathIcon Data="{StaticResource CodeRegular}"/>
                                             </Button>
                                             <Button Classes="action"
                                                     ToolTip.Tip="Stop"
                                                     IsVisible="{Binding IsRunning}"
                                                     Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).StopCommand}"
                                                     CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource stop_regular}"/>
+                                                <PathIcon Data="{StaticResource StopRegular}"/>
                                             </Button>
                                             <Button Classes="action"
                                                     ToolTip.Tip="Start"
                                                     IsVisible="{Binding !IsRunning}"
                                                     Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).StartCommand}"
                                                     CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource play_regular}"/>
+                                                <PathIcon Data="{StaticResource PlayRegular}"/>
                                             </Button>
                                             <Button Classes="action"
                                                     ToolTip.Tip="Inspect"
                                                     IsVisible="{Binding !IsRunning}"
                                                     Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).InspectCommand}"
                                                     CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource info_regular}"/>
+                                                <PathIcon Data="{StaticResource InfoRegular}"/>
                                             </Button>
                                             <Button Classes="action"
                                                     ToolTip.Tip="Remove"
                                                     Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).RemoveCommand}"
                                                     CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource delete_regular}"/>
+                                                <PathIcon Data="{StaticResource DeleteRegular}"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>

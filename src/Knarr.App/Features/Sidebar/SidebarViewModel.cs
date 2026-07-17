@@ -24,13 +24,13 @@ public partial class SidebarViewModel : ViewModelBase
 
         NavigationItems =
         [
-            new NavigationItem("Dashboard", "board_regular", createPage: () => new DashboardViewModel()),
-            new NavigationItem("Containers", "cube_regular", "4", createPage: () => new ContainersViewModel()),
-            new NavigationItem("Images", "cloud_regular", "7"),
-            new NavigationItem("Networks", "globe_regular", "3"),
-            new NavigationItem("Volumes", "storage_regular", "5"),
-            new NavigationItem("Registries", "library_regular"),
-            new NavigationItem("Settings", "settings_regular", createPage: () => new SettingsViewModel()),
+            new NavigationItem("Dashboard", "BoardRegular", createPage: () => new DashboardViewModel()),
+            new NavigationItem("Containers", "CubeRegular", "4", createPage: () => new ContainersViewModel()),
+            new NavigationItem("Images", "CloudRegular", "7"),
+            new NavigationItem("Networks", "GlobeRegular", "3"),
+            new NavigationItem("Volumes", "StorageRegular", "5"),
+            new NavigationItem("Registries", "LibraryRegular"),
+            new NavigationItem("Settings", "SettingsRegular", createPage: () => new SettingsViewModel()),
         ];
 
         SelectedItem = NavigationItems[0];

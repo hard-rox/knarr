@@ -62,17 +62,7 @@
         </NativeMenu>
     </NativeMenu.Menu>
 
-    <Panel>
-        <!-- Liquid glass backdrop -->
-        <ExperimentalAcrylicBorder IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
-                                             TintColor="{DynamicResource AcrylicTintColor}"
-                                             TintOpacity="1"
-                                             MaterialOpacity="0.6"/>
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-
+    <Panel Background="{DynamicResource BackgroundBaseBrush}">
         <DockPanel>
             <!-- Menu bar: in-window on Windows/Linux, system menu bar on macOS -->
             <NativeMenuBar DockPanel.Dock="Top"/>

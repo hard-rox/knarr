@@ -1,5 +1,7 @@
 namespace Knarr.App.Models;
 
+using Controls;
+
 /// <summary>Lifecycle state of a container as reported by the underlying CLI.</summary>
 public enum ContainerStatus
 {
@@ -45,5 +47,13 @@ public sealed class ContainerItem
         ContainerStatus.Created => "Created",
         ContainerStatus.Exited => "Exited (0)",
         _ => Status.ToString()
+    };
+
+    public PillStatus PillStatus => Status switch
+    {
+        ContainerStatus.Running => PillStatus.Running,
+        ContainerStatus.Paused => PillStatus.Paused,
+        ContainerStatus.Exited => PillStatus.Stopped,
+        _ => PillStatus.Neutral
     };
 }

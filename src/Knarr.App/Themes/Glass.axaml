@@ -1,58 +1,67 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!--
+  <!--
       Theme-variant aware palette for Knarr's "liquid glass" shell.
       Brushes are resolved via DynamicResource so they swap live when the
       requested theme variant changes (System / Light / Dark).
     -->
-    <ResourceDictionary.ThemeDictionaries>
+  <ResourceDictionary.ThemeDictionaries>
 
-        <ResourceDictionary x:Key="Light">
-            <Color x:Key="AccentColor">#0A84FF</Color>
-            <Color x:Key="Accent2Color">#BF5AF2</Color>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-            <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
+    <ResourceDictionary x:Key="Light">
+      <Color x:Key="AccentColor">#0A84FF</Color>
+      <Color x:Key="Accent2Color">#BF5AF2</Color>
+      <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+      <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
 
-            <SolidColorBrush x:Key="TextBrush" Color="#1C1C22" />
-            <SolidColorBrush x:Key="TextDimBrush" Color="#5B5F6B" />
+      <SolidColorBrush x:Key="TextBrush" Color="#1C1C22" />
+      <SolidColorBrush x:Key="TextDimBrush" Color="#5B5F6B" />
 
-            <!-- Acrylic tint for the window backdrop -->
-            <Color x:Key="AcrylicTintColor">#F4F6FB</Color>
+      <LinearGradientBrush x:Key="BackgroundBaseBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#FBC2EB" />
+        <GradientStop Offset="0.55" Color="#A6C1EE" />
+        <GradientStop Offset="1" Color="#84FAB0" />
+      </LinearGradientBrush>
 
-            <!-- Frosted glass surfaces layered on top of the acrylic backdrop -->
-            <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.55" />
-            <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.72" />
-            <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.32" />
-            <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
-            <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
-            <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
+      <!-- Frosted glass surfaces layered on top of the acrylic backdrop -->
+      <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.55" />
+      <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.72" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.32" />
+      <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
+      <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
+      <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
 
-            <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
-            <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
-        </ResourceDictionary>
+      <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
+      <SolidColorBrush x:Key="WarningBrush" Color="#C47800" />
+      <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
+    </ResourceDictionary>
 
-        <ResourceDictionary x:Key="Dark">
-            <Color x:Key="AccentColor">#0A84FF</Color>
-            <Color x:Key="Accent2Color">#BF5AF2</Color>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-            <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
+    <ResourceDictionary x:Key="Dark">
+      <Color x:Key="AccentColor">#0A84FF</Color>
+      <Color x:Key="Accent2Color">#BF5AF2</Color>
+      <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+      <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
 
-            <SolidColorBrush x:Key="TextBrush" Color="#F5F6FA" />
-            <SolidColorBrush x:Key="TextDimBrush" Color="#A0A4B0" />
+      <SolidColorBrush x:Key="TextBrush" Color="#F5F6FA" />
+      <SolidColorBrush x:Key="TextDimBrush" Color="#A0A4B0" />
 
-            <Color x:Key="AcrylicTintColor">#1B1D24</Color>
+      <LinearGradientBrush x:Key="BackgroundBaseBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#1A0817" />
+        <GradientStop Offset="0.55" Color="#080F1F" />
+        <GradientStop Offset="1" Color="#05150D" />
+      </LinearGradientBrush>
 
-            <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.08" />
-            <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.14" />
-            <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.05" />
-            <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
-            <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
-            <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
+      <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.08" />
+      <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.14" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.05" />
+      <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
+      <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
+      <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
 
-            <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
-            <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
-        </ResourceDictionary>
+      <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
+      <SolidColorBrush x:Key="WarningBrush" Color="#C47800" />
+      <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
+    </ResourceDictionary>
 
-    </ResourceDictionary.ThemeDictionaries>
+  </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>
