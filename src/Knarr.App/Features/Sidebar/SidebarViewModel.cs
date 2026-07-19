@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Knarr.App.Common;
 using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
+using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
 using Knarr.App.Models;
 using Knarr.App.Services;
@@ -26,7 +27,7 @@ public partial class SidebarViewModel : ViewModelBase
         [
             new NavigationItem("Dashboard", "BoardRegular", createPage: () => new DashboardViewModel()),
             new NavigationItem("Containers", "CubeRegular", "4", createPage: () => new ContainersViewModel()),
-            new NavigationItem("Images", "CloudRegular", "7"),
+            new NavigationItem("Images", "CloudRegular", "7", createPage: () => new ImagesViewModel()),
             new NavigationItem("Networks", "GlobeRegular", "3"),
             new NavigationItem("Volumes", "StorageRegular", "5"),
             new NavigationItem("Registries", "LibraryRegular"),

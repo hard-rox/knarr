@@ -1,0 +1,192 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Knarr.App.Features.Images"
+             xmlns:models="using:Knarr.App.Models"
+             x:Class="Knarr.App.Features.Images.ImagesView"
+             x:DataType="vm:ImagesViewModel">
+
+  <Design.DataContext>
+    <vm:ImagesViewModel />
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto,*" Margin="24" RowSpacing="16">
+
+    <!-- Merged toolbar + bulk-action bar -->
+    <Border Grid.Row="0"
+            Classes="glass-panel"
+            Padding="14,10">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
+        <!-- Title / selection count -->
+        <TextBlock Grid.Column="0"
+                   VerticalAlignment="Center"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}"
+                   Text="Images"
+                   IsVisible="{Binding !HasSelection}" />
+        <TextBlock Grid.Column="0"
+                   VerticalAlignment="Center"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}"
+                   IsVisible="{Binding HasSelection}"
+                   Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
+
+        <!-- Search -->
+        <TextBox Grid.Column="1"
+                 MaxWidth="280"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Center"
+                 PlaceholderText="Search images&#x2026;"
+                 Text="{Binding SearchText}" />
+
+        <!-- Default toolbar OR bulk actions when rows are selected -->
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    IsVisible="{Binding !HasSelection}">
+          <Button Content="Build" Command="{Binding BuildCommand}" />
+          <Button Content="Pull" Command="{Binding PullCommand}" />
+          <Button Content="Push" Command="{Binding PushCommand}" />
+          <Button Content="Import" Command="{Binding ImportCommand}" />
+          <Button Content="Prune" Command="{Binding PruneCommand}" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="2"
+                    IsVisible="{Binding HasSelection}">
+          <Button Classes="icon"
+                  ToolTip.Tip="Push selected"
+                  Command="{Binding PushSelectedCommand}">
+            <PathIcon Data="{StaticResource ArrowUploadRegular}" />
+          </Button>
+          <Button Classes="icon"
+                  ToolTip.Tip="Delete selected"
+                  Command="{Binding DeleteSelectedCommand}">
+            <PathIcon Data="{StaticResource DeleteRegular}" />
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Glass panel hosting the table -->
+    <Border Grid.Row="1"
+            VerticalAlignment="Top"
+            Classes="glass-panel"
+            CornerRadius="16"
+            ClipToBounds="True">
+      <TableView ItemsSource="{Binding Images}"
+                 Theme="{StaticResource GlassTableTheme}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 CanUserResizeColumns="False">
+        <TableView.Columns>
+
+          <!-- Select -->
+          <TableViewColumn Width="48" HorizontalContentAlignment="Center">
+            <TableViewColumn.Header>
+              <CheckBox IsThreeState="True" HorizontalContentAlignment="Center"
+                        IsChecked="{Binding $parent[TableView].((vm:ImagesViewModel)DataContext).AllSelected, Mode=TwoWay}" />
+            </TableViewColumn.Header>
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Repository (selectable text) -->
+          <TableViewColumn Header="Repository" Width="Auto">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <SelectableTextBlock Text="{Binding Repository}"
+                                     VerticalAlignment="Center"
+                                     FontWeight="SemiBold"
+                                     Foreground="{DynamicResource TextBrush}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Tag (selectable text) -->
+          <TableViewColumn Header="Tag" Width="Auto">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <SelectableTextBlock Text="{Binding Tag}"
+                                     VerticalAlignment="Center"
+                                     FontFamily="Cascadia Code,Consolas,monospace"
+                                     Foreground="{DynamicResource TextDimBrush}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Image ID (selectable text) -->
+          <TableViewColumn Header="Image ID" Width="Auto">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <SelectableTextBlock Text="{Binding ShortId}"
+                                     VerticalAlignment="Center"
+                                     FontFamily="Cascadia Code,Consolas,monospace"
+                                     FontSize="11"
+                                     Foreground="{DynamicResource TextDimBrush}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Created -->
+          <TableViewColumn Header="Created" Width="Auto">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <TextBlock Text="{Binding Created}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextDimBrush}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Size -->
+          <TableViewColumn Header="Size" Width="Auto">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <TextBlock Text="{Binding Size}"
+                           VerticalAlignment="Center"
+                           FontFamily="Cascadia Code,Consolas,monospace"
+                           Foreground="{DynamicResource TextDimBrush}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Actions (fixed width so it never shrinks) -->
+          <TableViewColumn Header="Actions" Width="120" HorizontalContentAlignment="Left">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ImageItem">
+                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                  <Button Classes="icon"
+                          ToolTip.Tip="Run"
+                          Command="{Binding $parent[TableView].((vm:ImagesViewModel)DataContext).RunCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource PlayRegular}" />
+                  </Button>
+                  <Button Classes="icon"
+                          ToolTip.Tip="Inspect"
+                          Command="{Binding $parent[TableView].((vm:ImagesViewModel)DataContext).InspectCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource InfoRegular}" />
+                  </Button>
+                  <Button Classes="icon"
+                          ToolTip.Tip="Remove"
+                          Command="{Binding $parent[TableView].((vm:ImagesViewModel)DataContext).RemoveCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource DeleteRegular}" />
+                  </Button>
+                </StackPanel>
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+        </TableView.Columns>
+      </TableView>
+    </Border>
+  </Grid>
+
+</UserControl>
