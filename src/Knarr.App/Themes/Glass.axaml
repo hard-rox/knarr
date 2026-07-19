@@ -9,10 +9,9 @@
   <ResourceDictionary.ThemeDictionaries>
 
     <ResourceDictionary x:Key="Light">
+      <!-- Brand accent (reserved for primary emphasis / future primary buttons). -->
       <Color x:Key="AccentColor">#0A84FF</Color>
-      <Color x:Key="Accent2Color">#BF5AF2</Color>
       <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-      <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
 
       <SolidColorBrush x:Key="TextBrush" Color="#1C1C22" />
       <SolidColorBrush x:Key="TextDimBrush" Color="#5B5F6B" />
@@ -30,17 +29,12 @@
       <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
       <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
       <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
-
-      <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
-      <SolidColorBrush x:Key="WarningBrush" Color="#C47800" />
-      <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
+      <!-- Brand accent (reserved for primary emphasis / future primary buttons). -->
       <Color x:Key="AccentColor">#0A84FF</Color>
-      <Color x:Key="Accent2Color">#BF5AF2</Color>
       <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-      <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
 
       <SolidColorBrush x:Key="TextBrush" Color="#F5F6FA" />
       <SolidColorBrush x:Key="TextDimBrush" Color="#A0A4B0" />
@@ -57,11 +51,59 @@
       <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
       <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
       <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
-
-      <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
-      <SolidColorBrush x:Key="WarningBrush" Color="#C47800" />
-      <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
     </ResourceDictionary>
 
   </ResourceDictionary.ThemeDictionaries>
+
+  <!--
+      Shared "glass table" design.
+      Theme-variant-agnostic resources reused by every feature that renders a data table
+      (Containers, Images, Volumes, …). Reference the theme from a view with:
+
+        <TableView Theme="{StaticResource GlassTableTheme}" ... />
+
+      The two keyed resources below are picked up implicitly by all TableViews in the app:
+      they hide the vertical header separators and align cell content with header content.
+      The companion Styles (Button.icon, row-selection suppression) live in App.axaml because
+      style selectors cannot be declared inside a ResourceDictionary.
+    -->
+
+  <!-- Remove the vertical separator lines drawn between header cells. -->
+  <SolidColorBrush x:Key="TableViewColumnHeaderSeparatorBackground" Color="Transparent" />
+
+  <!--
+      Align cells with headers: rows wrap cells in a Border padded with TableViewRowPadding
+      (default 6,9,6,12); the 6px left inset offsets cells right of the headers. Zero the
+      horizontal part (keep vertical for row height) so both rely only on TableViewCellPadding (6,0).
+    -->
+  <Thickness x:Key="TableViewRowPadding">0,9,0,12</Thickness>
+
+  <!-- Compact glass TableView theme: keeps the headers presenter but with a fixed-height, tinted header row. -->
+  <ControlTheme x:Key="GlassTableTheme"
+                TargetType="TableView"
+                BasedOn="{StaticResource {x:Type TableView}}">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border ClipToBounds="{TemplateBinding ClipToBounds}"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <DockPanel>
+            <TableViewColumnHeadersPresenter DockPanel.Dock="Top"
+                                             Height="35"
+                                             Background="{DynamicResource StripBrush}"
+                                             ClipToBounds="True" />
+            <ScrollViewer Name="PART_ScrollViewer"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+              <ItemsPresenter Name="PART_ItemsPresenter"
+                              ItemsPanel="{TemplateBinding ItemsPanel}" />
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
 </ResourceDictionary>
