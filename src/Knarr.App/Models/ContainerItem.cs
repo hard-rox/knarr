@@ -1,5 +1,6 @@
 namespace Knarr.App.Models;
 
+using CommunityToolkit.Mvvm.ComponentModel;
 using Controls;
 
 /// <summary>Lifecycle state of a container as reported by the underlying CLI.</summary>
@@ -15,8 +16,12 @@ public enum ContainerStatus
 /// A single container row shown in the Containers feature. UI-agnostic domain data that maps
 /// directly onto fields surfaced by the container / wslc CLIs.
 /// </summary>
-public sealed class ContainerItem
+public sealed partial class ContainerItem : ObservableObject
 {
+    /// <summary>Whether the row is currently ticked for a bulk (multiselect) action.</summary>
+    [ObservableProperty]
+    private bool _isSelected;
+
     public required string Name { get; init; }
 
     public required string Id { get; init; }

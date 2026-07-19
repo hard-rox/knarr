@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -64,6 +65,10 @@ public partial class ContainersViewModel : ViewModelBase
         ];
 
         Containers = new ObservableCollection<ContainerItem>(_allContainers);
+        foreach (var container in _allContainers)
+        {
+            container.PropertyChanged += OnContainerPropertyChanged;
+        }
     }
 
     public ObservableCollection<ContainerItem> Containers { get; }
@@ -73,6 +78,56 @@ public partial class ContainersViewModel : ViewModelBase
 
     [ObservableProperty]
     private ContainerItem? _selectedContainer;
+
+    /// <summary>Rows currently ticked for a bulk action.</summary>
+    public IReadOnlyList<ContainerItem> SelectedContainers =>
+        Containers.Where(c => c.IsSelected).ToList();
+
+    public int SelectedCount => Containers.Count(c => c.IsSelected);
+
+    public bool HasSelection => SelectedCount > 0;
+
+    /// <summary>
+    /// Header "select all" checkbox state: true/false when uniform, null (indeterminate) when mixed.
+    /// </summary>
+    public bool? AllSelected
+    {
+        get
+        {
+            if (Containers.Count == 0)
+            {
+                return false;
+            }
+
+            var selected = SelectedCount;
+            if (selected == 0)
+            {
+                return false;
+            }
+
+            return selected == Containers.Count ? true : null;
+        }
+        set
+        {
+            // A null assignment comes from the indeterminate state; treat it as "select all".
+            var target = value ?? true;
+            foreach (var container in Containers)
+            {
+                container.IsSelected = target;
+            }
+        }
+    }
+
+    private void OnContainerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ContainerItem.IsSelected))
+        {
+            OnPropertyChanged(nameof(SelectedContainers));
+            OnPropertyChanged(nameof(SelectedCount));
+            OnPropertyChanged(nameof(HasSelection));
+            OnPropertyChanged(nameof(AllSelected));
+        }
+    }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
@@ -93,6 +148,11 @@ public partial class ContainersViewModel : ViewModelBase
         {
             Containers.Add(container);
         }
+
+        OnPropertyChanged(nameof(SelectedContainers));
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(AllSelected));
     }
 
     // Lifecycle commands — stubs for the design milestone; real CLI wiring lands later.
@@ -104,6 +164,34 @@ public partial class ContainersViewModel : ViewModelBase
     [RelayCommand]
     private void RunContainer()
     {
+    }
+
+    // Bulk (multiselect) commands — operate on every ticked row. Stubs for the design milestone.
+    [RelayCommand]
+    private void StartSelected()
+    {
+        foreach (var container in SelectedContainers)
+        {
+            Start(container);
+        }
+    }
+
+    [RelayCommand]
+    private void StopSelected()
+    {
+        foreach (var container in SelectedContainers)
+        {
+            Stop(container);
+        }
+    }
+
+    [RelayCommand]
+    private void DeleteSelected()
+    {
+        foreach (var container in SelectedContainers.ToList())
+        {
+            Remove(container);
+        }
     }
 
     [RelayCommand]

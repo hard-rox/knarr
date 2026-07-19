@@ -64,4 +64,57 @@ public class ContainersViewModelTests
         vm.ExecCommand.Execute(running);
         vm.InspectCommand.Execute(stopped);
     }
+
+    [Fact]
+    public void Selection_TracksCountAndHasSelection()
+    {
+        var vm = new ContainersViewModel();
+        Assert.False(vm.HasSelection);
+        Assert.Equal(0, vm.SelectedCount);
+
+        vm.Containers[0].IsSelected = true;
+        vm.Containers[1].IsSelected = true;
+
+        Assert.True(vm.HasSelection);
+        Assert.Equal(2, vm.SelectedCount);
+        Assert.Equal(2, vm.SelectedContainers.Count);
+    }
+
+    [Fact]
+    public void AllSelected_IsNull_WhenSelectionIsMixed()
+    {
+        var vm = new ContainersViewModel();
+
+        vm.Containers[0].IsSelected = true;
+
+        Assert.Null(vm.AllSelected);
+    }
+
+    [Fact]
+    public void AllSelected_SetTrue_SelectsEveryRow()
+    {
+        var vm = new ContainersViewModel();
+
+        vm.AllSelected = true;
+
+        Assert.True(vm.AllSelected);
+        Assert.Equal(vm.Containers.Count, vm.SelectedCount);
+        Assert.All(vm.Containers, c => Assert.True(c.IsSelected));
+
+        vm.AllSelected = false;
+
+        Assert.False(vm.AllSelected);
+        Assert.Equal(0, vm.SelectedCount);
+    }
+
+    [Fact]
+    public void BulkCommands_DoNotThrow()
+    {
+        var vm = new ContainersViewModel();
+        vm.AllSelected = true;
+
+        vm.StartSelectedCommand.Execute(null);
+        vm.StopSelectedCommand.Execute(null);
+        vm.DeleteSelectedCommand.Execute(null);
+    }
 }

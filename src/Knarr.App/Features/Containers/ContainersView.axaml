@@ -6,248 +6,342 @@
              x:Class="Knarr.App.Features.Containers.ContainersView"
              x:DataType="vm:ContainersViewModel">
 
-    <Design.DataContext>
-        <vm:ContainersViewModel/>
-    </Design.DataContext>
+  <Design.DataContext>
+    <vm:ContainersViewModel />
+  </Design.DataContext>
 
-    <UserControl.Styles>
-        <!-- Primary toolbar button -->
-        <Style Selector="Button.primary">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="14,8"/>
-        </Style>
-        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Accent2Brush}"/>
-        </Style>
+  <UserControl.Styles>
+    <!-- Primary toolbar button -->
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="14,8" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Accent2Brush}" />
+    </Style>
 
-        <!-- Secondary / ghost toolbar button -->
-        <Style Selector="Button.ghost">
-            <Setter Property="Background" Value="{DynamicResource GlassFillBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="12,8"/>
-        </Style>
-        <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-        </Style>
+    <!-- Secondary / ghost toolbar button -->
+    <Style Selector="Button.ghost">
+      <Setter Property="Background" Value="{DynamicResource GlassFillBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="12,8" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
 
-        <!-- Small row action button -->
-        <Style Selector="Button.action">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="7"/>
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
-        </Style>
-        <Style Selector="Button.action:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-        </Style>
-        <Style Selector="Button.action PathIcon">
-            <Setter Property="Width" Value="16"/>
-            <Setter Property="Height" Value="16"/>
-        </Style>
+    <!-- Destructive bulk button -->
+    <Style Selector="Button.danger">
+      <Setter Property="Background" Value="{DynamicResource ErrorBrush}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="14,8" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#E03A30" />
+    </Style>
 
-        <!-- Column header cell -->
-        <Style Selector="TextBlock.colhead">
-            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
+    <!-- Small row action button -->
+    <Style Selector="Button.action">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="7" />
+      <Setter Property="Width" Value="32" />
+      <Setter Property="Height" Value="32" />
+    </Style>
+    <Style Selector="Button.action:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.action PathIcon">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+    </Style>
 
-        <!-- Monospace cell (ids, ports, resources) -->
-        <Style Selector="TextBlock.mono">
-            <Setter Property="FontFamily" Value="Cascadia Code,Consolas,monospace"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-    </UserControl.Styles>
+    <!-- Column header cell -->
+    <Style Selector="TextBlock.colhead">
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
 
-    <Grid RowDefinitions="Auto,*" Margin="24">
+    <!-- Monospace cell (ids, ports, resources) -->
+    <Style Selector="TextBlock.mono">
+      <Setter Property="FontFamily" Value="Cascadia Code,Consolas,monospace" />
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
 
-        <!-- Toolbar -->
-        <Grid Grid.Row="0"
-              ColumnDefinitions="Auto,*,Auto,Auto"
-              Margin="0,0,0,16">
-            <TextBlock Grid.Column="0"
-                       Text="Containers"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextBrush}"/>
+  <Grid RowDefinitions="Auto,Auto,*" Margin="24">
 
-            <!-- Search box -->
-            <Border Grid.Column="1"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Width="260"
-                    Margin="0,0,12,0"
-                    Background="{DynamicResource GlassFillBrush}"
-                    BorderBrush="{DynamicResource StrokeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    Padding="10,0">
-                <Grid ColumnDefinitions="Auto,*">
-                    <PathIcon Grid.Column="0"
-                              Width="15" Height="15"
-                              Foreground="{DynamicResource TextDimBrush}"
-                              Data="{StaticResource SearchRegular}"/>
-                    <TextBox Grid.Column="1"
-                             Margin="8,0,0,0"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             PlaceholderText="Search containers&#x2026;"
-                             Text="{Binding SearchText}"/>
-                </Grid>
-            </Border>
+    <!-- Toolbar -->
+    <Grid Grid.Row="0"
+          ColumnDefinitions="Auto,*,Auto,Auto"
+          Margin="0,0,0,16">
+      <TextBlock Grid.Column="0"
+                 Text="Containers"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 VerticalAlignment="Center"
+                 Foreground="{DynamicResource TextBrush}" />
 
-            <Button Grid.Column="2"
-                    Classes="ghost"
-                    Margin="0,0,10,0"
-                    Command="{Binding RefreshCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                    <PathIcon Width="15" Height="15" Data="{StaticResource ArrowClockwiseRegular}"/>
-                    <TextBlock Text="Refresh" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-
-            <Button Grid.Column="3"
-                    Classes="primary"
-                    Command="{Binding RunContainerCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                    <PathIcon Width="15" Height="15" Data="{StaticResource PlayRegular}"/>
-                    <TextBlock Text="Run container" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
+      <!-- Search box -->
+      <Border Grid.Column="1"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              Width="260"
+              Margin="0,0,12,0"
+              Background="{DynamicResource GlassFillBrush}"
+              BorderBrush="{DynamicResource StrokeBrush}"
+              BorderThickness="1"
+              CornerRadius="10"
+              Padding="10,0">
+        <Grid ColumnDefinitions="Auto,*">
+          <PathIcon Grid.Column="0"
+                    Width="15" Height="15"
+                    Foreground="{DynamicResource TextDimBrush}"
+                    Data="{StaticResource SearchRegular}" />
+          <TextBox Grid.Column="1"
+                   Margin="8,0,0,0"
+                   Background="Transparent"
+                   BorderThickness="0"
+                   PlaceholderText="Search containers&#x2026;"
+                   Text="{Binding SearchText}" />
         </Grid>
+      </Border>
 
-        <!-- Container table (glass card) -->
-        <Border Grid.Row="1"
-                Background="{DynamicResource GlassFillBrush}"
-                BorderBrush="{DynamicResource StrokeBrush}"
-                BorderThickness="1"
-                CornerRadius="16">
-            <DockPanel>
-                <!-- Header row -->
-                <Border DockPanel.Dock="Top"
-                        BorderBrush="{DynamicResource StrokeBrush}"
-                        BorderThickness="0,0,0,1"
-                        Padding="16,12">
-                    <Grid ColumnDefinitions="26,2*,1.6*,120,1.3*,1.3*,90,210">
-                        <TextBlock Grid.Column="1" Classes="colhead" Text="NAME"/>
-                        <TextBlock Grid.Column="2" Classes="colhead" Text="IMAGE"/>
-                        <TextBlock Grid.Column="3" Classes="colhead" Text="STATUS"/>
-                        <TextBlock Grid.Column="4" Classes="colhead" Text="PORTS"/>
-                        <TextBlock Grid.Column="5" Classes="colhead" Text="CPU / MEM"/>
-                        <TextBlock Grid.Column="6" Classes="colhead" Text="UPTIME"/>
-                        <TextBlock Grid.Column="7" Classes="colhead" Text="ACTIONS" HorizontalAlignment="Right"/>
-                    </Grid>
-                </Border>
+      <Button Grid.Column="2"
+              Classes="ghost"
+              Margin="0,0,10,0"
+              Command="{Binding RefreshCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="7">
+          <PathIcon Width="15" Height="15" Data="{StaticResource ArrowClockwiseRegular}" />
+          <TextBlock Text="Refresh" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
 
-                <!-- Rows -->
-                <ScrollViewer>
-                    <ItemsControl ItemsSource="{Binding Containers}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:ContainerItem">
-                                <Border BorderBrush="{DynamicResource StrokeBrush}"
-                                        BorderThickness="0,0,0,1"
-                                        Padding="16,12">
-                                    <Grid ColumnDefinitions="26,2*,1.6*,120,1.3*,1.3*,90,210">
-                                        <CheckBox Grid.Column="0" VerticalAlignment="Center"/>
-
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                            <TextBlock Text="{Binding Name}"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextBrush}"/>
-                                            <TextBlock Classes="mono"
-                                                       FontSize="11"
-                                                       Text="{Binding ShortId}"/>
-                                        </StackPanel>
-
-                                        <TextBlock Grid.Column="2"
-                                                   Classes="mono"
-                                                   Text="{Binding Image}"/>
-
-                                        <controls:Pill Grid.Column="3"
-                                            Text="{Binding StatusText}"
-                                            Status="{Binding PillStatus}"/>
-
-                                        <TextBlock Grid.Column="4"
-                                                   Classes="mono"
-                                                   Text="{Binding Ports}"/>
-
-                                        <TextBlock Grid.Column="5"
-                                                   Classes="mono"
-                                                   Text="{Binding ResourceUsage}"/>
-
-                                        <TextBlock Grid.Column="6"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextDimBrush}"
-                                                   FontSize="12"
-                                                   Text="{Binding Uptime}"/>
-
-                                        <StackPanel Grid.Column="7"
-                                                    Orientation="Horizontal"
-                                                    Spacing="2"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center">
-                                            <Button Classes="action"
-                                                    ToolTip.Tip="Logs"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).LogsCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource TextBulletListRegular}"/>
-                                            </Button>
-                                            <Button Classes="action"
-                                                    ToolTip.Tip="Exec"
-                                                    IsVisible="{Binding IsRunning}"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).ExecCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource CodeRegular}"/>
-                                            </Button>
-                                            <Button Classes="action"
-                                                    ToolTip.Tip="Stop"
-                                                    IsVisible="{Binding IsRunning}"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).StopCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource StopRegular}"/>
-                                            </Button>
-                                            <Button Classes="action"
-                                                    ToolTip.Tip="Start"
-                                                    IsVisible="{Binding !IsRunning}"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).StartCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource PlayRegular}"/>
-                                            </Button>
-                                            <Button Classes="action"
-                                                    ToolTip.Tip="Inspect"
-                                                    IsVisible="{Binding !IsRunning}"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).InspectCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource InfoRegular}"/>
-                                            </Button>
-                                            <Button Classes="action"
-                                                    ToolTip.Tip="Remove"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ContainersViewModel)DataContext).RemoveCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="{StaticResource DeleteRegular}"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </DockPanel>
-        </Border>
+      <Button Grid.Column="3"
+              Classes="primary"
+              Command="{Binding RunContainerCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="7">
+          <PathIcon Width="15" Height="15" Data="{StaticResource PlayRegular}" />
+          <TextBlock Text="Run container" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
     </Grid>
+
+    <!-- Bulk (multiselect) action strip — shown only when one or more rows are ticked -->
+    <Border Grid.Row="1"
+            IsVisible="{Binding HasSelection}"
+            Classes="glass-card"
+            Background="{DynamicResource GlassFillBrush}"
+            BorderBrush="{DynamicResource StrokeBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="14,10"
+            Margin="0,0,0,16">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+        <TextBlock Grid.Column="0"
+                   VerticalAlignment="Center"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}"
+                   Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
+
+        <Button Grid.Column="2"
+                Classes="ghost"
+                Margin="0,0,10,0"
+                Command="{Binding StartSelectedCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <PathIcon Width="15" Height="15" Data="{StaticResource PlayRegular}" />
+            <TextBlock Text="Start" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <Button Grid.Column="3"
+                Classes="ghost"
+                Margin="0,0,10,0"
+                Command="{Binding StopSelectedCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <PathIcon Width="15" Height="15" Data="{StaticResource StopRegular}" />
+            <TextBlock Text="Stop" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <Button Grid.Column="4"
+                Classes="danger"
+                Command="{Binding DeleteSelectedCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <PathIcon Width="15" Height="15" Data="{StaticResource DeleteRegular}" />
+            <TextBlock Text="Delete" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- Container table (glass card) -->
+    <Border Grid.Row="2"
+            VerticalAlignment="Top"
+            Classes="glass-card"
+            Background="{DynamicResource GlassFillBrush}"
+            BorderBrush="{DynamicResource StrokeBrush}"
+            BorderThickness="1"
+            CornerRadius="16"
+            ClipToBounds="True">
+      <TableView ItemsSource="{Binding Containers}"
+                 SelectionMode="Single"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 CanUserResizeColumns="False">
+        <TableView.Columns>
+          <!-- Select -->
+          <TableViewColumn>
+            <TableViewColumn.HeaderTemplate>
+              <DataTemplate>
+                <CheckBox HorizontalAlignment="Center"
+                          IsThreeState="True"
+                          IsChecked="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).AllSelected}" />
+              </DataTemplate>
+            </TableViewColumn.HeaderTemplate>
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <CheckBox HorizontalAlignment="Center"
+                          IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Name -->
+          <TableViewColumn Header="Name">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="{Binding Name}"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextBrush}" />
+                  <TextBlock Classes="mono"
+                             FontSize="11"
+                             Text="{Binding ShortId}" />
+                </StackPanel>
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Image -->
+          <TableViewColumn Header="Image">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <TextBlock Classes="mono" Text="{Binding Image}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Status -->
+          <TableViewColumn Header="Status">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <controls:Pill Text="{Binding StatusText}"
+                               Status="{Binding PillStatus}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Ports -->
+          <TableViewColumn Header="Ports">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <TextBlock Classes="mono" Text="{Binding Ports}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- CPU / Mem -->
+          <TableViewColumn Header="CPU / Mem">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <TextBlock Classes="mono" Text="{Binding ResourceUsage}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Uptime -->
+          <TableViewColumn Header="Uptime">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <TextBlock VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextDimBrush}"
+                           FontSize="12"
+                           Text="{Binding Uptime}" />
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+
+          <!-- Actions -->
+          <TableViewColumn Header="Actions">
+            <TableViewColumn.CellTemplate>
+              <DataTemplate x:DataType="models:ContainerItem">
+                <StackPanel Orientation="Horizontal"
+                            Spacing="2"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                  <Button Classes="action"
+                          ToolTip.Tip="Logs"
+                          Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).LogsCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource TextBulletListRegular}" />
+                  </Button>
+                  <Button Classes="action"
+                          ToolTip.Tip="Exec"
+                          IsVisible="{Binding IsRunning}"
+                          Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).ExecCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource CodeRegular}" />
+                  </Button>
+                  <Button Classes="action"
+                          ToolTip.Tip="Stop"
+                          IsVisible="{Binding IsRunning}"
+                          Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).StopCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource StopRegular}" />
+                  </Button>
+                  <Button Classes="action"
+                          ToolTip.Tip="Start"
+                          IsVisible="{Binding !IsRunning}"
+                          Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).StartCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource PlayRegular}" />
+                  </Button>
+                  <Button Classes="action"
+                          ToolTip.Tip="Inspect"
+                          IsVisible="{Binding !IsRunning}"
+                          Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).InspectCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource InfoRegular}" />
+                  </Button>
+                  <Button Classes="action"
+                          ToolTip.Tip="Remove"
+                          Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).RemoveCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource DeleteRegular}" />
+                  </Button>
+                </StackPanel>
+              </DataTemplate>
+            </TableViewColumn.CellTemplate>
+          </TableViewColumn>
+        </TableView.Columns>
+      </TableView>
+    </Border>
+  </Grid>
 
 </UserControl>

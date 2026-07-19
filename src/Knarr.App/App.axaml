@@ -21,5 +21,28 @@
 
     <Application.Styles>
         <FluentTheme />
+
+        <!--
+            Project-wide "liquid glass" shadow guideline.
+            Elevation tokens ported from docs/mockups/knarr-ui-glass.html so every glass card,
+            panel and toolbar button carries a consistent soft shadow. Buttons apply the shadow on
+            their templated ContentPresenter (Button has no BoxShadow of its own); cards/panels use
+            the Border.glass-card class.
+        -->
+        <Style Selector="Border.glass-card">
+            <Setter Property="BoxShadow" Value="0 8 32 0 #2E1F2687" />
+        </Style>
+
+        <Style Selector="Button.primary /template/ ContentPresenter">
+            <Setter Property="BoxShadow" Value="0 6 18 0 #660A84FF" />
+        </Style>
+
+        <Style Selector="Button.ghost /template/ ContentPresenter">
+            <Setter Property="BoxShadow" Value="0 2 8 0 #1A1F2687" />
+        </Style>
+
+        <Style Selector="Button.danger /template/ ContentPresenter">
+            <Setter Property="BoxShadow" Value="0 6 18 0 #59FF453A" />
+        </Style>
     </Application.Styles>
 </Application>
