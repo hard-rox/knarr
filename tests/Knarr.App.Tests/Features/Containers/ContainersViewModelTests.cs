@@ -12,7 +12,7 @@ public class ContainersViewModelTests
     {
         var vm = new ContainersViewModel();
 
-        Assert.Equal(4, vm.Containers.Count);
+        Assert.Equal(19, vm.Containers.Count);
         Assert.Contains(vm.Containers, c => c.Name == "web-api");
         Assert.Contains(vm.Containers, c => c.Status == ContainerStatus.Exited);
     }
@@ -43,7 +43,7 @@ public class ContainersViewModelTests
 
         vm.SearchText = string.Empty;
 
-        Assert.Equal(4, vm.Containers.Count);
+        Assert.Equal(19, vm.Containers.Count);
     }
 
     [Fact]

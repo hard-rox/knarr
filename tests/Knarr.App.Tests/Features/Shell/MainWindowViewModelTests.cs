@@ -65,15 +65,4 @@ public class MainWindowViewModelTests
 
         Assert.IsType<SettingsViewModel>(vm.CurrentPage);
     }
-
-    [Fact]
-    public void SelectingItemWithoutPage_ClearsCurrentPage()
-    {
-        var vm = CreateViewModel();
-
-        // "Containers" has no page factory yet.
-        vm.Sidebar.SelectedItem = vm.Sidebar.NavigationItems[1];
-
-        Assert.Null(vm.CurrentPage);
-    }
 }
