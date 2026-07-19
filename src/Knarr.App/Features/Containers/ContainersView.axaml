@@ -10,188 +10,155 @@
     <vm:ContainersViewModel />
   </Design.DataContext>
 
+  <UserControl.Resources>
+    <!-- Remove the vertical separator lines drawn between header cells. -->
+    <SolidColorBrush x:Key="TableViewColumnHeaderSeparatorBackground" Color="Transparent" />
+
+    <!-- Align cells with headers: rows wrap cells in a Border padded with TableViewRowPadding
+       (default 6,9,6,12); the 6px left inset offsets cells right of the headers. Zero the
+       horizontal part (keep vertical for row height) so both rely only on TableViewCellPadding (6,0). -->
+  <Thickness x:Key="TableViewRowPadding">0,9,0,12</Thickness>
+
+    <!-- Compact TableView theme: keeps the headers presenter but with a fixed-height, tinted header row. -->
+    <ControlTheme x:Key="HeaderlessTableView"
+                  TargetType="TableView"
+                  BasedOn="{StaticResource {x:Type TableView}}">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border ClipToBounds="{TemplateBinding ClipToBounds}"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <DockPanel>
+              <TableViewColumnHeadersPresenter DockPanel.Dock="Top"
+                                               Height="35"
+                                               Background="{DynamicResource StripBrush}"
+                                               ClipToBounds="True" />
+              <ScrollViewer Name="PART_ScrollViewer"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                <ItemsPresenter Name="PART_ItemsPresenter"
+                                ItemsPanel="{TemplateBinding ItemsPanel}" />
+              </ScrollViewer>
+            </DockPanel>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </UserControl.Resources>
+
   <UserControl.Styles>
-    <!-- Primary toolbar button -->
-    <Style Selector="Button.primary">
-      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-      <Setter Property="Foreground" Value="White" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="Padding" Value="14,8" />
-    </Style>
-    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource Accent2Brush}" />
-    </Style>
-
-    <!-- Secondary / ghost toolbar button -->
-    <Style Selector="Button.ghost">
-      <Setter Property="Background" Value="{DynamicResource GlassFillBrush}" />
-      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="Padding" Value="12,8" />
-    </Style>
-    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
-    </Style>
-
-    <!-- Destructive bulk button -->
-    <Style Selector="Button.danger">
-      <Setter Property="Background" Value="{DynamicResource ErrorBrush}" />
-      <Setter Property="Foreground" Value="White" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="Padding" Value="14,8" />
-    </Style>
-    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#E03A30" />
-    </Style>
-
-    <!-- Small row action button -->
-    <Style Selector="Button.action">
+    <!-- Minimal icon-button used for copy + row actions -->
+    <Style Selector="Button.icon">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Padding" Value="7" />
-      <Setter Property="Width" Value="32" />
-      <Setter Property="Height" Value="32" />
+      <Setter Property="Padding" Value="5" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
     </Style>
-    <Style Selector="Button.action:pointerover /template/ ContentPresenter">
+    <Style Selector="Button.icon:pointerover /template/ ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
     </Style>
-    <Style Selector="Button.action PathIcon">
-      <Setter Property="Width" Value="16" />
-      <Setter Property="Height" Value="16" />
+    <Style Selector="Button.icon PathIcon">
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
     </Style>
 
-    <!-- Column header cell -->
-    <Style Selector="TextBlock.colhead">
-      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
-      <Setter Property="FontSize" Value="11" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="HorizontalAlignment" Value="Center" />
-    </Style>
+    <!-- Header cells: no border, transparent so the tinted header row shows through as one strip. -->
+    <!-- <Style Selector="TableViewColumnHeader">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style> -->
 
-    <!-- Monospace cell (ids, ports, resources) -->
-    <Style Selector="TextBlock.mono">
-      <Setter Property="FontFamily" Value="Cascadia Code,Consolas,monospace" />
-      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="VerticalAlignment" Value="Center" />
+    <!-- Disable row selection highlight (the IsSelected checkbox still drives selection). -->
+    <Style Selector="TableViewRow:pointerover /template/ Border#Border">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TableViewRow:pressed /template/ Border#Border">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TableViewRow:selected /template/ Border#Border">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TableViewRow:selected:pointerover /template/ Border#Border">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TableViewRow:selected:pressed /template/ Border#Border">
+      <Setter Property="Background" Value="Transparent" />
     </Style>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto,Auto,*" Margin="24">
+  <Grid RowDefinitions="Auto,*" Margin="24" RowSpacing="16">
 
-    <!-- Toolbar -->
-    <Grid Grid.Row="0"
-          ColumnDefinitions="Auto,*,Auto,Auto"
-          Margin="0,0,0,16">
-      <TextBlock Grid.Column="0"
-                 Text="Containers"
-                 FontSize="24"
-                 FontWeight="Bold"
-                 VerticalAlignment="Center"
-                 Foreground="{DynamicResource TextBrush}" />
-
-      <!-- Search box -->
-      <Border Grid.Column="1"
-              HorizontalAlignment="Right"
-              VerticalAlignment="Center"
-              Width="260"
-              Margin="0,0,12,0"
-              Background="{DynamicResource GlassFillBrush}"
-              BorderBrush="{DynamicResource StrokeBrush}"
-              BorderThickness="1"
-              CornerRadius="10"
-              Padding="10,0">
-        <Grid ColumnDefinitions="Auto,*">
-          <PathIcon Grid.Column="0"
-                    Width="15" Height="15"
-                    Foreground="{DynamicResource TextDimBrush}"
-                    Data="{StaticResource SearchRegular}" />
-          <TextBox Grid.Column="1"
-                   Margin="8,0,0,0"
-                   Background="Transparent"
-                   BorderThickness="0"
-                   PlaceholderText="Search containers&#x2026;"
-                   Text="{Binding SearchText}" />
-        </Grid>
-      </Border>
-
-      <Button Grid.Column="2"
-              Classes="ghost"
-              Margin="0,0,10,0"
-              Command="{Binding RefreshCommand}">
-        <StackPanel Orientation="Horizontal" Spacing="7">
-          <PathIcon Width="15" Height="15" Data="{StaticResource ArrowClockwiseRegular}" />
-          <TextBlock Text="Refresh" VerticalAlignment="Center" />
-        </StackPanel>
-      </Button>
-
-      <Button Grid.Column="3"
-              Classes="primary"
-              Command="{Binding RunContainerCommand}">
-        <StackPanel Orientation="Horizontal" Spacing="7">
-          <PathIcon Width="15" Height="15" Data="{StaticResource PlayRegular}" />
-          <TextBlock Text="Run container" VerticalAlignment="Center" />
-        </StackPanel>
-      </Button>
-    </Grid>
-
-    <!-- Bulk (multiselect) action strip — shown only when one or more rows are ticked -->
-    <Border Grid.Row="1"
-            IsVisible="{Binding HasSelection}"
+    <!-- Merged toolbar + bulk-action bar -->
+    <Border Grid.Row="0"
             Classes="glass-card"
             Background="{DynamicResource GlassFillBrush}"
             BorderBrush="{DynamicResource StrokeBrush}"
             BorderThickness="1"
-            CornerRadius="12"
-            Padding="14,10"
-            Margin="0,0,0,16">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+            CornerRadius="14"
+            Padding="14,10">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
+        <!-- Title / selection count -->
         <TextBlock Grid.Column="0"
                    VerticalAlignment="Center"
+                   FontSize="18"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource TextBrush}"
+                   Text="Containers"
+                   IsVisible="{Binding !HasSelection}" />
+        <TextBlock Grid.Column="0"
+                   VerticalAlignment="Center"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}"
+                   IsVisible="{Binding HasSelection}"
                    Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
 
-        <Button Grid.Column="2"
-                Classes="ghost"
-                Margin="0,0,10,0"
-                Command="{Binding StartSelectedCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="7">
-            <PathIcon Width="15" Height="15" Data="{StaticResource PlayRegular}" />
-            <TextBlock Text="Start" VerticalAlignment="Center" />
-          </StackPanel>
-        </Button>
+        <!-- Search -->
+        <TextBox Grid.Column="1"
+                 MaxWidth="280"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Center"
+                 PlaceholderText="Search containers&#x2026;"
+                 Text="{Binding SearchText}" />
 
-        <Button Grid.Column="3"
-                Classes="ghost"
-                Margin="0,0,10,0"
-                Command="{Binding StopSelectedCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="7">
-            <PathIcon Width="15" Height="15" Data="{StaticResource StopRegular}" />
-            <TextBlock Text="Stop" VerticalAlignment="Center" />
-          </StackPanel>
-        </Button>
+        <!-- Default toolbar OR bulk actions when rows are selected -->
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    IsVisible="{Binding !HasSelection}">
+          <Button Content="Refresh" Command="{Binding RefreshCommand}" />
+          <Button Content="Run container" Command="{Binding RunContainerCommand}" />
+        </StackPanel>
 
-        <Button Grid.Column="4"
-                Classes="danger"
-                Command="{Binding DeleteSelectedCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="7">
-            <PathIcon Width="15" Height="15" Data="{StaticResource DeleteRegular}" />
-            <TextBlock Text="Delete" VerticalAlignment="Center" />
-          </StackPanel>
-        </Button>
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="2"
+                    IsVisible="{Binding HasSelection}">
+          <Button Classes="icon"
+                  ToolTip.Tip="Start selected"
+                  Command="{Binding StartSelectedCommand}">
+            <PathIcon Data="{StaticResource PlayRegular}" />
+          </Button>
+          <Button Classes="icon"
+                  ToolTip.Tip="Stop selected"
+                  Command="{Binding StopSelectedCommand}">
+            <PathIcon Data="{StaticResource StopRegular}" />
+          </Button>
+          <Button Classes="icon"
+                  ToolTip.Tip="Delete selected"
+                  Command="{Binding DeleteSelectedCommand}">
+            <PathIcon Data="{StaticResource DeleteRegular}" />
+          </Button>
+        </StackPanel>
       </Grid>
     </Border>
 
-    <!-- Container table (glass card) -->
-    <Border Grid.Row="2"
+    <!-- Glass panel hosting the table -->
+    <Border Grid.Row="1"
             VerticalAlignment="Top"
             Classes="glass-card"
             Background="{DynamicResource GlassFillBrush}"
@@ -200,136 +167,120 @@
             CornerRadius="16"
             ClipToBounds="True">
       <TableView ItemsSource="{Binding Containers}"
-                 SelectionMode="Single"
+                 Theme="{StaticResource HeaderlessTableView}"
                  Background="Transparent"
                  BorderThickness="0"
                  CanUserResizeColumns="False">
         <TableView.Columns>
+
           <!-- Select -->
-          <TableViewColumn>
-            <TableViewColumn.HeaderTemplate>
-              <DataTemplate>
-                <CheckBox HorizontalAlignment="Center"
-                          IsThreeState="True"
-                          IsChecked="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).AllSelected}" />
-              </DataTemplate>
-            </TableViewColumn.HeaderTemplate>
+          <TableViewColumn Width="48" HorizontalContentAlignment="Center">
+            <TableViewColumn.Header>
+              <CheckBox IsThreeState="True" HorizontalContentAlignment="Center"
+                        IsChecked="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).AllSelected, Mode=TwoWay}" />
+            </TableViewColumn.Header>
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
-                <CheckBox HorizontalAlignment="Center"
-                          IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" />
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
-          <!-- Name -->
-          <TableViewColumn Header="Name">
+          <!-- Name + Container ID (selectable text) -->
+          <TableViewColumn Header="Name" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                  <TextBlock Text="{Binding Name}"
-                             FontWeight="SemiBold"
-                             Foreground="{DynamicResource TextBrush}" />
-                  <TextBlock Classes="mono"
-                             FontSize="11"
-                             Text="{Binding ShortId}" />
+                  <SelectableTextBlock Text="{Binding Name}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}" />
+                  <SelectableTextBlock Text="{Binding ShortId}"
+                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextDimBrush}" />
                 </StackPanel>
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
-          <!-- Image -->
-          <TableViewColumn Header="Image">
+          <!-- Image (selectable text) -->
+          <TableViewColumn Header="Image" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
-                <TextBlock Classes="mono" Text="{Binding Image}" />
+                <SelectableTextBlock Text="{Binding Image}"
+                                     VerticalAlignment="Center"
+                                     FontFamily="Cascadia Code,Consolas,monospace"
+                                     Foreground="{DynamicResource TextDimBrush}" />
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
-          <!-- Status -->
-          <TableViewColumn Header="Status">
+          <!-- Status + Uptime -->
+          <TableViewColumn Header="Status" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
-                <controls:Pill Text="{Binding StatusText}"
-                               Status="{Binding PillStatus}" />
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                  <controls:Pill Text="{Binding StatusText}" Status="{Binding PillStatus}" />
+                  <TextBlock Text="{Binding Uptime}"
+                             FontSize="11"
+                             Foreground="{DynamicResource TextDimBrush}" />
+                </StackPanel>
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
           <!-- Ports -->
-          <TableViewColumn Header="Ports">
+          <TableViewColumn Header="Ports" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
-                <TextBlock Classes="mono" Text="{Binding Ports}" />
+                <TextBlock Text="{Binding Ports}"
+                           VerticalAlignment="Center"
+                           FontFamily="Cascadia Code,Consolas,monospace"
+                           Foreground="{DynamicResource TextDimBrush}" />
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
-          <!-- CPU / Mem -->
-          <TableViewColumn Header="CPU / Mem">
+          <!-- Actions (fixed width so it never shrinks) -->
+          <TableViewColumn Header="Actions" Width="120" HorizontalContentAlignment="Left">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
-                <TextBlock Classes="mono" Text="{Binding ResourceUsage}" />
-              </DataTemplate>
-            </TableViewColumn.CellTemplate>
-          </TableViewColumn>
-
-          <!-- Uptime -->
-          <TableViewColumn Header="Uptime">
-            <TableViewColumn.CellTemplate>
-              <DataTemplate x:DataType="models:ContainerItem">
-                <TextBlock VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextDimBrush}"
-                           FontSize="12"
-                           Text="{Binding Uptime}" />
-              </DataTemplate>
-            </TableViewColumn.CellTemplate>
-          </TableViewColumn>
-
-          <!-- Actions -->
-          <TableViewColumn Header="Actions">
-            <TableViewColumn.CellTemplate>
-              <DataTemplate x:DataType="models:ContainerItem">
-                <StackPanel Orientation="Horizontal"
-                            Spacing="2"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
-                  <Button Classes="action"
+                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                  <Button Classes="icon"
                           ToolTip.Tip="Logs"
                           Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).LogsCommand}"
                           CommandParameter="{Binding}">
                     <PathIcon Data="{StaticResource TextBulletListRegular}" />
                   </Button>
-                  <Button Classes="action"
+                  <Button Classes="icon"
                           ToolTip.Tip="Exec"
                           IsVisible="{Binding IsRunning}"
                           Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).ExecCommand}"
                           CommandParameter="{Binding}">
                     <PathIcon Data="{StaticResource CodeRegular}" />
                   </Button>
-                  <Button Classes="action"
+                  <Button Classes="icon"
                           ToolTip.Tip="Stop"
                           IsVisible="{Binding IsRunning}"
                           Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).StopCommand}"
                           CommandParameter="{Binding}">
                     <PathIcon Data="{StaticResource StopRegular}" />
                   </Button>
-                  <Button Classes="action"
+                  <Button Classes="icon"
                           ToolTip.Tip="Start"
                           IsVisible="{Binding !IsRunning}"
                           Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).StartCommand}"
                           CommandParameter="{Binding}">
                     <PathIcon Data="{StaticResource PlayRegular}" />
                   </Button>
-                  <Button Classes="action"
+                  <Button Classes="icon"
                           ToolTip.Tip="Inspect"
                           IsVisible="{Binding !IsRunning}"
                           Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).InspectCommand}"
                           CommandParameter="{Binding}">
                     <PathIcon Data="{StaticResource InfoRegular}" />
                   </Button>
-                  <Button Classes="action"
+                  <Button Classes="icon"
                           ToolTip.Tip="Remove"
                           Command="{Binding $parent[TableView].((vm:ContainersViewModel)DataContext).RemoveCommand}"
                           CommandParameter="{Binding}">
