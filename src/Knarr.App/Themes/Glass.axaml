@@ -1,58 +1,109 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!--
+  <!--
       Theme-variant aware palette for Knarr's "liquid glass" shell.
       Brushes are resolved via DynamicResource so they swap live when the
       requested theme variant changes (System / Light / Dark).
     -->
-    <ResourceDictionary.ThemeDictionaries>
+  <ResourceDictionary.ThemeDictionaries>
 
-        <ResourceDictionary x:Key="Light">
-            <Color x:Key="AccentColor">#0A84FF</Color>
-            <Color x:Key="Accent2Color">#BF5AF2</Color>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-            <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
+    <ResourceDictionary x:Key="Light">
+      <!-- Brand accent (reserved for primary emphasis / future primary buttons). -->
+      <Color x:Key="AccentColor">#0A84FF</Color>
+      <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 
-            <SolidColorBrush x:Key="TextBrush" Color="#1C1C22" />
-            <SolidColorBrush x:Key="TextDimBrush" Color="#5B5F6B" />
+      <SolidColorBrush x:Key="TextBrush" Color="#1C1C22" />
+      <SolidColorBrush x:Key="TextDimBrush" Color="#5B5F6B" />
 
-            <!-- Acrylic tint for the window backdrop -->
-            <Color x:Key="AcrylicTintColor">#F4F6FB</Color>
+      <LinearGradientBrush x:Key="BackgroundBaseBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#FBC2EB" />
+        <GradientStop Offset="0.55" Color="#A6C1EE" />
+        <GradientStop Offset="1" Color="#84FAB0" />
+      </LinearGradientBrush>
 
-            <!-- Frosted glass surfaces layered on top of the acrylic backdrop -->
-            <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.55" />
-            <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.72" />
-            <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.32" />
-            <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
-            <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
-            <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
+      <!-- Frosted glass surfaces layered on top of the acrylic backdrop -->
+      <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.55" />
+      <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.72" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.32" />
+      <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
+      <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
+      <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
+    </ResourceDictionary>
 
-            <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
-            <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
-        </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+      <!-- Brand accent (reserved for primary emphasis / future primary buttons). -->
+      <Color x:Key="AccentColor">#0A84FF</Color>
+      <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 
-        <ResourceDictionary x:Key="Dark">
-            <Color x:Key="AccentColor">#0A84FF</Color>
-            <Color x:Key="Accent2Color">#BF5AF2</Color>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-            <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}" />
+      <SolidColorBrush x:Key="TextBrush" Color="#F5F6FA" />
+      <SolidColorBrush x:Key="TextDimBrush" Color="#A0A4B0" />
 
-            <SolidColorBrush x:Key="TextBrush" Color="#F5F6FA" />
-            <SolidColorBrush x:Key="TextDimBrush" Color="#A0A4B0" />
+      <LinearGradientBrush x:Key="BackgroundBaseBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#1A0817" />
+        <GradientStop Offset="0.55" Color="#080F1F" />
+        <GradientStop Offset="1" Color="#05150D" />
+      </LinearGradientBrush>
 
-            <Color x:Key="AcrylicTintColor">#1B1D24</Color>
+      <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.08" />
+      <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.14" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.05" />
+      <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
+      <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
+      <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
+    </ResourceDictionary>
 
-            <SolidColorBrush x:Key="GlassFillBrush" Color="#FFFFFF" Opacity="0.08" />
-            <SolidColorBrush x:Key="GlassStrongBrush" Color="#FFFFFF" Opacity="0.14" />
-            <SolidColorBrush x:Key="SidebarBrush" Color="#FFFFFF" Opacity="0.05" />
-            <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
-            <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
-            <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
+  </ResourceDictionary.ThemeDictionaries>
 
-            <SolidColorBrush x:Key="OkBrush" Color="#30D158" />
-            <SolidColorBrush x:Key="ErrorBrush" Color="#FF453A" />
-        </ResourceDictionary>
+  <!--
+      Shared "glass table" design.
+      Theme-variant-agnostic resources reused by every feature that renders a data table
+      (Containers, Images, Volumes, …). Reference the theme from a view with:
 
-    </ResourceDictionary.ThemeDictionaries>
+        <TableView Theme="{StaticResource GlassTableTheme}" ... />
+
+      The two keyed resources below are picked up implicitly by all TableViews in the app:
+      they hide the vertical header separators and align cell content with header content.
+      The companion Styles (Button.icon, row-selection suppression) live in App.axaml because
+      style selectors cannot be declared inside a ResourceDictionary.
+    -->
+
+  <!-- Remove the vertical separator lines drawn between header cells. -->
+  <SolidColorBrush x:Key="TableViewColumnHeaderSeparatorBackground" Color="Transparent" />
+
+  <!--
+      Align cells with headers: rows wrap cells in a Border padded with TableViewRowPadding
+      (default 6,9,6,12); the 6px left inset offsets cells right of the headers. Zero the
+      horizontal part (keep vertical for row height) so both rely only on TableViewCellPadding (6,0).
+    -->
+  <Thickness x:Key="TableViewRowPadding">0,9,0,12</Thickness>
+
+  <!-- Compact glass TableView theme: keeps the headers presenter but with a fixed-height, tinted header row. -->
+  <ControlTheme x:Key="GlassTableTheme"
+                TargetType="TableView"
+                BasedOn="{StaticResource {x:Type TableView}}">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border ClipToBounds="{TemplateBinding ClipToBounds}"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <DockPanel>
+            <TableViewColumnHeadersPresenter DockPanel.Dock="Top"
+                                             Height="35"
+                                             Background="{DynamicResource StripBrush}"
+                                             ClipToBounds="True" />
+            <ScrollViewer Name="PART_ScrollViewer"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+              <ItemsPresenter Name="PART_ItemsPresenter"
+                              ItemsPanel="{TemplateBinding ItemsPanel}" />
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
 </ResourceDictionary>

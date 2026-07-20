@@ -62,17 +62,7 @@
         </NativeMenu>
     </NativeMenu.Menu>
 
-    <Panel>
-        <!-- Liquid glass backdrop -->
-        <ExperimentalAcrylicBorder IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
-                                             TintColor="{DynamicResource AcrylicTintColor}"
-                                             TintOpacity="1"
-                                             MaterialOpacity="0.6"/>
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-
+    <Panel Background="{DynamicResource BackgroundBaseBrush}">
         <DockPanel>
             <!-- Menu bar: in-window on Windows/Linux, system menu bar on macOS -->
             <NativeMenuBar DockPanel.Dock="Top"/>
@@ -88,20 +78,30 @@
 
                 <!-- CONTENT AREA: swaps page views with a fade when the sidebar selection changes -->
                 <Border Grid.Column="2" Background="Transparent">
-                    <Panel>
-                        <TransitioningContentControl Content="{Binding CurrentPage}">
-                            <TransitioningContentControl.PageTransition>
-                                <CrossFade Duration="0:0:0.2"/>
-                            </TransitioningContentControl.PageTransition>
-                        </TransitioningContentControl>
+                    <DockPanel>
+                        <!-- Page title: reflects the current sidebar selection -->
+                        <TextBlock DockPanel.Dock="Top"
+                                   Margin="24,20,24,0"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   Text="{Binding Sidebar.SelectedItem.Title}"/>
 
-                        <!-- Fallback for nav items that do not yet have a page -->
-                        <TextBlock Text="{Binding Sidebar.SelectedItem.Title}"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource TextDimBrush}"
-                                   IsVisible="{Binding CurrentPage, Converter={x:Static aconv:ObjectConverters.IsNull}}"/>
-                    </Panel>
+                        <Panel>
+                            <TransitioningContentControl Content="{Binding CurrentPage}">
+                                <TransitioningContentControl.PageTransition>
+                                    <CrossFade Duration="0:0:0.2"/>
+                                </TransitioningContentControl.PageTransition>
+                            </TransitioningContentControl>
+
+                            <!-- Fallback for nav items that do not yet have a page -->
+                            <TextBlock Text="{Binding Sidebar.SelectedItem.Title}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextDimBrush}"
+                                       IsVisible="{Binding CurrentPage, Converter={x:Static aconv:ObjectConverters.IsNull}}"/>
+                        </Panel>
+                    </DockPanel>
                 </Border>
             </Grid>
         </DockPanel>

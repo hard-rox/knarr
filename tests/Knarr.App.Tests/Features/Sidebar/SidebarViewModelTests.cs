@@ -30,8 +30,8 @@ public class SidebarViewModelTests
     {
         var vm = CreateViewModel();
 
-        Assert.Equal("board_regular", vm.NavigationItems[0].Icon);
-        Assert.Equal("settings_regular", vm.NavigationItems[^1].Icon);
+        Assert.Equal("BoardRegular", vm.NavigationItems[0].Icon);
+        Assert.Equal("SettingsRegular", vm.NavigationItems[^1].Icon);
     }
 
     [Fact]

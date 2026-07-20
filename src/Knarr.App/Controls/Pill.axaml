@@ -1,0 +1,46 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Knarr.App.Controls">
+  <Design.PreviewWith>
+    <controls:Pill />
+  </Design.PreviewWith>
+
+  <ControlTheme x:Key="{x:Type controls:Pill}" TargetType="controls:Pill">
+    <!-- Set Defaults -->
+    <Setter Property="Background" Value="{DynamicResource StripBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                CornerRadius="20"
+                Padding="10,4">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Ellipse Width="7" Height="7"
+                     VerticalAlignment="Center"
+                     Fill="{TemplateBinding Foreground}" />
+            <TextBlock Text="{TemplateBinding Text}"
+                       FontSize="11"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       Foreground="{TemplateBinding Foreground}" />
+          </StackPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:running">
+      <Setter Property="Background" Value="#2E30D158" />
+      <Setter Property="Foreground" Value="#1A9C3F" />
+    </Style>
+    <Style Selector="^:stopped">
+      <Setter Property="Background" Value="#29FF453A" />
+      <Setter Property="Foreground" Value="#D1352B" />
+    </Style>
+    <Style Selector="^:paused">
+      <Setter Property="Background" Value="#2EFF9F0A" />
+      <Setter Property="Foreground" Value="#C47800" />
+    </Style>
+  </ControlTheme>
+</ResourceDictionary>

@@ -24,6 +24,19 @@ Thanks for your interest in contributing!
   code-behind. Never use ReactiveUI or WPF-style `DependencyProperty`/Triggers.
 - Knarr must never reimplement runtime logic — every GUI action maps to a vendor CLI command.
 
+## Design & theming
+
+Knarr has a **liquid-glass** design system. Before adding or restyling UI, read
+[docs/DESIGN.md](docs/DESIGN.md) and follow it:
+
+- Bind colors to the theme tokens in `src/Knarr.App/Themes/Glass.axaml` via `DynamicResource`; never
+  hard-code hex values in a view, and make sure surfaces look right in both Light and Dark.
+- Reuse the shared building blocks instead of per-view styling: `Border.glass-panel` and
+  `Button.icon` (in `src/Knarr.App/App.axaml`) and the `GlassTableTheme` for data tables.
+- Keep the palette lean — don't add unused tokens.
+
+The `glass-design` skill (`.github/skills/glass-design/`) can guide you through this.
+
 ## Pull requests
 
 - Keep changes focused and describe the intent.
