@@ -119,8 +119,8 @@
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
-          <!-- Repository (selectable text) -->
-          <TableViewColumn Header="Repository" Width="Auto">
+          <!-- Name (selectable text) -->
+          <TableViewColumn Header="Name" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ImageItem">
                 <SelectableTextBlock Text="{Binding Repository}"

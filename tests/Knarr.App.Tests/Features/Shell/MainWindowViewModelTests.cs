@@ -15,7 +15,7 @@ public class MainWindowViewModelTests
         SidebarViewModel? sidebar = null)
     {
         themeService ??= Substitute.For<IThemeService>();
-        sidebar ??= new SidebarViewModel(Substitute.For<IPlatformInfoProvider>());
+        sidebar ??= new SidebarViewModel(Substitute.For<IPlatformInfoProvider>(), Substitute.For<IContainerCliProvider>());
         return new MainWindowViewModel(themeService, sidebar);
     }
 

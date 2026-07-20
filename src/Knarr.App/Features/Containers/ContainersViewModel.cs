@@ -1,231 +1,41 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Knarr.App.Common;
 using Knarr.App.Models;
+using Knarr.App.Services;
 
 namespace Knarr.App.Features.Containers;
 
 /// <summary>
 /// View model for the Containers feature. Presents the list of containers and exposes the
-/// lifecycle actions that (in a later milestone) will map 1:1 onto CLI commands. For now the
-/// commands are stubs and the data is sample/design data.
+/// lifecycle actions, each of which maps 1:1 onto a single CLI command via
+/// <see cref="IContainerCliProvider"/>. Data is loaded from the host container CLI.
 /// </summary>
 public partial class ContainersViewModel : ViewModelBase
 {
-    private readonly List<ContainerItem> _allContainers;
+    private readonly IContainerCliProvider _cliProvider;
+    private readonly List<ContainerItem> _allContainers = [];
 
-    public ContainersViewModel()
+    public ContainersViewModel(IContainerCliProvider cliProvider)
     {
-        _allContainers =
-        [
-            new ContainerItem
-            {
-                Name = "web-api",
-                Id = "a1b2c3d4e5f6",
-                Image = "nginx:latest",
-                Status = ContainerStatus.Running,
-                Ports = "8080\u219280",
-                Cpu = "6%",
-                Memory = "128MB",
-                Uptime = "2h 14m"
-            },
-            new ContainerItem
-            {
-                Name = "postgres-db",
-                Id = "f6e5d4c3b2a1",
-                Image = "postgres:16",
-                Status = ContainerStatus.Running,
-                Ports = "5432\u21925432",
-                Cpu = "9%",
-                Memory = "512MB",
-                Uptime = "2h 14m"
-            },
-            new ContainerItem
-            {
-                Name = "redis-cache",
-                Id = "99aa88bb77cc",
-                Image = "redis:7-alpine",
-                Status = ContainerStatus.Running,
-                Ports = "6379\u21926379",
-                Cpu = "3%",
-                Memory = "64MB",
-                Uptime = "48m"
-            },
-            new ContainerItem
-            {
-                Name = "batch-worker",
-                Id = "1234abcd5678",
-                Image = "worker:dev",
-                Status = ContainerStatus.Exited
-            },
-            new ContainerItem
-            {
-                Name = "rabbitmq-broker",
-                Id = "aa11bb22cc33",
-                Image = "rabbitmq:3-management",
-                Status = ContainerStatus.Running,
-                Ports = "5672\u21925672",
-                Cpu = "4%",
-                Memory = "256MB",
-                Uptime = "5h 02m"
-            },
-            new ContainerItem
-            {
-                Name = "mongo-primary",
-                Id = "dd44ee55ff66",
-                Image = "mongo:7",
-                Status = ContainerStatus.Running,
-                Ports = "27017\u219227017",
-                Cpu = "11%",
-                Memory = "768MB",
-                Uptime = "1d 3h"
-            },
-            new ContainerItem
-            {
-                Name = "elasticsearch",
-                Id = "77gg88hh99ii",
-                Image = "elasticsearch:8.13.0",
-                Status = ContainerStatus.Running,
-                Ports = "9200\u21929200",
-                Cpu = "18%",
-                Memory = "1.5GB",
-                Uptime = "6h 41m"
-            },
-            new ContainerItem
-            {
-                Name = "kibana-ui",
-                Id = "0a1b2c3d4e5f",
-                Image = "kibana:8.13.0",
-                Status = ContainerStatus.Running,
-                Ports = "5601\u21925601",
-                Cpu = "5%",
-                Memory = "420MB",
-                Uptime = "6h 40m"
-            },
-            new ContainerItem
-            {
-                Name = "grafana-dash",
-                Id = "5f4e3d2c1b0a",
-                Image = "grafana/grafana:10.4.0",
-                Status = ContainerStatus.Running,
-                Ports = "3000\u21923000",
-                Cpu = "2%",
-                Memory = "192MB",
-                Uptime = "12h 08m"
-            },
-            new ContainerItem
-            {
-                Name = "prometheus",
-                Id = "abcabc123123",
-                Image = "prom/prometheus:v2.51.0",
-                Status = ContainerStatus.Running,
-                Ports = "9090\u21929090",
-                Cpu = "7%",
-                Memory = "310MB",
-                Uptime = "12h 09m"
-            },
-            new ContainerItem
-            {
-                Name = "minio-storage",
-                Id = "321321cbacba",
-                Image = "minio/minio:latest",
-                Status = ContainerStatus.Running,
-                Ports = "9000\u21929000",
-                Cpu = "3%",
-                Memory = "148MB",
-                Uptime = "3h 55m"
-            },
-            new ContainerItem
-            {
-                Name = "mysql-db",
-                Id = "9f8e7d6c5b4a",
-                Image = "mysql:8.4",
-                Status = ContainerStatus.Running,
-                Ports = "3306\u21923306",
-                Cpu = "8%",
-                Memory = "540MB",
-                Uptime = "1d 6h"
-            },
-            new ContainerItem
-            {
-                Name = "keycloak-auth",
-                Id = "4a5b6c7d8e9f",
-                Image = "quay.io/keycloak/keycloak:24.0",
-                Status = ContainerStatus.Exited
-            },
-            new ContainerItem
-            {
-                Name = "vault-secrets",
-                Id = "beadfeedbead",
-                Image = "hashicorp/vault:1.16",
-                Status = ContainerStatus.Running,
-                Ports = "8200\u21928200",
-                Cpu = "1%",
-                Memory = "96MB",
-                Uptime = "8h 22m"
-            },
-            new ContainerItem
-            {
-                Name = "nats-streaming",
-                Id = "feedfacefeed",
-                Image = "nats:2.10-alpine",
-                Status = ContainerStatus.Running,
-                Ports = "4222\u21924222",
-                Cpu = "2%",
-                Memory = "72MB",
-                Uptime = "9h 17m"
-            },
-            new ContainerItem
-            {
-                Name = "mailhog-smtp",
-                Id = "cafebabecafe",
-                Image = "mailhog/mailhog:v1.0.1",
-                Status = ContainerStatus.Running,
-                Ports = "8025\u21928025",
-                Cpu = "1%",
-                Memory = "40MB",
-                Uptime = "2h 03m"
-            },
-            new ContainerItem
-            {
-                Name = "traefik-proxy",
-                Id = "10ff20ee30dd",
-                Image = "traefik:v3.0",
-                Status = ContainerStatus.Running,
-                Ports = "443\u2192443",
-                Cpu = "4%",
-                Memory = "88MB",
-                Uptime = "1d 1h"
-            },
-            new ContainerItem
-            {
-                Name = "jaeger-tracing",
-                Id = "40cc50bb60aa",
-                Image = "jaegertracing/all-in-one:1.56",
-                Status = ContainerStatus.Exited
-            },
-            new ContainerItem
-            {
-                Name = "adminer-ui",
-                Id = "70990088aa11",
-                Image = "adminer:4.8.1",
-                Status = ContainerStatus.Paused,
-                Ports = "8081\u21928080",
-                Cpu = "0%",
-                Memory = "36MB",
-                Uptime = "4h 30m"
-            }
-        ];
+        _cliProvider = cliProvider;
+        Containers = new ObservableCollection<ContainerItem>();
 
-        Containers = new ObservableCollection<ContainerItem>(_allContainers);
-        foreach (var container in _allContainers)
-        {
-            container.PropertyChanged += OnContainerPropertyChanged;
-        }
+        // Kick off the initial load; property updates marshal back to the UI thread.
+        _ = LoadAsync();
+    }
+
+    /// <summary>Design-time constructor; serves sample data via the in-memory provider.</summary>
+    public ContainersViewModel()
+        : this(new DesignTimeContainerCliProvider())
+    {
     }
 
     public ObservableCollection<ContainerItem> Containers { get; }
@@ -244,6 +54,14 @@ public partial class ContainersViewModel : ViewModelBase
 
     [ObservableProperty]
     private ContainerItem? _selectedContainer;
+
+    /// <summary>True while a CLI list/refresh is in flight.</summary>
+    [ObservableProperty]
+    private bool _isLoading;
+
+    /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
+    [ObservableProperty]
+    private string? _errorMessage;
 
     /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ContainerItem> SelectedContainers =>
@@ -321,82 +139,151 @@ public partial class ContainersViewModel : ViewModelBase
         OnPropertyChanged(nameof(AllSelected));
     }
 
-    // Lifecycle commands — stubs for the design milestone; real CLI wiring lands later.
-    [RelayCommand]
-    private void Refresh()
+    /// <summary>
+    /// Loads (or reloads) the container list from the CLI. Safe to call repeatedly; concurrent
+    /// calls are coalesced. Failures are surfaced via <see cref="ErrorMessage"/> and never throw.
+    /// </summary>
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
+        if (IsLoading)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var summaries = await _cliProvider
+                .ListContainersAsync(includeAll: true, cancellationToken)
+                .ConfigureAwait(true);
+
+            foreach (var existing in _allContainers)
+            {
+                existing.PropertyChanged -= OnContainerPropertyChanged;
+            }
+
+            _allContainers.Clear();
+            foreach (var summary in summaries)
+            {
+                var item = new ContainerItem
+                {
+                    Name = summary.Name,
+                    Id = summary.Id,
+                    Image = summary.Image,
+                    Status = summary.Status,
+                    Ports = summary.Ports,
+                    Cpu = summary.Cpu,
+                    Memory = summary.Memory,
+                    Uptime = summary.Uptime,
+                };
+                item.PropertyChanged += OnContainerPropertyChanged;
+                _allContainers.Add(item);
+            }
+
+            ApplyFilter();
+            OnPropertyChanged(nameof(TotalCount));
+            OnPropertyChanged(nameof(RunningCount));
+            OnPropertyChanged(nameof(StoppedCount));
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
+
+    // Lifecycle commands — each maps 1:1 onto a CLI invocation via the provider, then reloads.
+    [RelayCommand]
+    private Task Refresh() => LoadAsync();
 
     [RelayCommand]
     private void RunContainer()
     {
+        // Run wizard is a later milestone.
     }
 
-    // Bulk (multiselect) commands — operate on every ticked row. Stubs for the design milestone.
+    // Bulk (multiselect) commands — operate on every ticked row.
     [RelayCommand]
-    private void StartSelected()
-    {
-        foreach (var container in SelectedContainers)
-        {
-            Start(container);
-        }
-    }
-
-    [RelayCommand]
-    private void StopSelected()
-    {
-        foreach (var container in SelectedContainers)
-        {
-            Stop(container);
-        }
-    }
-
-    [RelayCommand]
-    private void DeleteSelected()
+    private async Task StartSelected()
     {
         foreach (var container in SelectedContainers.ToList())
         {
-            Remove(container);
+            await Start(container).ConfigureAwait(true);
         }
     }
 
     [RelayCommand]
-    private void Start(ContainerItem container)
+    private async Task StopSelected()
     {
+        foreach (var container in SelectedContainers.ToList())
+        {
+            await Stop(container).ConfigureAwait(true);
+        }
     }
 
     [RelayCommand]
-    private void Stop(ContainerItem container)
+    private async Task DeleteSelected()
     {
+        foreach (var container in SelectedContainers.ToList())
+        {
+            await Remove(container).ConfigureAwait(true);
+        }
     }
 
     [RelayCommand]
-    private void Restart(ContainerItem container)
-    {
-    }
+    private Task Start(ContainerItem container)
+        => ExecuteAndReloadAsync(ct => _cliProvider.StartContainerAsync(container.Id, ct));
 
     [RelayCommand]
-    private void Kill(ContainerItem container)
-    {
-    }
+    private Task Stop(ContainerItem container)
+        => ExecuteAndReloadAsync(ct => _cliProvider.StopContainerAsync(container.Id, ct));
 
     [RelayCommand]
-    private void Remove(ContainerItem container)
-    {
-    }
+    private Task Restart(ContainerItem container)
+        => ExecuteAndReloadAsync(ct => _cliProvider.RestartContainerAsync(container.Id, ct));
+
+    [RelayCommand]
+    private Task Kill(ContainerItem container)
+        => ExecuteAndReloadAsync(ct => _cliProvider.KillContainerAsync(container.Id, ct));
+
+    [RelayCommand]
+    private Task Remove(ContainerItem container)
+        => ExecuteAndReloadAsync(ct => _cliProvider.RemoveContainerAsync(container.Id, force: true, ct));
 
     [RelayCommand]
     private void Logs(ContainerItem container)
     {
+        // Logs viewer is a later milestone.
     }
 
     [RelayCommand]
     private void Exec(ContainerItem container)
     {
+        // Exec terminal is a later milestone.
     }
 
     [RelayCommand]
     private void Inspect(ContainerItem container)
     {
+        // Inspect viewer is a later milestone.
+    }
+
+    /// <summary>Runs a mutating CLI action, surfacing failures via <see cref="ErrorMessage"/>, then reloads.</summary>
+    private async Task ExecuteAndReloadAsync(Func<CancellationToken, Task> action)
+    {
+        try
+        {
+            await action(CancellationToken.None).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+
+        await LoadAsync().ConfigureAwait(true);
     }
 }

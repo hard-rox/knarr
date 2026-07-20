@@ -17,7 +17,7 @@ public partial class SidebarViewModel : ViewModelBase
 {
     private readonly IPlatformInfoProvider _platformInfo;
 
-    public SidebarViewModel(IPlatformInfoProvider platformInfo)
+    public SidebarViewModel(IPlatformInfoProvider platformInfo, IContainerCliProvider cliProvider)
     {
         _platformInfo = platformInfo;
         PlatformName = platformInfo.PlatformName;
@@ -26,8 +26,8 @@ public partial class SidebarViewModel : ViewModelBase
         NavigationItems =
         [
             new NavigationItem("Dashboard", "BoardRegular", createPage: () => new DashboardViewModel()),
-            new NavigationItem("Containers", "CubeRegular", "4", createPage: () => new ContainersViewModel()),
-            new NavigationItem("Images", "CloudRegular", "7", createPage: () => new ImagesViewModel()),
+            new NavigationItem("Containers", "CubeRegular", "4", createPage: () => new ContainersViewModel(cliProvider)),
+            new NavigationItem("Images", "CloudRegular", "7", createPage: () => new ImagesViewModel(cliProvider)),
             new NavigationItem("Networks", "GlobeRegular", "3"),
             new NavigationItem("Volumes", "StorageRegular", "5"),
             new NavigationItem("Registries", "LibraryRegular"),
@@ -39,7 +39,7 @@ public partial class SidebarViewModel : ViewModelBase
 
     /// <summary>Design-time constructor with sample platform information.</summary>
     public SidebarViewModel()
-        : this(new PlatformInfoProvider())
+        : this(new PlatformInfoProvider(), new DesignTimeContainerCliProvider())
     {
     }
 

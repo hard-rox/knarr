@@ -12,7 +12,7 @@ public class SidebarViewModelTests
     private static SidebarViewModel CreateViewModel(IPlatformInfoProvider? platformInfo = null)
     {
         platformInfo ??= Substitute.For<IPlatformInfoProvider>();
-        return new SidebarViewModel(platformInfo);
+        return new SidebarViewModel(platformInfo, Substitute.For<IContainerCliProvider>());
     }
 
     [Fact]

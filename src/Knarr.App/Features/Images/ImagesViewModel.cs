@@ -1,74 +1,41 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Knarr.App.Common;
 using Knarr.App.Models;
+using Knarr.App.Services;
 
 namespace Knarr.App.Features.Images;
 
 /// <summary>
-/// View model for the Images feature. Presents the list of images and exposes the actions that
-/// (in a later milestone) will map 1:1 onto CLI commands. For now the commands are stubs and the
-/// data is sample/design data.
+/// View model for the Images feature. Presents the list of images and exposes the actions, each of
+/// which maps 1:1 onto a single CLI command via <see cref="IContainerCliProvider"/>. Data is loaded
+/// from the host container CLI.
 /// </summary>
 public partial class ImagesViewModel : ViewModelBase
 {
-    private readonly List<ImageItem> _allImages;
+    private readonly IContainerCliProvider _cliProvider;
+    private readonly List<ImageItem> _allImages = [];
 
-    public ImagesViewModel()
+    public ImagesViewModel(IContainerCliProvider cliProvider)
     {
-        _allImages =
-        [
-            new ImageItem
-            {
-                Repository = "nginx",
-                Tag = "latest",
-                Id = "sha256:9c7a54a9a1b2",
-                Created = "3 days ago",
-                Size = "187 MB"
-            },
-            new ImageItem
-            {
-                Repository = "postgres",
-                Tag = "16",
-                Id = "sha256:b1f2e3c4d5e6",
-                Created = "1 week ago",
-                Size = "438 MB"
-            },
-            new ImageItem
-            {
-                Repository = "redis",
-                Tag = "7-alpine",
-                Id = "sha256:44de9a0f1e2d",
-                Created = "2 weeks ago",
-                Size = "41 MB"
-            },
-            new ImageItem
-            {
-                Repository = "worker",
-                Tag = "dev",
-                Id = "sha256:0a11cc22bb33",
-                Created = "1 hour ago",
-                Size = "312 MB"
-            },
-            new ImageItem
-            {
-                Repository = "ubuntu",
-                Tag = "24.04",
-                Id = "sha256:c2d3e4f5a6b7",
-                Created = "1 month ago",
-                Size = "78 MB"
-            }
-        ];
+        _cliProvider = cliProvider;
+        Images = new ObservableCollection<ImageItem>();
 
-        Images = new ObservableCollection<ImageItem>(_allImages);
-        foreach (var image in _allImages)
-        {
-            image.PropertyChanged += OnImagePropertyChanged;
-        }
+        // Kick off the initial load; property updates marshal back to the UI thread.
+        _ = LoadAsync();
+    }
+
+    /// <summary>Design-time constructor; serves sample data via the in-memory provider.</summary>
+    public ImagesViewModel()
+        : this(new DesignTimeContainerCliProvider())
+    {
     }
 
     public ObservableCollection<ImageItem> Images { get; }
@@ -78,6 +45,14 @@ public partial class ImagesViewModel : ViewModelBase
 
     [ObservableProperty]
     private ImageItem? _selectedImage;
+
+    /// <summary>True while a CLI list/refresh is in flight.</summary>
+    [ObservableProperty]
+    private bool _isLoading;
+
+    /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
+    [ObservableProperty]
+    private string? _errorMessage;
 
     /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ImageItem> SelectedImages =>
@@ -155,79 +130,144 @@ public partial class ImagesViewModel : ViewModelBase
         OnPropertyChanged(nameof(AllSelected));
     }
 
-    // Toolbar commands — stubs for the design milestone; real CLI wiring lands later.
+    // Toolbar commands — each maps 1:1 onto a CLI invocation via the provider, then reloads.
     [RelayCommand]
-    private void Refresh()
-    {
-    }
+    private Task Refresh() => LoadAsync();
 
     [RelayCommand]
     private void Build()
     {
+        // Build dialog is a later milestone.
     }
 
     [RelayCommand]
     private void Pull()
     {
+        // Pull dialog (registry reference input) is a later milestone.
     }
 
     [RelayCommand]
     private void Push()
     {
+        // Toolbar push (reference input) is a later milestone; use the per-row push meanwhile.
     }
 
     [RelayCommand]
     private void Import()
     {
+        // Import file picker is a later milestone.
     }
 
     [RelayCommand]
-    private void Prune()
-    {
-    }
+    private Task Prune() => ExecuteAndReloadAsync(ct => _cliProvider.PruneImagesAsync(ct));
 
-    // Bulk (multiselect) commands — operate on every ticked row. Stubs for the design milestone.
+    // Bulk (multiselect) commands — operate on every ticked row.
     [RelayCommand]
-    private void PushSelected()
-    {
-        foreach (var image in SelectedImages)
-        {
-            PushImage(image);
-        }
-    }
-
-    [RelayCommand]
-    private void DeleteSelected()
+    private async Task PushSelected()
     {
         foreach (var image in SelectedImages.ToList())
         {
-            Remove(image);
+            await PushImage(image).ConfigureAwait(true);
         }
     }
 
-    // Row commands — stubs for the design milestone.
+    [RelayCommand]
+    private async Task DeleteSelected()
+    {
+        foreach (var image in SelectedImages.ToList())
+        {
+            await Remove(image).ConfigureAwait(true);
+        }
+    }
+
+    // Row commands.
     [RelayCommand]
     private void Run(ImageItem image)
     {
+        // Run wizard is a later milestone.
     }
 
     [RelayCommand]
     private void Tag(ImageItem image)
     {
+        // Tag dialog (target reference input) is a later milestone.
     }
 
     [RelayCommand]
-    private void PushImage(ImageItem image)
-    {
-    }
+    private Task PushImage(ImageItem image)
+        => ExecuteAndReloadAsync(ct => _cliProvider.PushImageAsync(image.RepoTag, ct));
 
     [RelayCommand]
     private void Inspect(ImageItem image)
     {
+        // Inspect viewer is a later milestone.
     }
 
     [RelayCommand]
-    private void Remove(ImageItem image)
+    private Task Remove(ImageItem image)
+        => ExecuteAndReloadAsync(ct => _cliProvider.RemoveImageAsync(image.RepoTag, force: true, ct));
+
+    /// <summary>
+    /// Loads (or reloads) the image list from the CLI. Safe to call repeatedly; concurrent calls
+    /// are coalesced. Failures are surfaced via <see cref="ErrorMessage"/> and never throw.
+    /// </summary>
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
+        if (IsLoading)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var summaries = await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
+
+            foreach (var existing in _allImages)
+            {
+                existing.PropertyChanged -= OnImagePropertyChanged;
+            }
+
+            _allImages.Clear();
+            foreach (var summary in summaries)
+            {
+                var item = new ImageItem
+                {
+                    Repository = summary.Repository,
+                    Tag = summary.Tag,
+                    Id = summary.Id,
+                    Created = summary.Created,
+                    Size = summary.Size,
+                };
+                item.PropertyChanged += OnImagePropertyChanged;
+                _allImages.Add(item);
+            }
+
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>Runs a mutating CLI action, surfacing failures via <see cref="ErrorMessage"/>, then reloads.</summary>
+    private async Task ExecuteAndReloadAsync(Func<CancellationToken, Task> action)
+    {
+        try
+        {
+            await action(CancellationToken.None).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+
+        await LoadAsync().ConfigureAwait(true);
     }
 }

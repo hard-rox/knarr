@@ -10,8 +10,8 @@ namespace Knarr.App.Services;
 
 /// <summary>
 /// Detects the host OS and maps it to the corresponding first-party container CLI,
-/// then probes that CLI at runtime for its version. Backend health remains stubbed
-/// until <c>IContainerCliProvider</c> is implemented.
+/// then probes that CLI at runtime for its version. Container and image operations are
+/// handled separately by <see cref="IContainerCliProvider"/>.
 /// </summary>
 public sealed partial class PlatformInfoProvider : IPlatformInfoProvider
 {

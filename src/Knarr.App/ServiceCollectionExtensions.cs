@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Knarr.App.Features.Shell;
 using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
@@ -10,12 +11,39 @@ namespace Knarr.App;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    public static void AddCommonServices(this IServiceCollection collection)
+    extension(IServiceCollection collection)
     {
-        collection.AddSingleton<IPlatformInfoProvider, PlatformInfoProvider>();
-        collection.AddSingleton<IThemeService, ThemeService>();
+        public void AddCommonServices()
+        {
+            collection.AddSingleton<IPlatformInfoProvider, PlatformInfoProvider>();
+            collection.AddSingleton<IThemeService, ThemeService>();
 
-        collection.AddTransient<SidebarViewModel>();
-        collection.AddTransient<MainWindowViewModel>();
+            collection.AddSingleton<ICliProcessRunner, CliProcessRunner>();
+            collection.AddContainerCliProvider();
+
+            collection.AddTransient<SidebarViewModel>();
+            collection.AddTransient<MainWindowViewModel>();
+        }
+
+        /// <summary>
+        /// Registers the platform-appropriate <see cref="IContainerCliProvider"/>: Apple Container on
+        /// macOS, wslc on Windows. Other hosts (e.g. Linux dev boxes) fall back to the sample provider
+        /// so the app still runs without a supported CLI.
+        /// </summary>
+        private void AddContainerCliProvider()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                collection.AddSingleton<IContainerCliProvider, AppleContainerCliProvider>();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                collection.AddSingleton<IContainerCliProvider, WslcCliProvider>();
+            }
+            else
+            {
+                collection.AddSingleton<IContainerCliProvider, DesignTimeContainerCliProvider>();
+            }
+        }
     }
 }
