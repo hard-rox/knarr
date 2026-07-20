@@ -1,9 +1,4 @@
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Knarr.App.Common;
 using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
 

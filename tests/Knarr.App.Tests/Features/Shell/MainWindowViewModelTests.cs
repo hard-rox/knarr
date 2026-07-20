@@ -3,8 +3,8 @@ using Knarr.App.Features.Settings;
 using Knarr.App.Features.Shell;
 using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
+using Knarr.Service;
 using NSubstitute;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.Shell;
 

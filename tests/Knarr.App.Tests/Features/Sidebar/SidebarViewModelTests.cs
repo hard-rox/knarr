@@ -1,9 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Knarr.App.Features.Sidebar;
-using Knarr.App.Services;
+using Knarr.Service;
 using NSubstitute;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.Sidebar;
 

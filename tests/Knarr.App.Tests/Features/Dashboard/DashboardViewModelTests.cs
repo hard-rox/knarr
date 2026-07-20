@@ -1,5 +1,4 @@
 using Knarr.App.Features.Dashboard;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.Dashboard;
 

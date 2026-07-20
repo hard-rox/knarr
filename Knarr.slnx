@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Knarr.App/Knarr.App.csproj"/>
+    <Project Path="src/Knarr.App/Knarr.App.csproj" />
+    <Project Path="src/Knarr.Service/Knarr.Service.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Knarr.App.Tests/Knarr.App.Tests.csproj"/>
+    <Project Path="tests/Knarr.App.Tests/Knarr.App.Tests.csproj" />
+    <Project Path="tests/Knarr.Service.Tests/Knarr.Service.Tests.csproj" />
   </Folder>
 </Solution>

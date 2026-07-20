@@ -1,6 +1,5 @@
 using System.Linq;
 using Knarr.App.Features.Images;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.Images;
 
@@ -54,12 +53,9 @@ public class ImagesViewModelTests
         vm.RefreshCommand.Execute(null);
         vm.BuildCommand.Execute(null);
         vm.PullCommand.Execute(null);
-        vm.PushCommand.Execute(null);
         vm.ImportCommand.Execute(null);
-        vm.PruneCommand.Execute(null);
         vm.RunCommand.Execute(image);
         vm.TagCommand.Execute(image);
-        vm.PushImageCommand.Execute(image);
         vm.InspectCommand.Execute(image);
         vm.RemoveCommand.Execute(image);
     }
@@ -112,7 +108,6 @@ public class ImagesViewModelTests
         var vm = new ImagesViewModel();
         vm.AllSelected = true;
 
-        vm.PushSelectedCommand.Execute(null);
         vm.DeleteSelectedCommand.Execute(null);
     }
 }

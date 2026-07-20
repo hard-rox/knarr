@@ -59,19 +59,9 @@
             <PathIcon Data="{StaticResource ArrowDownloadRegular}" />
           </Button>
           <Button Classes="icon"
-                  ToolTip.Tip="Push"
-                  Command="{Binding PushCommand}">
-            <PathIcon Data="{StaticResource ArrowUploadRegular}" />
-          </Button>
-          <Button Classes="icon"
                   ToolTip.Tip="Import"
                   Command="{Binding ImportCommand}">
             <PathIcon Data="{StaticResource ArrowImportRegular}" />
-          </Button>
-          <Button Classes="icon"
-                  ToolTip.Tip="Prune"
-                  Command="{Binding PruneCommand}">
-            <PathIcon Data="{StaticResource DeleteRegular}" />
           </Button>
         </StackPanel>
 
@@ -79,11 +69,6 @@
                     Orientation="Horizontal"
                     Spacing="2"
                     IsVisible="{Binding HasSelection}">
-          <Button Classes="icon"
-                  ToolTip.Tip="Push selected"
-                  Command="{Binding PushSelectedCommand}">
-            <PathIcon Data="{StaticResource ArrowUploadRegular}" />
-          </Button>
           <Button Classes="icon"
                   ToolTip.Tip="Delete selected"
                   Command="{Binding DeleteSelectedCommand}">

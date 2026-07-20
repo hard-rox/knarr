@@ -1,7 +1,6 @@
 using System.Linq;
 using Knarr.App.Features.Containers;
-using Knarr.App.Models;
-using Xunit;
+using Knarr.Service.Models;
 
 namespace Knarr.App.Tests.Features.Containers;
 
@@ -58,7 +57,6 @@ public class ContainersViewModelTests
         vm.StartCommand.Execute(stopped);
         vm.StopCommand.Execute(running);
         vm.RestartCommand.Execute(running);
-        vm.KillCommand.Execute(running);
         vm.RemoveCommand.Execute(stopped);
         vm.LogsCommand.Execute(running);
         vm.ExecCommand.Execute(running);

@@ -1,5 +1,4 @@
 using Knarr.App.Features.Settings;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.Settings;
 
