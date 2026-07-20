@@ -1,24 +1,17 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using Knarr.App.Models;
+using CliWrap;
+using CliWrap.Buffered;
 
-namespace Knarr.App.Services;
+namespace Knarr.Service;
 
 /// <summary>
-/// Shared plumbing for the concrete container CLI providers: runs the executable via
-/// <see cref="ICliProcessRunner"/>, throws <see cref="CliCommandException"/> on failure, and
-/// provides parsing helpers used by both platforms. Subclasses supply the executable name, the
-/// exact argument lists for each verb, and the JSON shape of their list output.
+/// Shared plumbing for the concrete container CLI providers: runs the executable via CliWrap,
+/// throws <see cref="CliCommandException"/> on failure, and provides parsing helpers used by both
+/// platforms. Subclasses supply the executable name, the exact argument lists for each verb, and
+/// the JSON shape of their list output.
 /// </summary>
-public abstract class CliProviderBase : IContainerCliProvider
+internal abstract class CliProviderBase : IContainerCliProvider
 {
-    private readonly ICliProcessRunner _runner;
-
-    protected CliProviderBase(ICliProcessRunner runner) => _runner = runner;
-
     /// <summary>Name (or path) of the CLI executable, e.g. <c>container</c> or <c>wslc</c>.</summary>
     protected abstract string Executable { get; }
 
@@ -44,33 +37,19 @@ public abstract class CliProviderBase : IContainerCliProvider
         await StartContainerAsync(id, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task KillContainerAsync(string id, CancellationToken cancellationToken = default)
-        => RunAsync(cancellationToken, "kill", id);
-
     public abstract Task RemoveContainerAsync(
         string id,
         bool force = false,
         CancellationToken cancellationToken = default);
 
-    public Task<string> InspectContainerAsync(string id, CancellationToken cancellationToken = default)
-        => CaptureAsync(cancellationToken, "inspect", id);
-
     // ----- Images -----
 
     public abstract Task PullImageAsync(string reference, CancellationToken cancellationToken = default);
-
-    public abstract Task PushImageAsync(string reference, CancellationToken cancellationToken = default);
-
-    public abstract Task TagImageAsync(string source, string target, CancellationToken cancellationToken = default);
 
     public abstract Task RemoveImageAsync(
         string reference,
         bool force = false,
         CancellationToken cancellationToken = default);
-
-    public abstract Task PruneImagesAsync(CancellationToken cancellationToken = default);
-
-    public abstract Task<string> InspectImageAsync(string reference, CancellationToken cancellationToken = default);
 
     // ----- Execution helpers -----
 
@@ -83,8 +62,15 @@ public abstract class CliProviderBase : IContainerCliProvider
     /// <summary>Runs the CLI, returning stdout, and throws <see cref="CliCommandException"/> on failure.</summary>
     protected async Task<string> CaptureAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        var result = await _runner.RunAsync(Executable, arguments, cancellationToken).ConfigureAwait(false);
-        if (!result.Succeeded)
+        // Validation is disabled so a non-zero exit surfaces as our own exception (with the exact
+        // command line) rather than CliWrap's, keeping the CLI transparency contract intact.
+        var result = await Cli.Wrap(Executable)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
         {
             var command = $"{Executable} {string.Join(' ', arguments)}";
             throw new CliCommandException(command, result.ExitCode, result.StandardError);

@@ -1,5 +1,13 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Knarr.App.Features.Images;
+using Knarr.Service;
+using Knarr.Service.Models;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Knarr.App.Tests.Features.Images;
 
@@ -109,5 +117,79 @@ public class ImagesViewModelTests
         vm.AllSelected = true;
 
         vm.DeleteSelectedCommand.Execute(null);
+    }
+
+    [Fact]
+    public void LoadedState_HasItems()
+    {
+        var vm = new ImagesViewModel();
+
+        Assert.True(vm.HasItems);
+        Assert.False(vm.IsLoading);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.HasError);
+        Assert.False(vm.HasNoResults);
+    }
+
+    [Fact]
+    public void EmptyState_WhenCliReturnsNoImages()
+    {
+        var provider = Substitute.For<IContainerCliProvider>();
+        provider.ListImagesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<ImageSummary>>([]));
+
+        var vm = new ImagesViewModel(provider);
+
+        Assert.True(vm.IsEmpty);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.HasError);
+        Assert.False(vm.HasNoResults);
+    }
+
+    [Fact]
+    public void ErrorState_WhenCliThrows()
+    {
+        var provider = Substitute.For<IContainerCliProvider>();
+        provider.ListImagesAsync(Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("cli unreachable"));
+
+        var vm = new ImagesViewModel(provider);
+
+        Assert.True(vm.HasError);
+        Assert.Equal("cli unreachable", vm.ErrorMessage);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.HasNoResults);
+    }
+
+    [Fact]
+    public void NoResultsState_WhenSearchMatchesNothing()
+    {
+        var vm = new ImagesViewModel { SearchText = "zzz-no-such-image" };
+
+        Assert.True(vm.HasNoResults);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.HasError);
+    }
+
+    [Fact]
+    public void LoadingState_WhileListInFlight()
+    {
+        var tcs = new TaskCompletionSource<IReadOnlyList<ImageSummary>>();
+        var provider = Substitute.For<IContainerCliProvider>();
+        provider.ListImagesAsync(Arg.Any<CancellationToken>())
+            .Returns(tcs.Task);
+
+        var vm = new ImagesViewModel(provider);
+
+        Assert.True(vm.IsLoading);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.IsEmpty);
+
+        tcs.SetResult([]);
+
+        Assert.False(vm.IsLoading);
+        Assert.True(vm.IsEmpty);
     }
 }

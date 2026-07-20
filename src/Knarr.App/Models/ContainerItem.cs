@@ -1,16 +1,7 @@
 namespace Knarr.App.Models;
 
-using CommunityToolkit.Mvvm.ComponentModel;
 using Controls;
-
-/// <summary>Lifecycle state of a container as reported by the underlying CLI.</summary>
-public enum ContainerStatus
-{
-    Created,
-    Running,
-    Paused,
-    Exited
-}
+using Knarr.Service.Models;
 
 /// <summary>
 /// A single container row shown in the Containers feature. UI-agnostic domain data that maps

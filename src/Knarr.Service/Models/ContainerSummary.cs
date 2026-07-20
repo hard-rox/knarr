@@ -1,9 +1,9 @@
-namespace Knarr.App.Models;
+namespace Knarr.Service.Models;
 
 /// <summary>
 /// A UI-agnostic snapshot of a single container as reported by the underlying CLI's list command.
-/// Returned by <c>IContainerCliProvider</c>; view models map this onto <see cref="ContainerItem"/>
-/// for display. Fields the CLI does not surface in its list output default to an em dash.
+/// Returned by <see cref="IContainerCliProvider"/>; view models map this onto their own display
+/// types. Fields the CLI does not surface in its list output default to an em dash.
 /// </summary>
 public sealed record ContainerSummary
 {

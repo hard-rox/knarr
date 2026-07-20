@@ -8,6 +8,7 @@
         <entry key="src/Knarr.App/Controls/PillControl.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Containers/ContainersView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Dashboard/DashboardView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Features/Images/ImagesView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Shell/MainWindow.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Sidebar/Sidebar.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Themes/Glass.axaml" value="src/Knarr.App/Knarr.App.csproj" />

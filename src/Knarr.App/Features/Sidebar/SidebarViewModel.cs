@@ -1,15 +1,7 @@
-using System.Collections.ObjectModel;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Knarr.App.Common;
 using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
-using Knarr.App.Models;
-using Knarr.App.Services;
 
 namespace Knarr.App.Features.Sidebar;
 
@@ -39,7 +31,7 @@ public partial class SidebarViewModel : ViewModelBase
 
     /// <summary>Design-time constructor with sample platform information.</summary>
     public SidebarViewModel()
-        : this(new PlatformInfoProvider(), new DesignTimeContainerCliProvider())
+        : this(new DesignTimePlatformInfoProvider(), new DesignTimeContainerCliProvider())
     {
     }
 

@@ -1,9 +1,4 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Knarr.App.Models;
-
-namespace Knarr.App.Services;
+namespace Knarr.Service;
 
 /// <summary>
 /// An in-memory <see cref="IContainerCliProvider"/> that serves fixed sample data and treats every
@@ -58,26 +53,11 @@ public sealed class DesignTimeContainerCliProvider : IContainerCliProvider
 
     public Task RestartContainerAsync(string id, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-    public Task KillContainerAsync(string id, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
     public Task RemoveContainerAsync(string id, bool force = false, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
 
-    public Task<string> InspectContainerAsync(string id, CancellationToken cancellationToken = default)
-        => Task.FromResult("{}");
-
     public Task PullImageAsync(string reference, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-    public Task PushImageAsync(string reference, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-    public Task TagImageAsync(string source, string target, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
 
     public Task RemoveImageAsync(string reference, bool force = false, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
-
-    public Task PruneImagesAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-    public Task<string> InspectImageAsync(string reference, CancellationToken cancellationToken = default)
-        => Task.FromResult("{}");
 }

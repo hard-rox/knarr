@@ -1,19 +1,18 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+using CliWrap;
+using CliWrap.Buffered;
 
-namespace Knarr.App.Services;
+namespace Knarr.Service;
 
 /// <summary>
 /// Detects the host OS and maps it to the corresponding first-party container CLI,
-/// then probes that CLI at runtime for its version. Container and image operations are
+/// then probes that CLI at runtime for its version via CliWrap. Container and image operations are
 /// handled separately by <see cref="IContainerCliProvider"/>.
 /// </summary>
-public sealed partial class PlatformInfoProvider : IPlatformInfoProvider
+internal sealed partial class PlatformInfoProvider : IPlatformInfoProvider
 {
     private const string UnknownVersion = "not detected";
 
@@ -53,33 +52,19 @@ public sealed partial class PlatformInfoProvider : IPlatformInfoProvider
     {
         try
         {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = _cliExecutable,
-                Arguments = "--version",
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
+            var result = await Cli.Wrap(_cliExecutable)
+                .WithArguments(["--version"])
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            using var process = Process.Start(startInfo);
-            if (process is null)
+            if (!result.IsSuccess)
             {
                 SetUnreachable();
                 return;
             }
 
-            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-
-            if (process.ExitCode != 0)
-            {
-                SetUnreachable();
-                return;
-            }
-
-            CliVersion = ParseVersion(output);
+            CliVersion = ParseVersion(result.StandardOutput);
             IsCliReachable = true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

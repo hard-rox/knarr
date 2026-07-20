@@ -1,7 +1,4 @@
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Knarr.App.Services;
+namespace Knarr.Service;
 
 /// <summary>
 /// Supplies information about the host platform and its container CLI for display

@@ -1,23 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Knarr.App.Common;
-using Knarr.App.Models;
-using Knarr.App.Services;
-
 namespace Knarr.App.Features.Images;
 
-/// <summary>
-/// View model for the Images feature. Presents the list of images and exposes the actions, each of
-/// which maps 1:1 onto a single CLI command via <see cref="IContainerCliProvider"/>. Data is loaded
-/// from the host container CLI.
-/// </summary>
 public partial class ImagesViewModel : ViewModelBase
 {
     private readonly IContainerCliProvider _cliProvider;
@@ -26,9 +8,7 @@ public partial class ImagesViewModel : ViewModelBase
     public ImagesViewModel(IContainerCliProvider cliProvider)
     {
         _cliProvider = cliProvider;
-        Images = new ObservableCollection<ImageItem>();
-
-        // Kick off the initial load; property updates marshal back to the UI thread.
+        Images = [];
         _ = LoadAsync();
     }
 
@@ -41,22 +21,37 @@ public partial class ImagesViewModel : ViewModelBase
     public ObservableCollection<ImageItem> Images { get; }
 
     [ObservableProperty]
-    private string _searchText = string.Empty;
-
-    [ObservableProperty]
-    private ImageItem? _selectedImage;
+    public partial string SearchText { get; set; } = string.Empty;
 
     /// <summary>True while a CLI list/refresh is in flight.</summary>
     [ObservableProperty]
-    private bool _isLoading;
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoResults))]
+    [NotifyPropertyChangedFor(nameof(HasItems))]
+    public partial bool IsLoading { get; set; }
 
     /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
     [ObservableProperty]
-    private string? _errorMessage;
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoResults))]
+    public partial string? ErrorMessage { get; set; }
+
+    /// <summary>True when the last CLI action failed and <see cref="ErrorMessage"/> is set.</summary>
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    /// <summary>True when there are rows to display in the table.</summary>
+    public bool HasItems => !IsLoading && !HasError && Images.Count > 0;
+
+    /// <summary>True when the CLI returned no images at all (not merely filtered out).</summary>
+    public bool IsEmpty => !IsLoading && !HasError && _allImages.Count == 0;
+
+    /// <summary>True when images exist, but the current search filter matches none.</summary>
+    public bool HasNoResults => !IsLoading && !HasError && _allImages.Count > 0 && Images.Count == 0;
 
     /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ImageItem> SelectedImages =>
-        Images.Where(i => i.IsSelected).ToList();
+        [.. Images.Where(i => i.IsSelected)];
 
     public int SelectedCount => Images.Count(i => i.IsSelected);
 
@@ -114,8 +109,8 @@ public partial class ImagesViewModel : ViewModelBase
         {
             var term = SearchText.Trim();
             filtered = _allImages.Where(i =>
-                i.Repository.Contains(term, System.StringComparison.OrdinalIgnoreCase) ||
-                i.Tag.Contains(term, System.StringComparison.OrdinalIgnoreCase));
+                i.Repository.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                i.Tag.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
         Images.Clear();
@@ -128,6 +123,9 @@ public partial class ImagesViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(AllSelected));
+        OnPropertyChanged(nameof(HasItems));
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasNoResults));
     }
 
     // Toolbar commands — each maps 1:1 onto a CLI invocation via the provider, then reloads.
@@ -147,30 +145,12 @@ public partial class ImagesViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Push()
-    {
-        // Toolbar push (reference input) is a later milestone; use the per-row push meanwhile.
-    }
-
-    [RelayCommand]
     private void Import()
     {
         // Import file picker is a later milestone.
     }
 
-    [RelayCommand]
-    private Task Prune() => ExecuteAndReloadAsync(ct => _cliProvider.PruneImagesAsync(ct));
-
-    // Bulk (multiselect) commands — operate on every ticked row.
-    [RelayCommand]
-    private async Task PushSelected()
-    {
-        foreach (var image in SelectedImages.ToList())
-        {
-            await PushImage(image).ConfigureAwait(true);
-        }
-    }
-
+    // Bulk (multiselect) commands operate on every ticked row.
     [RelayCommand]
     private async Task DeleteSelected()
     {
@@ -194,10 +174,6 @@ public partial class ImagesViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private Task PushImage(ImageItem image)
-        => ExecuteAndReloadAsync(ct => _cliProvider.PushImageAsync(image.RepoTag, ct));
-
-    [RelayCommand]
     private void Inspect(ImageItem image)
     {
         // Inspect viewer is a later milestone.
@@ -211,7 +187,7 @@ public partial class ImagesViewModel : ViewModelBase
     /// Loads (or reloads) the image list from the CLI. Safe to call repeatedly; concurrent calls
     /// are coalesced. Failures are surfaced via <see cref="ErrorMessage"/> and never throw.
     /// </summary>
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    private async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         if (IsLoading)
         {
@@ -236,7 +212,6 @@ public partial class ImagesViewModel : ViewModelBase
                 {
                     Repository = summary.Repository,
                     Tag = summary.Tag,
-                    Id = summary.Id,
                     Created = summary.Created,
                     Size = summary.Size,
                 };

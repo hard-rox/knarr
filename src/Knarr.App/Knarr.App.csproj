@@ -24,4 +24,8 @@
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Knarr.Service\Knarr.Service.csproj"/>
+    </ItemGroup>
 </Project>

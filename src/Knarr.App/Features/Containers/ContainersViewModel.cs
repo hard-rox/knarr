@@ -1,15 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Knarr.App.Common;
-using Knarr.App.Models;
-using Knarr.App.Services;
+using Knarr.Service.Models;
 
 namespace Knarr.App.Features.Containers;
 
@@ -57,11 +46,29 @@ public partial class ContainersViewModel : ViewModelBase
 
     /// <summary>True while a CLI list/refresh is in flight.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoResults))]
+    [NotifyPropertyChangedFor(nameof(HasItems))]
     private bool _isLoading;
 
     /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoResults))]
     private string? _errorMessage;
+
+    /// <summary>True when the last CLI action failed and <see cref="ErrorMessage"/> is set.</summary>
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    /// <summary>True when there are rows to display in the table.</summary>
+    public bool HasItems => !IsLoading && !HasError && Containers.Count > 0;
+
+    /// <summary>True when the CLI returned no containers at all (not merely filtered out).</summary>
+    public bool IsEmpty => !IsLoading && !HasError && _allContainers.Count == 0;
+
+    /// <summary>True when containers exist but the current search filter matches none.</summary>
+    public bool HasNoResults => !IsLoading && !HasError && _allContainers.Count > 0 && Containers.Count == 0;
 
     /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ContainerItem> SelectedContainers =>
@@ -137,6 +144,9 @@ public partial class ContainersViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(AllSelected));
+        OnPropertyChanged(nameof(HasItems));
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasNoResults));
     }
 
     /// <summary>
@@ -245,10 +255,6 @@ public partial class ContainersViewModel : ViewModelBase
     [RelayCommand]
     private Task Restart(ContainerItem container)
         => ExecuteAndReloadAsync(ct => _cliProvider.RestartContainerAsync(container.Id, ct));
-
-    [RelayCommand]
-    private Task Kill(ContainerItem container)
-        => ExecuteAndReloadAsync(ct => _cliProvider.KillContainerAsync(container.Id, ct));
 
     [RelayCommand]
     private Task Remove(ContainerItem container)

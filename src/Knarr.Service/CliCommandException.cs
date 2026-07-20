@@ -1,6 +1,6 @@
 using System;
 
-namespace Knarr.App.Services;
+namespace Knarr.Service;
 
 /// <summary>
 /// Thrown when a container CLI command exits with a non-zero status. Carries the failing command

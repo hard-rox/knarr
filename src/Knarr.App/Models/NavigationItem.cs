@@ -1,5 +1,3 @@
-using System;
-
 namespace Knarr.App.Models;
 
 /// <summary>

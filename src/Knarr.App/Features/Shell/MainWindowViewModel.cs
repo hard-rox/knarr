@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
 
