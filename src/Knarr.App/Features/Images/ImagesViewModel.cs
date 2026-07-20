@@ -109,8 +109,8 @@ public partial class ImagesViewModel : ViewModelBase
         }
         set
         {
-            // A null assignment comes from the indeterminate state; treat it as "select all".
-            var target = value ?? true;
+            // When the user clicks a checked box, Avalonia cycles it to null. Treat this as deselect all.
+            var target = value ?? false;
             foreach (var image in Images)
             {
                 image.IsSelected = target;
