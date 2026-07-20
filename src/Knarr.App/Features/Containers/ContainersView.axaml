@@ -10,45 +10,70 @@
     <vm:ContainersViewModel />
   </Design.DataContext>
 
-  <Grid RowDefinitions="Auto,*" Margin="24" RowSpacing="16">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="24" RowSpacing="16">
 
-    <!-- Merged toolbar + bulk-action bar -->
-    <Border Grid.Row="0"
+    <!-- Stat tiles -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,*,*" ColumnSpacing="16">
+      <controls:Tile Grid.Column="0"
+                     Label="Total containers"
+                     Value="{Binding TotalCount, StringFormat='{}{0}'}" />
+      <controls:Tile Grid.Column="1"
+                     Label="Running"
+                     Status="Running"
+                     Value="{Binding RunningCount, StringFormat='{}{0}'}" />
+      <controls:Tile Grid.Column="2"
+                     Label="Stopped"
+                     Status="Stopped"
+                     Value="{Binding StoppedCount, StringFormat='{}{0}'}" />
+    </Grid>
+
+    <!-- Action bar: search (always) + toolbar / bulk actions -->
+    <Border Grid.Row="1"
             Classes="glass-panel"
             Padding="14,10">
       <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
 
-        <!-- Title / selection count -->
-        <TextBlock Grid.Column="0"
-                   VerticalAlignment="Center"
-                   FontSize="18"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextBrush}"
-                   Text="Containers"
-                   IsVisible="{Binding !HasSelection}" />
-        <TextBlock Grid.Column="0"
-                   VerticalAlignment="Center"
-                   FontSize="18"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextBrush}"
-                   IsVisible="{Binding HasSelection}"
-                   Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
-
         <!-- Search -->
-        <TextBox Grid.Column="1"
-                 MaxWidth="280"
-                 HorizontalAlignment="Right"
+        <TextBox Grid.Column="0"
+                 Classes="search"
+                 Width="280"
                  VerticalAlignment="Center"
                  PlaceholderText="Search containers&#x2026;"
-                 Text="{Binding SearchText}" />
+                 Text="{Binding SearchText}">
+          <TextBox.InnerLeftContent>
+            <PathIcon Data="{StaticResource SearchRegular}"
+                      Width="14" Height="14"
+                      Margin="6,0,2,0"
+                      Foreground="{DynamicResource TextDimBrush}" />
+          </TextBox.InnerLeftContent>
+        </TextBox>
+
+        <!-- Selection count -->
+        <TextBlock Grid.Column="1"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center"
+                   Margin="0,0,10,0"
+                   FontSize="13"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextDimBrush}"
+                   IsVisible="{Binding HasSelection}"
+                   Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
 
         <!-- Default toolbar OR bulk actions when rows are selected -->
         <StackPanel Grid.Column="2"
                     Orientation="Horizontal"
-                    Spacing="8"
+                    Spacing="2"
                     IsVisible="{Binding !HasSelection}">
-          <Button Content="Refresh" Command="{Binding RefreshCommand}" />
-          <Button Content="Run container" Command="{Binding RunContainerCommand}" />
+          <Button Classes="icon"
+                  ToolTip.Tip="Refresh"
+                  Command="{Binding RefreshCommand}">
+            <PathIcon Data="{StaticResource ArrowClockwiseRegular}" />
+          </Button>
+          <Button Classes="icon"
+                  ToolTip.Tip="Run container"
+                  Command="{Binding RunContainerCommand}">
+            <PathIcon Data="{StaticResource PlayRegular}" />
+          </Button>
         </StackPanel>
 
         <StackPanel Grid.Column="2"
@@ -75,7 +100,7 @@
     </Border>
 
     <!-- Glass panel hosting the table -->
-    <Border Grid.Row="1"
+    <Border Grid.Row="2"
             VerticalAlignment="Top"
             Classes="glass-panel"
             CornerRadius="16"

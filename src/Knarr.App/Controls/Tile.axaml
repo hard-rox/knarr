@@ -1,0 +1,38 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Knarr.App.Controls">
+  <Design.PreviewWith>
+    <controls:Tile Label="Running" Value="3" Status="Running" Width="160" />
+  </Design.PreviewWith>
+
+  <ControlTheme x:Key="{x:Type controls:Tile}" TargetType="controls:Tile">
+    <!-- Set Defaults -->
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Classes="glass-panel" Padding="16,14">
+          <StackPanel Spacing="6">
+            <TextBlock Text="{TemplateBinding Label}"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextDimBrush}" />
+            <TextBlock Text="{TemplateBinding Value}"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="{TemplateBinding Foreground}" />
+          </StackPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:running">
+      <Setter Property="Foreground" Value="#1A9C3F" />
+    </Style>
+    <Style Selector="^:stopped">
+      <Setter Property="Foreground" Value="#D1352B" />
+    </Style>
+    <Style Selector="^:paused">
+      <Setter Property="Foreground" Value="#C47800" />
+    </Style>
+  </ControlTheme>
+</ResourceDictionary>

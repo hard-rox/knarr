@@ -230,6 +230,15 @@ public partial class ContainersViewModel : ViewModelBase
 
     public ObservableCollection<ContainerItem> Containers { get; }
 
+    /// <summary>Total number of containers, independent of the current search filter.</summary>
+    public int TotalCount => _allContainers.Count;
+
+    /// <summary>Number of running containers.</summary>
+    public int RunningCount => _allContainers.Count(c => c.Status == ContainerStatus.Running);
+
+    /// <summary>Number of stopped (exited) containers.</summary>
+    public int StoppedCount => _allContainers.Count(c => c.Status == ContainerStatus.Exited);
+
     [ObservableProperty]
     private string _searchText = string.Empty;
 
