@@ -1,3 +1,5 @@
+using Knarr.Service.Models;
+
 namespace Knarr.App.Features.Images;
 
 public partial class ImagesViewModel : ViewModelBase
@@ -12,10 +14,11 @@ public partial class ImagesViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
-    /// <summary>Design-time constructor; serves sample data via the in-memory provider.</summary>
+    /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ImagesViewModel()
-        : this(new DesignTimeContainerCliProvider())
     {
+        _cliProvider = null!;
+        Images = [];
     }
 
     public ObservableCollection<ImageItem> Images { get; }
@@ -81,7 +84,7 @@ public partial class ImagesViewModel : ViewModelBase
         {
             // When the user clicks a checked box, Avalonia cycles it to null. Treat this as deselect all.
             var target = value ?? false;
-            foreach (var image in Images)
+            foreach (ImageItem image in Images)
             {
                 image.IsSelected = target;
             }
@@ -114,7 +117,7 @@ public partial class ImagesViewModel : ViewModelBase
         }
 
         Images.Clear();
-        foreach (var image in filtered)
+        foreach (ImageItem image in filtered)
         {
             Images.Add(image);
         }
@@ -154,7 +157,7 @@ public partial class ImagesViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteSelected()
     {
-        foreach (var image in SelectedImages.ToList())
+        foreach (ImageItem image in SelectedImages.ToList())
         {
             await Remove(image).ConfigureAwait(true);
         }
@@ -198,23 +201,17 @@ public partial class ImagesViewModel : ViewModelBase
         ErrorMessage = null;
         try
         {
-            var summaries = await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
+            IReadOnlyList<ContainerImage> summaries = await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
 
-            foreach (var existing in _allImages)
+            foreach (ImageItem existing in _allImages)
             {
                 existing.PropertyChanged -= OnImagePropertyChanged;
             }
 
             _allImages.Clear();
-            foreach (var summary in summaries)
+            foreach (ContainerImage summary in summaries)
             {
-                var item = new ImageItem
-                {
-                    Repository = summary.Repository,
-                    Tag = summary.Tag,
-                    Created = summary.Created,
-                    Size = summary.Size,
-                };
+                ImageItem item = new ImageItem(summary);
                 item.PropertyChanged += OnImagePropertyChanged;
                 _allImages.Add(item);
             }

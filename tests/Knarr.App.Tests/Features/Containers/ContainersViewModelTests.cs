@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Knarr.App.Features.Containers;
+using Knarr.App.Models;
 using Knarr.Service;
 using Knarr.Service.Models;
 using NSubstitute;
@@ -13,20 +14,39 @@ namespace Knarr.App.Tests.Features.Containers;
 
 public class ContainersViewModelTests
 {
-    [Fact]
-    public void DefaultState_SeedsContainers()
-    {
-        var vm = new ContainersViewModel();
+    private static readonly IReadOnlyList<Container> _sampleContainers =
+    [
+        new() { Id = "aaaaaaaaaaaa", Name = "web-api", Image = "nginx:latest", State = ContainerState.Running },
+        new() { Id = "bbbbbbbbbbbb", Name = "postgres-db", Image = "postgres:16", State = ContainerState.Running },
+        new() { Id = "cccccccccccc", Name = "redis-cache", Image = "redis:7-alpine", State = ContainerState.Running },
+        new() { Id = "dddddddddddd", Name = "batch-worker", Image = "worker:dev", State = ContainerState.Exited },
+    ];
 
-        Assert.Equal(19, vm.Containers.Count);
+    private static IContainerCliProvider ProviderWith(IReadOnlyList<Container> containers)
+    {
+        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        provider.ListContainersAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(containers));
+        return provider;
+    }
+
+    private static ContainersViewModel CreateViewModel() => new(ProviderWith(_sampleContainers));
+
+    [Fact]
+    public void DefaultState_LoadsContainers()
+    {
+        ContainersViewModel vm = CreateViewModel();
+
+        Assert.Equal(4, vm.Containers.Count);
         Assert.Contains(vm.Containers, c => c.Name == "web-api");
-        Assert.Contains(vm.Containers, c => c.Status == ContainerStatus.Exited);
+        Assert.Contains(vm.Containers, c => c.Status == ContainerState.Exited);
     }
 
     [Fact]
     public void SearchText_FiltersByName()
     {
-        var vm = new ContainersViewModel { SearchText = "redis" };
+        ContainersViewModel vm = CreateViewModel();
+        vm.SearchText = "redis";
 
         Assert.Single(vm.Containers);
         Assert.Equal("redis-cache", vm.Containers[0].Name);
@@ -35,7 +55,8 @@ public class ContainersViewModelTests
     [Fact]
     public void SearchText_FiltersByImage_CaseInsensitive()
     {
-        var vm = new ContainersViewModel { SearchText = "POSTGRES" };
+        ContainersViewModel vm = CreateViewModel();
+        vm.SearchText = "POSTGRES";
 
         Assert.Single(vm.Containers);
         Assert.Equal("postgres-db", vm.Containers[0].Name);
@@ -44,20 +65,21 @@ public class ContainersViewModelTests
     [Fact]
     public void SearchText_Cleared_RestoresAllContainers()
     {
-        var vm = new ContainersViewModel { SearchText = "redis" };
+        ContainersViewModel vm = CreateViewModel();
+        vm.SearchText = "redis";
         Assert.Single(vm.Containers);
 
         vm.SearchText = string.Empty;
 
-        Assert.Equal(19, vm.Containers.Count);
+        Assert.Equal(4, vm.Containers.Count);
     }
 
     [Fact]
     public void LifecycleCommands_DoNotThrow()
     {
-        var vm = new ContainersViewModel();
-        var running = vm.Containers.First(c => c.IsRunning);
-        var stopped = vm.Containers.First(c => !c.IsRunning);
+        ContainersViewModel vm = CreateViewModel();
+        ContainerItem running = vm.Containers.First(c => c.IsRunning);
+        ContainerItem stopped = vm.Containers.First(c => !c.IsRunning);
 
         vm.RefreshCommand.Execute(null);
         vm.RunContainerCommand.Execute(null);
@@ -73,7 +95,7 @@ public class ContainersViewModelTests
     [Fact]
     public void Selection_TracksCountAndHasSelection()
     {
-        var vm = new ContainersViewModel();
+        ContainersViewModel vm = CreateViewModel();
         Assert.False(vm.HasSelection);
         Assert.Equal(0, vm.SelectedCount);
 
@@ -88,7 +110,7 @@ public class ContainersViewModelTests
     [Fact]
     public void AllSelected_IsNull_WhenSelectionIsMixed()
     {
-        var vm = new ContainersViewModel();
+        ContainersViewModel vm = CreateViewModel();
 
         vm.Containers[0].IsSelected = true;
 
@@ -98,7 +120,7 @@ public class ContainersViewModelTests
     [Fact]
     public void AllSelected_SetTrue_SelectsEveryRow()
     {
-        var vm = new ContainersViewModel();
+        ContainersViewModel vm = CreateViewModel();
 
         vm.AllSelected = true;
 
@@ -115,7 +137,7 @@ public class ContainersViewModelTests
     [Fact]
     public void BulkCommands_DoNotThrow()
     {
-        var vm = new ContainersViewModel();
+        ContainersViewModel vm = CreateViewModel();
         vm.AllSelected = true;
 
         vm.StartSelectedCommand.Execute(null);
@@ -126,7 +148,7 @@ public class ContainersViewModelTests
     [Fact]
     public void LoadedState_HasItems()
     {
-        var vm = new ContainersViewModel();
+        ContainersViewModel vm = CreateViewModel();
 
         Assert.True(vm.HasItems);
         Assert.False(vm.IsLoading);
@@ -138,11 +160,7 @@ public class ContainersViewModelTests
     [Fact]
     public void EmptyState_WhenCliReturnsNoContainers()
     {
-        var provider = Substitute.For<IContainerCliProvider>();
-        provider.ListContainersAsync(Arg.Any<bool>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ContainerSummary>>([]));
-
-        var vm = new ContainersViewModel(provider);
+        ContainersViewModel vm = new ContainersViewModel(ProviderWith([]));
 
         Assert.True(vm.IsEmpty);
         Assert.False(vm.HasItems);
@@ -153,11 +171,11 @@ public class ContainersViewModelTests
     [Fact]
     public void ErrorState_WhenCliThrows()
     {
-        var provider = Substitute.For<IContainerCliProvider>();
-        provider.ListContainersAsync(Arg.Any<bool>(), Arg.Any<CancellationToken>())
+        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        provider.ListContainersAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("cli unreachable"));
 
-        var vm = new ContainersViewModel(provider);
+        ContainersViewModel vm = new ContainersViewModel(provider);
 
         Assert.True(vm.HasError);
         Assert.Equal("cli unreachable", vm.ErrorMessage);
@@ -169,7 +187,8 @@ public class ContainersViewModelTests
     [Fact]
     public void NoResultsState_WhenSearchMatchesNothing()
     {
-        var vm = new ContainersViewModel { SearchText = "zzz-no-such-container" };
+        ContainersViewModel vm = CreateViewModel();
+        vm.SearchText = "zzz-no-such-container";
 
         Assert.True(vm.HasNoResults);
         Assert.False(vm.HasItems);
@@ -180,12 +199,12 @@ public class ContainersViewModelTests
     [Fact]
     public void LoadingState_WhileListInFlight()
     {
-        var tcs = new TaskCompletionSource<IReadOnlyList<ContainerSummary>>();
-        var provider = Substitute.For<IContainerCliProvider>();
-        provider.ListContainersAsync(Arg.Any<bool>(), Arg.Any<CancellationToken>())
+        TaskCompletionSource<IReadOnlyList<Container>> tcs = new TaskCompletionSource<IReadOnlyList<Container>>();
+        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        provider.ListContainersAsync(Arg.Any<CancellationToken>())
             .Returns(tcs.Task);
 
-        var vm = new ContainersViewModel(provider);
+        ContainersViewModel vm = new ContainersViewModel(provider);
 
         Assert.True(vm.IsLoading);
         Assert.False(vm.HasItems);

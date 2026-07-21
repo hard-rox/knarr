@@ -14,7 +14,6 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
     <PackageVersion Include="CliWrap" Version="3.10.2" />
-    <PackageVersion Include="JsonLinq" Version="1.0.0" />
   </ItemGroup>
 
   <!-- Test dependencies -->

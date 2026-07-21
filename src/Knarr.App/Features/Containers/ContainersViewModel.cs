@@ -1,4 +1,5 @@
 using Knarr.Service.Models;
+using Container = Knarr.Service.Models.Container;
 
 namespace Knarr.App.Features.Containers;
 
@@ -21,10 +22,11 @@ public partial class ContainersViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
-    /// <summary>Design-time constructor; serves sample data via the in-memory provider.</summary>
+    /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ContainersViewModel()
-        : this(new DesignTimeContainerCliProvider())
     {
+        _cliProvider = null!;
+        Containers = new ObservableCollection<ContainerItem>();
     }
 
     public ObservableCollection<ContainerItem> Containers { get; }
@@ -33,10 +35,10 @@ public partial class ContainersViewModel : ViewModelBase
     public int TotalCount => _allContainers.Count;
 
     /// <summary>Number of running containers.</summary>
-    public int RunningCount => _allContainers.Count(c => c.Status == ContainerStatus.Running);
+    public int RunningCount => _allContainers.Count(c => c.Status == ContainerState.Running);
 
     /// <summary>Number of stopped (exited) containers.</summary>
-    public int StoppedCount => _allContainers.Count(c => c.Status == ContainerStatus.Exited);
+    public int StoppedCount => _allContainers.Count(c => c.Status == ContainerState.Exited);
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -102,7 +104,7 @@ public partial class ContainersViewModel : ViewModelBase
         {
             // A null assignment comes from the indeterminate state; treat it as "select all".
             var target = value ?? true;
-            foreach (var container in Containers)
+            foreach (ContainerItem container in Containers)
             {
                 container.IsSelected = target;
             }
@@ -135,7 +137,7 @@ public partial class ContainersViewModel : ViewModelBase
         }
 
         Containers.Clear();
-        foreach (var container in filtered)
+        foreach (ContainerItem container in filtered)
         {
             Containers.Add(container);
         }
@@ -164,29 +166,19 @@ public partial class ContainersViewModel : ViewModelBase
         ErrorMessage = null;
         try
         {
-            var summaries = await _cliProvider
-                .ListContainersAsync(includeAll: true, cancellationToken)
+            IReadOnlyList<Container> summaries = await _cliProvider
+                .ListContainersAsync(cancellationToken)
                 .ConfigureAwait(true);
 
-            foreach (var existing in _allContainers)
+            foreach (ContainerItem existing in _allContainers)
             {
                 existing.PropertyChanged -= OnContainerPropertyChanged;
             }
 
             _allContainers.Clear();
-            foreach (var summary in summaries)
+            foreach (Container summary in summaries)
             {
-                var item = new ContainerItem
-                {
-                    Name = summary.Name,
-                    Id = summary.Id,
-                    Image = summary.Image,
-                    Status = summary.Status,
-                    Ports = summary.Ports,
-                    Cpu = summary.Cpu,
-                    Memory = summary.Memory,
-                    Uptime = summary.Uptime,
-                };
+                ContainerItem item = new ContainerItem(summary);
                 item.PropertyChanged += OnContainerPropertyChanged;
                 _allContainers.Add(item);
             }
@@ -220,7 +212,7 @@ public partial class ContainersViewModel : ViewModelBase
     [RelayCommand]
     private async Task StartSelected()
     {
-        foreach (var container in SelectedContainers.ToList())
+        foreach (ContainerItem container in SelectedContainers.ToList())
         {
             await Start(container).ConfigureAwait(true);
         }
@@ -229,7 +221,7 @@ public partial class ContainersViewModel : ViewModelBase
     [RelayCommand]
     private async Task StopSelected()
     {
-        foreach (var container in SelectedContainers.ToList())
+        foreach (ContainerItem container in SelectedContainers.ToList())
         {
             await Stop(container).ConfigureAwait(true);
         }
@@ -238,7 +230,7 @@ public partial class ContainersViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteSelected()
     {
-        foreach (var container in SelectedContainers.ToList())
+        foreach (ContainerItem container in SelectedContainers.ToList())
         {
             await Remove(container).ConfigureAwait(true);
         }

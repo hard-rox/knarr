@@ -15,14 +15,14 @@ public class MainWindowViewModelTests
         SidebarViewModel? sidebar = null)
     {
         themeService ??= Substitute.For<IThemeService>();
-        sidebar ??= new SidebarViewModel(Substitute.For<IPlatformInfoProvider>(), Substitute.For<IContainerCliProvider>());
+        sidebar ??= new SidebarViewModel(Substitute.For<IContainerCliProvider>());
         return new MainWindowViewModel(themeService, sidebar);
     }
 
     [Fact]
     public void NavigationItems_AreSeeded()
     {
-        var vm = CreateViewModel();
+        MainWindowViewModel vm = CreateViewModel();
 
         Assert.Equal(7, vm.Sidebar.NavigationItems.Count);
         Assert.Equal("Dashboard", vm.Sidebar.NavigationItems[0].Title);
@@ -32,7 +32,7 @@ public class MainWindowViewModelTests
     [Fact]
     public void Sidebar_IsExpandedByDefault()
     {
-        var vm = CreateViewModel();
+        MainWindowViewModel vm = CreateViewModel();
 
         Assert.True(vm.Sidebar.IsSidebarExpanded);
     }
@@ -40,8 +40,8 @@ public class MainWindowViewModelTests
     [Fact]
     public void SetThemeCommand_DelegatesToThemeService()
     {
-        var themeService = Substitute.For<IThemeService>();
-        var vm = CreateViewModel(themeService: themeService);
+        IThemeService themeService = Substitute.For<IThemeService>();
+        MainWindowViewModel vm = CreateViewModel(themeService: themeService);
 
         vm.SetThemeCommand.Execute(AppTheme.Dark);
 
@@ -51,7 +51,7 @@ public class MainWindowViewModelTests
     [Fact]
     public void CurrentPage_DefaultsToDashboardPage()
     {
-        var vm = CreateViewModel();
+        MainWindowViewModel vm = CreateViewModel();
 
         Assert.IsType<DashboardViewModel>(vm.CurrentPage);
     }
@@ -59,7 +59,7 @@ public class MainWindowViewModelTests
     [Fact]
     public void SelectingSettings_SwapsCurrentPageToSettings()
     {
-        var vm = CreateViewModel();
+        MainWindowViewModel vm = CreateViewModel();
 
         vm.Sidebar.SelectedItem = vm.Sidebar.NavigationItems[^1];
 

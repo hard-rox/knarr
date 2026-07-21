@@ -4,34 +4,24 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Knarr.Service;
 
 /// <summary>
-/// Registers the container service layer with the DI container. Keeps the concrete CLI providers
-/// internal to this assembly; consumers depend only on the exposed interfaces.
+/// Registers the container service layer with the DI container. The concrete CLI provider stays
+/// internal to this assembly; consumers depend only on <see cref="IContainerCliProvider"/>.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the platform-appropriate <see cref="IContainerCliProvider"/> and
-    /// <see cref="IPlatformInfoProvider"/>: Apple Container on macOS, wslc on Windows. Other hosts
-    /// (e.g. Linux dev boxes) fall back to the sample provider so the app still runs without a
-    /// supported CLI.
+    /// Registers the platform-appropriate <see cref="IContainerCliProvider"/>. Only Windows (wslc)
+    /// is supported for now; other platforms throw <see cref="PlatformNotSupportedException"/>.
     /// </summary>
     public static IServiceCollection AddContainerServices(this IServiceCollection services)
     {
-        services.AddSingleton<IPlatformInfoProvider, PlatformInfoProvider>();
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            services.AddSingleton<IContainerCliProvider, AppleContainerCliProvider>();
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            services.AddSingleton<IContainerCliProvider, WslcCliProvider>();
-        }
-        else
-        {
-            services.AddSingleton<IContainerCliProvider, DesignTimeContainerCliProvider>();
+            throw new PlatformNotSupportedException(
+                "Knarr currently supports only Windows (wslc). Other platforms are not yet implemented.");
         }
 
+        services.AddSingleton<IContainerCliProvider, WslcContainerCliProvider>();
         return services;
     }
 }

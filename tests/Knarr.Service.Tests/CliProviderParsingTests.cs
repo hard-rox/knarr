@@ -1,117 +1,92 @@
+using System;
+using System.Collections.Generic;
+
 namespace Knarr.Service.Tests;
 
 /// <summary>
-/// Unit tests for the container CLI providers' JSON parsing. Process execution is delegated to
-/// CliWrap and is not exercised here; these tests cover the platform-specific parsing logic via
-/// the providers' internal static parse methods (exposed through InternalsVisibleTo).
+/// Unit tests for the wslc provider's JSON parsing and shaping. Process execution is delegated to
+/// CliWrap and is not exercised here; these tests cover the parsing/shaping via the provider's
+/// internal static parse methods (exposed through InternalsVisibleTo).
 /// </summary>
 public class CliProviderParsingTests
 {
     [Fact]
-    public void Apple_ParseContainers_ReadsInspectStyleJson()
-    {
-        const string json = """
-        [
-          { "status": "running", "configuration": { "id": "web", "image": { "reference": "docker.io/library/nginx:latest" } } },
-          { "status": "stopped", "configuration": { "id": "db", "image": { "reference": "postgres:16" } } }
-        ]
-        """;
-
-        var containers = AppleContainerCliProvider.ParseContainers(json);
-
-        Assert.Equal(2, containers.Count);
-        Assert.Equal("web", containers[0].Id);
-        Assert.Equal("docker.io/library/nginx:latest", containers[0].Image);
-        Assert.Equal(ContainerStatus.Running, containers[0].Status);
-        Assert.Equal(ContainerStatus.Exited, containers[1].Status);
-    }
-
-    [Fact]
-    public void Apple_ParseImages_ReadsReferenceAndSize()
-    {
-        const string json = """
-        [ { "reference": "docker.io/library/nginx:latest", "descriptor": { "digest": "sha256:abc", "size": 1048576 } } ]
-        """;
-
-        var images = AppleContainerCliProvider.ParseImages(json);
-
-        var image = Assert.Single(images);
-        Assert.Equal("docker.io/library/nginx", image.Repository);
-        Assert.Equal("latest", image.Tag);
-        Assert.Equal("abc", image.Id);
-        Assert.Equal("1.0 MB", image.Size);
-    }
-
-    [Fact]
-    public void Apple_ParseImages_ReadsNestedConfigurationSchema()
+    public void ParseContainers_ShapesIdStateAndPorts()
     {
         const string json = """
         [
           {
-            "configuration": {
-              "descriptor": { "digest": "sha256:96498ffd522e", "size": 12212 },
-              "name": "docker.io/library/hello-world:latest"
-            },
-            "id": "96498ffd522e",
-            "variants": []
+            "CreatedAt": 1783247887,
+            "Id": "54b33d1d705e20329034dc366442f97fb826d2b6952260a152c13666aff5dfb9",
+            "Image": "redis",
+            "Name": "redis",
+            "Ports": [ { "BindingAddress": "127.0.0.1", "ContainerPort": 6379, "HostPort": 6379, "Protocol": 6 } ],
+            "State": 2,
+            "StateChangedAt": 1784609346
+          },
+          {
+            "CreatedAt": 1783247931,
+            "Id": "ecdf3a98ed66d0f169b1227fc8737bc61e12085aae71ed4fdcede0117f094b6d",
+            "Image": "rabbitmq:management",
+            "Name": "rabbitmq",
+            "Ports": [],
+            "State": 3,
+            "StateChangedAt": 1784628212
           }
         ]
         """;
 
-        var image = Assert.Single(AppleContainerCliProvider.ParseImages(json));
+        IReadOnlyList<Container> containers = WslcContainerCliProvider.ParseContainers(json);
 
-        Assert.Equal("docker.io/library/hello-world", image.Repository);
-        Assert.Equal("latest", image.Tag);
-        Assert.Equal("96498ffd522e", image.Id);
+        Assert.Equal(2, containers.Count);
+
+        Container redis = containers[0];
+        Assert.Equal("54b33d1d705e", redis.Id);
+        Assert.Equal(12, redis.Id.Length);
+        Assert.Equal("redis", redis.Name);
+        Assert.Equal(ContainerState.Running, redis.State);
+        Assert.Equal("6379\u21926379/tcp", redis.Ports);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1783247887), redis.CreatedAt);
+
+        Container rabbit = containers[1];
+        Assert.Equal(ContainerState.Exited, rabbit.State);
+        Assert.Equal("\u2014", rabbit.Ports);
     }
 
     [Fact]
-    public void Apple_ParseContainers_EmptyOrNonArray_ReturnsEmpty()
-    {
-        Assert.Empty(AppleContainerCliProvider.ParseContainers("[]"));
-        Assert.Empty(AppleContainerCliProvider.ParseContainers("{}"));
-    }
-
-    [Fact]
-    public void Wslc_ParseContainers_ReadsDockerStyleJson()
-    {
-        const string json = """
-        [ { "ID": "abc123", "Names": "web", "Image": "nginx:latest", "State": "running", "Ports": "8080->80" } ]
-        """;
-
-        var container = Assert.Single(WslcCliProvider.ParseContainers(json));
-
-        Assert.Equal("abc123", container.Id);
-        Assert.Equal("web", container.Name);
-        Assert.Equal(ContainerStatus.Running, container.Status);
-        Assert.Equal("8080->80", container.Ports);
-    }
-
-    [Fact]
-    public void Wslc_ParseImages_ReadsColumns()
+    public void ParseImages_ShapesIdAndSize()
     {
         const string json = """
-        [ { "Repository": "nginx", "Tag": "latest", "ID": "sha256:abc", "CreatedSince": "3 days ago", "Size": "187MB" } ]
+        [
+          {
+            "Created": 1782970335,
+            "Id": "sha256:a2334b0057861fbfdf227b60817c5a45a9233719ce92e912e0cdb60c08203f5b",
+            "Repository": "rabbitmq",
+            "Size": 250460256,
+            "Tag": "management"
+          }
+        ]
         """;
 
-        var image = Assert.Single(WslcCliProvider.ParseImages(json));
+        ContainerImage image = Assert.Single(WslcContainerCliProvider.ParseImages(json));
 
-        Assert.Equal("nginx", image.Repository);
-        Assert.Equal("latest", image.Tag);
-        Assert.Equal("187MB", image.Size);
-        Assert.Equal("3 days ago", image.Created);
+        Assert.Equal("rabbitmq", image.Repository);
+        Assert.Equal("management", image.Tag);
+        Assert.Equal("a2334b005786", image.Id);
+        Assert.Equal(12, image.Id.Length);
+        Assert.Equal("239 MB", image.Size);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1782970335), image.Created);
     }
 
     [Fact]
-    public void Wslc_ParseImages_FallsBackToSingleReference()
+    public void ParseContainers_EmptyArray_ReturnsEmpty()
     {
-        const string json = """
-        [ { "Name": "docker.io/library/redis:7-alpine", "ID": "sha256:def" } ]
-        """;
+        Assert.Empty(WslcContainerCliProvider.ParseContainers("[]"));
+    }
 
-        var image = Assert.Single(WslcCliProvider.ParseImages(json));
-
-        Assert.Equal("docker.io/library/redis", image.Repository);
-        Assert.Equal("7-alpine", image.Tag);
+    [Fact]
+    public void ParseImages_EmptyArray_ReturnsEmpty()
+    {
+        Assert.Empty(WslcContainerCliProvider.ParseImages("[]"));
     }
 }

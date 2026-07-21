@@ -2,18 +2,17 @@ using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
+using Knarr.Service.Models;
 
 namespace Knarr.App.Features.Sidebar;
 
 public partial class SidebarViewModel : ViewModelBase
 {
-    private readonly IPlatformInfoProvider _platformInfo;
+    private readonly IContainerCliProvider _cliProvider;
 
-    public SidebarViewModel(IPlatformInfoProvider platformInfo, IContainerCliProvider cliProvider)
+    public SidebarViewModel(IContainerCliProvider cliProvider)
     {
-        _platformInfo = platformInfo;
-        PlatformName = platformInfo.PlatformName;
-        CliName = platformInfo.CliName;
+        _cliProvider = cliProvider;
 
         NavigationItems =
         [
@@ -29,9 +28,9 @@ public partial class SidebarViewModel : ViewModelBase
         SelectedItem = NavigationItems[0];
     }
 
-    /// <summary>Design-time constructor with sample platform information.</summary>
+    /// <summary>Design-time constructor; renders navigation without a container CLI.</summary>
     public SidebarViewModel()
-        : this(new DesignTimePlatformInfoProvider(), new DesignTimeContainerCliProvider())
+        : this(null!)
     {
     }
 
@@ -43,9 +42,12 @@ public partial class SidebarViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSidebarExpanded = true;
 
-    public string PlatformName { get; }
+    [ObservableProperty]
+    private string _platformName = "Windows";
 
-    public string CliName { get; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CliDisplay))]
+    private string _cliName = "wslc";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CliDisplay))]
@@ -59,9 +61,11 @@ public partial class SidebarViewModel : ViewModelBase
     /// <summary>Probes the container CLI for its version. Call once after construction on the UI thread.</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        await _platformInfo.RefreshCliInfoAsync(cancellationToken).ConfigureAwait(true);
-        IsCliReachable = _platformInfo.IsCliReachable;
-        CliVersion = _platformInfo.CliVersion;
+        PlatformInfo info = await _cliProvider.GetPlatformInfoAsync(cancellationToken).ConfigureAwait(true);
+        PlatformName = info.PlatformName;
+        CliName = info.CliName;
+        CliVersion = info.CliVersion;
+        IsCliReachable = info.IsCliReachable;
     }
 
     [RelayCommand]

@@ -14,11 +14,11 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var collection = new ServiceCollection();
+            ServiceCollection collection = new ServiceCollection();
             collection.AddCommonServices();
 
-            var services = collection.BuildServiceProvider();
-            var viewModel = services.GetRequiredService<MainWindowViewModel>();
+            ServiceProvider services = collection.BuildServiceProvider();
+            MainWindowViewModel viewModel = services.GetRequiredService<MainWindowViewModel>();
 
             desktop.MainWindow = new MainWindow
             {

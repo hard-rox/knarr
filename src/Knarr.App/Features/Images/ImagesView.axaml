@@ -110,10 +110,23 @@
           <TableViewColumn Header="Image" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ImageItem">
-                <SelectableTextBlock Text="{Binding RepoTag}"
-                                     VerticalAlignment="Center"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextBrush}" />
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SelectableTextBlock Text="{Binding RepoTag}"
+                                         VerticalAlignment="Center"
+                                         FontWeight="SemiBold"
+                                         Foreground="{DynamicResource TextBrush}" />
+                    <Button Classes="icon"
+                            ToolTip.Tip="Copy name"
+                            Click="OnCopyImageName">
+                      <PathIcon Data="{StaticResource CopyRegular}" />
+                    </Button>
+                  </StackPanel>
+                  <SelectableTextBlock Text="{Binding Id}"
+                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextDimBrush}" />
+                </StackPanel>
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>

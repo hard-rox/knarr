@@ -1,5 +1,3 @@
-using System;
-
 namespace Knarr.Service;
 
 /// <summary>

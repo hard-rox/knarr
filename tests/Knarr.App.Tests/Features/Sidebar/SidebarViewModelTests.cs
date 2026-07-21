@@ -2,22 +2,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using Knarr.App.Features.Sidebar;
 using Knarr.Service;
+using Knarr.Service.Models;
 using NSubstitute;
 
 namespace Knarr.App.Tests.Features.Sidebar;
 
 public class SidebarViewModelTests
 {
-    private static SidebarViewModel CreateViewModel(IPlatformInfoProvider? platformInfo = null)
+    private static SidebarViewModel CreateViewModel(IContainerCliProvider? cliProvider = null)
     {
-        platformInfo ??= Substitute.For<IPlatformInfoProvider>();
-        return new SidebarViewModel(platformInfo, Substitute.For<IContainerCliProvider>());
+        cliProvider ??= Substitute.For<IContainerCliProvider>();
+        return new SidebarViewModel(cliProvider);
     }
 
     [Fact]
     public void NavigationItems_AreSeeded()
     {
-        var vm = CreateViewModel();
+        SidebarViewModel vm = CreateViewModel();
 
         Assert.Equal(7, vm.NavigationItems.Count);
         Assert.Equal("Dashboard", vm.NavigationItems[0].Title);
@@ -27,7 +28,7 @@ public class SidebarViewModelTests
     [Fact]
     public void NavigationItems_UseIconResourceKeys()
     {
-        var vm = CreateViewModel();
+        SidebarViewModel vm = CreateViewModel();
 
         Assert.Equal("BoardRegular", vm.NavigationItems[0].Icon);
         Assert.Equal("SettingsRegular", vm.NavigationItems[^1].Icon);
@@ -36,7 +37,7 @@ public class SidebarViewModelTests
     [Fact]
     public void SelectedItem_DefaultsToDashboard()
     {
-        var vm = CreateViewModel();
+        SidebarViewModel vm = CreateViewModel();
 
         Assert.NotNull(vm.SelectedItem);
         Assert.Equal("Dashboard", vm.SelectedItem!.Title);
@@ -45,7 +46,7 @@ public class SidebarViewModelTests
     [Fact]
     public void IsExpandedByDefault()
     {
-        var vm = CreateViewModel();
+        SidebarViewModel vm = CreateViewModel();
 
         Assert.True(vm.IsSidebarExpanded);
     }
@@ -53,7 +54,7 @@ public class SidebarViewModelTests
     [Fact]
     public void ToggleSidebar_FlipsIsSidebarExpanded()
     {
-        var vm = CreateViewModel();
+        SidebarViewModel vm = CreateViewModel();
 
         vm.ToggleSidebarCommand.Execute(null);
         Assert.False(vm.IsSidebarExpanded);
@@ -63,43 +64,43 @@ public class SidebarViewModelTests
     }
 
     [Fact]
-    public void PlatformInfo_IsSurfacedFromProvider()
+    public async Task InitializeAsync_SurfacesProbedPlatformInfo()
     {
-        var platformInfo = Substitute.For<IPlatformInfoProvider>();
-        platformInfo.PlatformName.Returns("macOS");
-        platformInfo.CliName.Returns("apple container");
+        IContainerCliProvider cliProvider = Substitute.For<IContainerCliProvider>();
+        cliProvider.GetPlatformInfoAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new PlatformInfo
+            {
+                PlatformName = "Windows",
+                CliName = "wslc",
+                CliVersion = "v2.9.3.0",
+                IsCliReachable = true,
+            }));
 
-        var vm = CreateViewModel(platformInfo);
-
-        Assert.Equal("macOS", vm.PlatformName);
-        Assert.Equal("apple container", vm.CliName);
-    }
-
-    [Fact]
-    public async Task InitializeAsync_SurfacesProbedCliVersion()
-    {
-        var platformInfo = Substitute.For<IPlatformInfoProvider>();
-        platformInfo.CliName.Returns("apple container");
-        platformInfo.IsCliReachable.Returns(true);
-        platformInfo.CliVersion.Returns("v1.0.0");
-
-        var vm = CreateViewModel(platformInfo);
+        SidebarViewModel vm = CreateViewModel(cliProvider);
         await vm.InitializeAsync();
 
-        await platformInfo.Received(1).RefreshCliInfoAsync(Arg.Any<CancellationToken>());
+        await cliProvider.Received(1).GetPlatformInfoAsync(Arg.Any<CancellationToken>());
+        Assert.Equal("Windows", vm.PlatformName);
+        Assert.Equal("wslc", vm.CliName);
         Assert.True(vm.IsCliReachable);
-        Assert.Equal("v1.0.0", vm.CliVersion);
-        Assert.Equal("apple container v1.0.0", vm.CliDisplay);
+        Assert.Equal("v2.9.3.0", vm.CliVersion);
+        Assert.Equal("wslc v2.9.3.0", vm.CliDisplay);
     }
 
     [Fact]
     public async Task InitializeAsync_WhenCliUnreachable_ReportsNotReachable()
     {
-        var platformInfo = Substitute.For<IPlatformInfoProvider>();
-        platformInfo.IsCliReachable.Returns(false);
-        platformInfo.CliVersion.Returns("not detected");
+        IContainerCliProvider cliProvider = Substitute.For<IContainerCliProvider>();
+        cliProvider.GetPlatformInfoAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new PlatformInfo
+            {
+                PlatformName = "Windows",
+                CliName = "wslc",
+                CliVersion = "not detected",
+                IsCliReachable = false,
+            }));
 
-        var vm = CreateViewModel(platformInfo);
+        SidebarViewModel vm = CreateViewModel(cliProvider);
         await vm.InitializeAsync();
 
         Assert.False(vm.IsCliReachable);

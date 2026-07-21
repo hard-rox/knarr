@@ -7,7 +7,7 @@ public class DashboardViewModelTests
     [Fact]
     public void DefaultState_IsValid()
     {
-        var vm = new DashboardViewModel();
+        DashboardViewModel vm = new DashboardViewModel();
 
         Assert.NotNull(vm);
     }
