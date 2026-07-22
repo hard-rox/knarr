@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Knarr.App.Features.Images"
+        xmlns:controls="using:Knarr.App.Controls"
+        x:Class="Knarr.App.Features.Images.PullImageDialog"
+        x:DataType="vm:PullImageDialogViewModel"
+        Title="Pull image"
+        Width="620" Height="480"
+        MinWidth="480" MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BackgroundBaseBrush}">
+
+  <Design.DataContext>
+    <vm:PullImageDialogViewModel />
+  </Design.DataContext>
+
+        <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="14">
+
+    <!-- Reference input -->
+                <StackPanel Grid.Row="0" Spacing="6">
+      <TextBlock Text="Image reference"
+                 FontWeight="SemiBold"
+                 Foreground="{DynamicResource TextBrush}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Grid.Column="0"
+                                                                 Text="{Binding ImageReference}"
+                                                                 PlaceholderText="docker.io/library/alpine:3.20"
+                                                                 IsEnabled="{Binding !IsRunning}"
+                                                                 FontFamily="Cascadia Code,Consolas,monospace" />
+                                <Button Grid.Column="1"
+                                                                Content="Pull"
+                                                                Classes="accent"
+                                                                Command="{Binding PullCommand}"
+                                                                IsVisible="{Binding !IsRunning}" />
+                                <Button Grid.Column="1"
+                                                                Content="Cancel"
+                                                                Command="{Binding CancelCommand}"
+                                                                IsVisible="{Binding IsRunning}" />
+                        </Grid>
+    </StackPanel>
+
+    <!-- Status line -->
+    <TextBlock Grid.Row="1"
+               Text="{Binding StatusMessage}"
+               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+               FontSize="12"
+               Foreground="{DynamicResource TextDimBrush}" />
+
+    <!-- Terminal output -->
+    <controls:TerminalOutputView Grid.Row="2"
+                                 Lines="{Binding Output}"
+                                 State="{Binding State}"
+                                 IsTruncated="{Binding IsTruncated}"
+                                 TruncationNote="{Binding TruncationNote}"
+                                 Placeholder="Enter an image reference and click Pull to begin." />
+
+    <!-- In-flight progress -->
+    <ProgressBar Grid.Row="3"
+                 IsIndeterminate="True"
+                 IsVisible="{Binding IsRunning}"
+                 Foreground="{DynamicResource AccentBrush}" />
+
+    <!-- Actions -->
+    <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto">
+      <Button Grid.Column="0"
+              Content="Copy output"
+              Command="{Binding CopyOutputCommand}" />
+      <Button Grid.Column="2"
+              Content="Close"
+              Command="{Binding CloseCommand}" />
+    </Grid>
+  </Grid>
+</Window>

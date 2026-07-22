@@ -93,6 +93,76 @@ public class ImagesViewModelTests
     }
 
     [Fact]
+    public void Pull_WithFactory_RaisesPullDialogRequestedWithEmptyReference()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        PullImageDialogViewModel dialogVm = new(provider, NullLogger<PullImageDialogViewModel>.Instance);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, () => dialogVm);
+
+        PullImageDialogViewModel? requested = null;
+        vm.PullDialogRequested += (_, d) => requested = d;
+
+        vm.PullCommand.Execute(null);
+
+        Assert.Same(dialogVm, requested);
+        Assert.Equal(string.Empty, dialogVm.ImageReference);
+    }
+
+    [Fact]
+    public void Pull_WithReferenceParameter_PrefillsDialogReference()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        PullImageDialogViewModel dialogVm = new(provider, NullLogger<PullImageDialogViewModel>.Instance);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, () => dialogVm);
+
+        vm.PullCommand.Execute("redis");
+
+        Assert.Equal("redis", dialogVm.ImageReference);
+    }
+
+    [Fact]
+    public async Task Remove_UsesImageId_WhenRepositoryAndTagAreMissing()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        provider.RemoveImageAsync(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance);
+        ImageItem dangling = new()
+        {
+            Repository = string.Empty,
+            Tag = string.Empty,
+            Id = "abcd1234ef56",
+        };
+
+        await vm.RemoveCommand.ExecuteAsync(dangling);
+
+        await provider.Received(1).RemoveImageAsync("abcd1234ef56", true, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteSelected_UsesImageIdFallback_WhenRepoTagWouldBeInvalid()
+    {
+        IReadOnlyList<ContainerImage> images =
+        [
+            new() { Id = "abcd1234ef56", Repository = string.Empty, Tag = string.Empty, Size = "100 MB" },
+        ];
+        IContainerCliProvider provider = ProviderWith(images);
+        provider.RemoveImagesAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance);
+        vm.Images[0].IsSelected = true;
+
+        await vm.DeleteSelectedCommand.ExecuteAsync(null);
+
+        await provider.Received(1).RemoveImagesAsync(
+            Arg.Is<IReadOnlyList<string>>(refs => refs != null && refs.Count == 1 && refs[0] == "abcd1234ef56"),
+            true,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Selection_TracksCountAndHasSelection()
     {
         ImagesViewModel vm = CreateViewModel();

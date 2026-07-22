@@ -16,6 +16,7 @@
                 <ResourceInclude Source="avares://Knarr.App/Themes/Icons.axaml"/>
                 <ResourceInclude Source="avares://Knarr.App/Controls/Pill.axaml"/>
                 <ResourceInclude Source="avares://Knarr.App/Controls/Tile.axaml"/>
+                <ResourceInclude Source="avares://Knarr.App/Controls/TerminalOutputView.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

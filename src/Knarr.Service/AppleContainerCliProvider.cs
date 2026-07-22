@@ -1,9 +1,14 @@
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using CliWrap;
 using CliWrap.Buffered;
+using CliWrap.Builders;
 
 namespace Knarr.Service;
 
@@ -64,6 +69,9 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
 
     public Task PullImageAsync(string reference, CancellationToken cancellationToken = default)
         => RunAsync(cancellationToken, "image", "pull", reference);
+
+    public IAsyncEnumerable<CliOutputLine> PullImageStreamingAsync(string reference, CancellationToken cancellationToken = default)
+        => RunStreamingAsync(cancellationToken, "image", "pull", reference);
 
     public Task RemoveImageAsync(string reference, bool force = false, CancellationToken cancellationToken = default)
         => force
@@ -134,6 +142,166 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
 
         logger.LogError("CLI command failed: {Command} (exit {ExitCode}): {Error}", command, result.ExitCode, result.StandardError);
         throw new CliCommandException(command, result.ExitCode, result.StandardError);
+    }
+
+    /// <summary>
+    /// Runs a CLI command as a live event stream, translating each CliWrap event into a
+    /// CliWrap-agnostic <see cref="CliOutputLine"/>. The exact command line is emitted first, then
+    /// stdout/stderr lines in arrival order, then a terminating exit line. Cancellation is
+    /// cooperative: <paramref name="cancellationToken"/> requests a graceful interrupt, with a
+    /// forceful kill scheduled as a fallback so a stuck process cannot hang indefinitely.
+    /// </summary>
+    private async IAsyncEnumerable<CliOutputLine> RunStreamingAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken,
+        params string[] arguments)
+    {
+        var commandLine = $"{_executable} {string.Join(' ', arguments)}";
+        logger.LogDebug("Executing CLI command (streaming): {Command}", commandLine);
+        yield return CliOutputLine.ForCommand(commandLine);
+
+        using var forcefulCts = new CancellationTokenSource();
+        // When the caller cancels, request a graceful stop and schedule a forceful kill as a fallback.
+        await using CancellationTokenRegistration link = cancellationToken.Register(
+            () => forcefulCts.CancelAfter(TimeSpan.FromSeconds(3)));
+
+        Channel<CliOutputLine> channel = Channel.CreateUnbounded<CliOutputLine>();
+        StreamingPipeState stdOut = new(channel.Writer, CliOutputKind.StandardOutput);
+        StreamingPipeState stdErr = new(channel.Writer, CliOutputKind.StandardError);
+
+        var runTask = Task.Run(async () =>
+        {
+            try
+            {
+                CommandTask<CommandResult> commandTask = Cli.Wrap(_executable)
+                    .WithArguments(arguments)
+                    .WithValidation(CommandResultValidation.None)
+                    .WithStandardOutputPipe(stdOut.Target)
+                    .WithStandardErrorPipe(stdErr.Target)
+                    .ExecuteAsync(forcefulCts.Token, cancellationToken);
+
+                CommandResult result = await commandTask.ConfigureAwait(false);
+                stdOut.Flush();
+                stdErr.Flush();
+                channel.Writer.TryWrite(CliOutputLine.ForExit(result.ExitCode));
+            }
+            finally
+            {
+                channel.Writer.TryComplete();
+            }
+        }, CancellationToken.None);
+
+        await foreach (CliOutputLine line in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if (line.Kind == CliOutputKind.Exit)
+            {
+                if (line.ExitCode == 0)
+                {
+                    logger.LogDebug("CLI command succeeded: {Command}", commandLine);
+                }
+                else
+                {
+                    logger.LogError("CLI command failed: {Command} (exit {ExitCode})", commandLine, line.ExitCode);
+                }
+            }
+
+            yield return line;
+        }
+
+        await runTask.ConfigureAwait(false);
+    }
+
+    private sealed class StreamingPipeState(ChannelWriter<CliOutputLine> writer, CliOutputKind kind)
+    {
+        private readonly StringBuilder _buffer = new();
+        private readonly Decoder _decoder = Encoding.UTF8.GetDecoder();
+
+        public PipeTarget Target => PipeTarget.ToStream(new StreamingPipeStream(this));
+
+        public void Flush()
+        {
+            if (_buffer.Length == 0)
+            {
+                return;
+            }
+
+            writer.TryWrite(CreateLine(_buffer.ToString()));
+            _buffer.Clear();
+        }
+
+        private void AppendChunk(ReadOnlySpan<byte> chunk)
+        {
+            if (chunk.Length == 0)
+            {
+                return;
+            }
+
+            Span<char> chars = stackalloc char[chunk.Length];
+            _decoder.Convert(chunk, chars, flush: false, out _, out int charsUsed, out _);
+
+            for (var i = 0; i < charsUsed; i++)
+            {
+                char c = chars[i];
+
+                if (c == '\r' || c == '\n')
+                {
+                    if (_buffer.Length > 0)
+                    {
+                        writer.TryWrite(CreateLine(_buffer.ToString()));
+                        _buffer.Clear();
+                    }
+
+                    if (c == '\r' && i + 1 < charsUsed && chars[i + 1] == '\n')
+                    {
+                        i++;
+                    }
+
+                    continue;
+                }
+
+                _buffer.Append(c);
+            }
+        }
+
+        private CliOutputLine CreateLine(string text) => kind switch
+        {
+            CliOutputKind.StandardError => CliOutputLine.ForStandardError(text),
+            _ => CliOutputLine.ForStandardOutput(text),
+        };
+
+        private sealed class StreamingPipeStream(StreamingPipeState owner) : Stream
+        {
+            public override bool CanRead => false;
+            public override bool CanSeek => false;
+            public override bool CanWrite => true;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+
+            public override void Flush()
+            {
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+                => throw new NotSupportedException();
+
+            public override long Seek(long offset, SeekOrigin origin)
+                => throw new NotSupportedException();
+
+            public override void SetLength(long value)
+                => throw new NotSupportedException();
+
+            public override void Write(byte[] buffer, int offset, int count)
+                => owner.AppendChunk(buffer.AsSpan(offset, count));
+
+            public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                owner.AppendChunk(buffer.Span);
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 
     /// <summary>

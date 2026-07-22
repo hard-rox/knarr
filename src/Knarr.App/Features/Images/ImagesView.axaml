@@ -218,10 +218,15 @@
                    TextWrapping="Wrap"
                    FontSize="13"
                    Foreground="{DynamicResource TextDimBrush}" />
-        <Button Content="Pull image"
-                HorizontalAlignment="Center"
+        <Button HorizontalAlignment="Center"
                 Margin="0,4,0,0"
-                Command="{Binding PullCommand}" />
+                Classes="accent"
+                Command="{Binding PullCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource ArrowDownloadRegular}" Width="14" Height="14" />
+            <TextBlock Text="Pull image" />
+          </StackPanel>
+        </Button>
       </StackPanel>
 
       <!-- No results (search filter matched nothing) -->
@@ -240,12 +245,22 @@
                    FontSize="15"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource TextBrush}" />
-        <TextBlock Text="Try a different search term."
+        <TextBlock Text="Try a different search term, or pull it from a registry."
                    HorizontalAlignment="Center"
                    TextAlignment="Center"
                    TextWrapping="Wrap"
                    FontSize="13"
                    Foreground="{DynamicResource TextDimBrush}" />
+        <Button HorizontalAlignment="Center"
+                Margin="0,4,0,0"
+                Classes="accent"
+                Command="{Binding PullCommand}"
+                CommandParameter="{Binding SearchText}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource ArrowDownloadRegular}" Width="14" Height="14" />
+            <TextBlock Text="Pull image" />
+          </StackPanel>
+        </Button>
       </StackPanel>
 
       <!-- Error state -->

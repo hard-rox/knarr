@@ -11,15 +11,20 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ImagesViewModel> _logger;
+    private readonly Func<PullImageDialogViewModel>? _pullDialogFactory;
     private readonly List<ImageItem> _allImages = [];
 
     private DispatcherTimer? _refreshTimer;
     private bool _loadInFlight;
 
-    public ImagesViewModel(IContainerCliProvider cliProvider, ILogger<ImagesViewModel> logger)
+    public ImagesViewModel(
+        IContainerCliProvider cliProvider,
+        ILogger<ImagesViewModel> logger,
+        Func<PullImageDialogViewModel>? pullDialogFactory = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
+        _pullDialogFactory = pullDialogFactory;
         Images = [];
         _ = LoadAsync();
         StartAutoRefresh();
@@ -34,6 +39,12 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     }
 
     public ObservableCollection<ImageItem> Images { get; }
+
+    /// <summary>
+    /// Raised when a pull dialog should be shown. The view resolves the owner window and displays
+    /// the supplied, already-initialised dialog view model modally.
+    /// </summary>
+    public event EventHandler<PullImageDialogViewModel>? PullDialogRequested;
 
     [ObservableProperty]
     public partial string SearchText { get; set; } = string.Empty;
@@ -158,10 +169,20 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private void Pull()
+    private void Pull(string? initialReference)
     {
-        // Pull dialog (registry reference input) is a later milestone.
+        if (_pullDialogFactory is null)
+        {
+            return;
+        }
+
+        PullImageDialogViewModel dialogViewModel = _pullDialogFactory();
+        dialogViewModel.Reset(initialReference);
+        dialogViewModel.PullSucceeded += OnPullSucceeded;
+        PullDialogRequested?.Invoke(this, dialogViewModel);
     }
+
+    private void OnPullSucceeded(object? sender, EventArgs e) => _ = LoadAsync();
 
     [RelayCommand]
     private void Import()
@@ -173,7 +194,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private Task DeleteSelected()
     {
-        var references = SelectedImages.Select(i => i.RepoTag).ToList();
+        var references = SelectedImages.Select(ResolveImageReference).ToList();
         return references.Count == 0
             ? Task.CompletedTask
             : ExecuteAndReloadAsync(ct => _cliProvider.RemoveImagesAsync(references, force: true, ct));
@@ -200,7 +221,22 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
     [RelayCommand]
     private Task Remove(ImageItem image)
-        => ExecuteAndReloadAsync(ct => _cliProvider.RemoveImageAsync(image.RepoTag, force: true, ct));
+        => ExecuteAndReloadAsync(ct => _cliProvider.RemoveImageAsync(ResolveImageReference(image), force: true, ct));
+
+    private static string ResolveImageReference(ImageItem image)
+    {
+        if (!string.IsNullOrWhiteSpace(image.Repository) && !string.IsNullOrWhiteSpace(image.Tag))
+        {
+            return image.RepoTag;
+        }
+
+        if (!string.IsNullOrWhiteSpace(image.Id))
+        {
+            return image.Id;
+        }
+
+        return image.RepoTag;
+    }
 
     /// <summary>
     /// Loads (or reloads) the image list from the CLI. Safe to call repeatedly; concurrent calls
