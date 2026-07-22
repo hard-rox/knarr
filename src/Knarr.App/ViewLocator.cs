@@ -1,8 +1,6 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Knarr.App.Common;
 
 namespace Knarr.App;
 
@@ -20,7 +18,7 @@ public class ViewLocator : IDataTemplate
             return null;
 
         var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
-        var type = Type.GetType(name);
+        Type? type = Type.GetType(name);
 
         if (type != null)
         {

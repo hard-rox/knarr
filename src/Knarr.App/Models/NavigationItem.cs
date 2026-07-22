@@ -1,12 +1,9 @@
-using System;
-using Knarr.App.Common;
-
 namespace Knarr.App.Models;
 
 /// <summary>
 /// A single entry in the main window's left navigation sidebar.
 /// </summary>
-public sealed class NavigationItem
+public sealed partial class NavigationItem : ObservableObject
 {
     public NavigationItem(
         string title,
@@ -16,7 +13,7 @@ public sealed class NavigationItem
     {
         Title = title;
         Icon = icon;
-        Badge = badge;
+        _badge = badge;
         CreatePage = createPage;
     }
 
@@ -26,8 +23,10 @@ public sealed class NavigationItem
     /// <summary>Resource key of the icon geometry shown to the left of the label (e.g. "cube_regular").</summary>
     public string Icon { get; }
 
-    /// <summary>Optional count/badge shown on the right; null hides it.</summary>
-    public string? Badge { get; }
+    /// <summary>Optional count/badge shown on the right; null hides it. Updated live for some items.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBadge))]
+    private string? _badge;
 
     /// <summary>
     /// Factory that produces the page view model shown when this item is selected;

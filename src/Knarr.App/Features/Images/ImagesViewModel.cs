@@ -1,87 +1,72 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Knarr.App.Common;
-using Knarr.App.Models;
+using Avalonia.Threading;
+using Knarr.Service.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.Images;
 
-/// <summary>
-/// View model for the Images feature. Presents the list of images and exposes the actions that
-/// (in a later milestone) will map 1:1 onto CLI commands. For now the commands are stubs and the
-/// data is sample/design data.
-/// </summary>
-public partial class ImagesViewModel : ViewModelBase
+public partial class ImagesViewModel : ViewModelBase, IDisposable
 {
-    private readonly List<ImageItem> _allImages;
+    private static readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
 
+    private readonly IContainerCliProvider _cliProvider;
+    private readonly ILogger<ImagesViewModel> _logger;
+    private readonly List<ImageItem> _allImages = [];
+
+    private DispatcherTimer? _refreshTimer;
+    private bool _loadInFlight;
+
+    public ImagesViewModel(IContainerCliProvider cliProvider, ILogger<ImagesViewModel> logger)
+    {
+        _cliProvider = cliProvider;
+        _logger = logger;
+        Images = [];
+        _ = LoadAsync();
+        StartAutoRefresh();
+    }
+
+    /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ImagesViewModel()
     {
-        _allImages =
-        [
-            new ImageItem
-            {
-                Repository = "nginx",
-                Tag = "latest",
-                Id = "sha256:9c7a54a9a1b2",
-                Created = "3 days ago",
-                Size = "187 MB"
-            },
-            new ImageItem
-            {
-                Repository = "postgres",
-                Tag = "16",
-                Id = "sha256:b1f2e3c4d5e6",
-                Created = "1 week ago",
-                Size = "438 MB"
-            },
-            new ImageItem
-            {
-                Repository = "redis",
-                Tag = "7-alpine",
-                Id = "sha256:44de9a0f1e2d",
-                Created = "2 weeks ago",
-                Size = "41 MB"
-            },
-            new ImageItem
-            {
-                Repository = "worker",
-                Tag = "dev",
-                Id = "sha256:0a11cc22bb33",
-                Created = "1 hour ago",
-                Size = "312 MB"
-            },
-            new ImageItem
-            {
-                Repository = "ubuntu",
-                Tag = "24.04",
-                Id = "sha256:c2d3e4f5a6b7",
-                Created = "1 month ago",
-                Size = "78 MB"
-            }
-        ];
-
-        Images = new ObservableCollection<ImageItem>(_allImages);
-        foreach (var image in _allImages)
-        {
-            image.PropertyChanged += OnImagePropertyChanged;
-        }
+        _cliProvider = null!;
+        _logger = NullLogger<ImagesViewModel>.Instance;
+        Images = [];
     }
 
     public ObservableCollection<ImageItem> Images { get; }
 
     [ObservableProperty]
-    private string _searchText = string.Empty;
+    public partial string SearchText { get; set; } = string.Empty;
 
+    /// <summary>True while a CLI list/refresh is in flight.</summary>
     [ObservableProperty]
-    private ImageItem? _selectedImage;
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoResults))]
+    [NotifyPropertyChangedFor(nameof(HasItems))]
+    public partial bool IsLoading { get; set; }
+
+    /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasNoResults))]
+    public partial string? ErrorMessage { get; set; }
+
+    /// <summary>True when the last CLI action failed and <see cref="ErrorMessage"/> is set.</summary>
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    /// <summary>True when there are rows to display in the table.</summary>
+    public bool HasItems => !IsLoading && !HasError && Images.Count > 0;
+
+    /// <summary>True when the CLI returned no images at all (not merely filtered out).</summary>
+    public bool IsEmpty => !IsLoading && !HasError && _allImages.Count == 0;
+
+    /// <summary>True when images exist, but the current search filter matches none.</summary>
+    public bool HasNoResults => !IsLoading && !HasError && _allImages.Count > 0 && Images.Count == 0;
 
     /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ImageItem> SelectedImages =>
-        Images.Where(i => i.IsSelected).ToList();
+        [.. Images.Where(i => i.IsSelected)];
 
     public int SelectedCount => Images.Count(i => i.IsSelected);
 
@@ -111,7 +96,7 @@ public partial class ImagesViewModel : ViewModelBase
         {
             // When the user clicks a checked box, Avalonia cycles it to null. Treat this as deselect all.
             var target = value ?? false;
-            foreach (var image in Images)
+            foreach (ImageItem image in Images)
             {
                 image.IsSelected = target;
             }
@@ -139,12 +124,12 @@ public partial class ImagesViewModel : ViewModelBase
         {
             var term = SearchText.Trim();
             filtered = _allImages.Where(i =>
-                i.Repository.Contains(term, System.StringComparison.OrdinalIgnoreCase) ||
-                i.Tag.Contains(term, System.StringComparison.OrdinalIgnoreCase));
+                i.Repository.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                i.Tag.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
         Images.Clear();
-        foreach (var image in filtered)
+        foreach (ImageItem image in filtered)
         {
             Images.Add(image);
         }
@@ -153,81 +138,169 @@ public partial class ImagesViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(AllSelected));
+        OnPropertyChanged(nameof(HasItems));
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasNoResults));
     }
 
-    // Toolbar commands — stubs for the design milestone; real CLI wiring lands later.
+    // Toolbar commands — each maps 1:1 onto a CLI invocation via the provider, then reloads.
     [RelayCommand]
-    private void Refresh()
+    private Task Refresh()
     {
+        _logger.LogInformation("Manual images refresh requested");
+        return LoadAsync();
     }
 
     [RelayCommand]
     private void Build()
     {
+        // Build dialog is a later milestone.
     }
 
     [RelayCommand]
     private void Pull()
     {
-    }
-
-    [RelayCommand]
-    private void Push()
-    {
+        // Pull dialog (registry reference input) is a later milestone.
     }
 
     [RelayCommand]
     private void Import()
     {
+        // Import file picker is a later milestone.
     }
 
+    // Bulk (multiselect) commands — the provider runs each batch as a single command session.
     [RelayCommand]
-    private void Prune()
+    private Task DeleteSelected()
     {
+        var references = SelectedImages.Select(i => i.RepoTag).ToList();
+        return references.Count == 0
+            ? Task.CompletedTask
+            : ExecuteAndReloadAsync(ct => _cliProvider.RemoveImagesAsync(references, force: true, ct));
     }
 
-    // Bulk (multiselect) commands — operate on every ticked row. Stubs for the design milestone.
-    [RelayCommand]
-    private void PushSelected()
-    {
-        foreach (var image in SelectedImages)
-        {
-            PushImage(image);
-        }
-    }
-
-    [RelayCommand]
-    private void DeleteSelected()
-    {
-        foreach (var image in SelectedImages.ToList())
-        {
-            Remove(image);
-        }
-    }
-
-    // Row commands — stubs for the design milestone.
+    // Row commands.
     [RelayCommand]
     private void Run(ImageItem image)
     {
+        // Run wizard is a later milestone.
     }
 
     [RelayCommand]
     private void Tag(ImageItem image)
     {
-    }
-
-    [RelayCommand]
-    private void PushImage(ImageItem image)
-    {
+        // Tag dialog (target reference input) is a later milestone.
     }
 
     [RelayCommand]
     private void Inspect(ImageItem image)
     {
+        // Inspect viewer is a later milestone.
     }
 
     [RelayCommand]
-    private void Remove(ImageItem image)
+    private Task Remove(ImageItem image)
+        => ExecuteAndReloadAsync(ct => _cliProvider.RemoveImageAsync(image.RepoTag, force: true, ct));
+
+    /// <summary>
+    /// Loads (or reloads) the image list from the CLI. Safe to call repeatedly; concurrent calls
+    /// are coalesced. When <paramref name="showLoading"/> is false (background auto-refresh) the
+    /// loading indicator is not toggled, so the table stays visible without flicker. Failures are
+    /// surfaced via <see cref="ErrorMessage"/> and never throw.
+    /// </summary>
+    private async Task LoadAsync(bool showLoading = true, CancellationToken cancellationToken = default)
     {
+        if (_loadInFlight)
+        {
+            return;
+        }
+
+        _loadInFlight = true;
+        if (showLoading)
+        {
+            IsLoading = true;
+        }
+
+        ErrorMessage = null;
+        try
+        {
+            IReadOnlyList<ContainerImage> summaries = await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
+
+            foreach (ImageItem existing in _allImages)
+            {
+                existing.PropertyChanged -= OnImagePropertyChanged;
+            }
+
+            _allImages.Clear();
+            foreach (ContainerImage summary in summaries)
+            {
+                ImageItem item = new ImageItem(summary);
+                item.PropertyChanged += OnImagePropertyChanged;
+                _allImages.Add(item);
+            }
+
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Failed to load images");
+        }
+        finally
+        {
+            if (showLoading)
+            {
+                IsLoading = false;
+            }
+
+            _loadInFlight = false;
+        }
+    }
+
+    /// <summary>Runs a mutating CLI action, surfacing failures via <see cref="ErrorMessage"/>, then reloads.</summary>
+    private async Task ExecuteAndReloadAsync(Func<CancellationToken, Task> action)
+    {
+        try
+        {
+            await action(CancellationToken.None).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Image action failed");
+        }
+
+        await LoadAsync().ConfigureAwait(true);
+    }
+
+    /// <summary>Starts the periodic background refresh of the image list.</summary>
+    private void StartAutoRefresh()
+    {
+        if (_refreshTimer is not null)
+        {
+            return;
+        }
+
+        _refreshTimer = new DispatcherTimer { Interval = _refreshInterval };
+        _refreshTimer.Tick += async (_, _) => await LoadAsync(showLoading: false).ConfigureAwait(true);
+        _refreshTimer.Start();
+        _logger.LogDebug("Images auto-refresh started ({Interval}s)", _refreshInterval.TotalSeconds);
+    }
+
+    public void Dispose()
+    {
+        if (_refreshTimer is not null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer = null;
+            _logger.LogDebug("Images auto-refresh stopped");
+        }
+
+        foreach (ImageItem item in _allImages)
+        {
+            item.PropertyChanged -= OnImagePropertyChanged;
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

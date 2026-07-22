@@ -63,6 +63,12 @@ flowchart TD
 - Provider parses `--format json` output where available; falls back to table parsing otherwise.
 - Selection handled via DI at startup using `RuntimeInformation.IsOSPlatform`.
 
+> **Implementation status:** `IContainerCliProvider` is implemented with `AppleContainerCliProvider`
+> (macOS) and `WslcCliProvider` (Windows), selected by OS in `ServiceCollectionExtensions`. This
+> first milestone covers **container** and **image** operations (list/start/stop/restart/kill/remove/inspect
+> for containers; list/pull/push/tag/remove/prune/inspect for images). List output is requested as
+> `--format json` and parsed with `System.Text.Json`. Networks, volumes and registries follow later.
+
 ### Command mapping (illustrative)
 
 | Knarr action | Windows (`wslc`) | macOS (`container`) |
@@ -70,10 +76,10 @@ flowchart TD
 | List containers | `wslc list` | `container list` |
 | Run container | `wslc run [opts] <image>` | `container run [opts] <image>` |
 | Stop container | `wslc stop <id>` | `container stop <id>` |
-| Remove container | `wslc remove <id>` | `container rm <id>` |
-| List images | `wslc images` | `container images` |
+| Remove container | `wslc remove <id>` | `container delete <id>` |
+| List images | `wslc images` | `container image list` |
 | Build image | `wslc build` | `container build` |
-| Pull image | `wslc pull <image>` | `container pull <image>` |
+| Pull image | `wslc pull <image>` | `container image pull <image>` |
 | Registry login | `wslc login` | `container registry login` |
 
 > The Windows command surface below is authoritative per the `wslc` help output. macOS mappings follow the equivalent Apple Container verbs and are validated by the macOS provider.

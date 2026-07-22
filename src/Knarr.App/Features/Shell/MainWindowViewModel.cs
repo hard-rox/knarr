@@ -1,21 +1,19 @@
-using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Knarr.App.Common;
 using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.Shell;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IThemeService _themeService;
+    private readonly ILogger<MainWindowViewModel> _logger;
 
-    public MainWindowViewModel(IThemeService themeService, SidebarViewModel sidebar)
+    public MainWindowViewModel(IThemeService themeService, SidebarViewModel sidebar, ILogger<MainWindowViewModel> logger)
     {
         _themeService = themeService;
+        _logger = logger;
 
         Sidebar = sidebar;
         Sidebar.PropertyChanged += OnSidebarPropertyChanged;
@@ -24,7 +22,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Design-time constructor; wires the concrete stub services for the previewer.</summary>
     public MainWindowViewModel()
-        : this(new ThemeService(), new SidebarViewModel())
+        : this(new ThemeService(), new SidebarViewModel(), NullLogger<MainWindowViewModel>.Instance)
     {
     }
 
@@ -45,6 +43,12 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (e.PropertyName == nameof(SidebarViewModel.SelectedItem))
         {
+            // Dispose the outgoing page so its background work (e.g. auto-refresh timers) stops.
+            if (CurrentPage is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
             CurrentPage = Sidebar.SelectedItem?.CreatePage?.Invoke();
         }
     }

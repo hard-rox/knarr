@@ -59,19 +59,9 @@
             <PathIcon Data="{StaticResource ArrowDownloadRegular}" />
           </Button>
           <Button Classes="icon"
-                  ToolTip.Tip="Push"
-                  Command="{Binding PushCommand}">
-            <PathIcon Data="{StaticResource ArrowUploadRegular}" />
-          </Button>
-          <Button Classes="icon"
                   ToolTip.Tip="Import"
                   Command="{Binding ImportCommand}">
             <PathIcon Data="{StaticResource ArrowImportRegular}" />
-          </Button>
-          <Button Classes="icon"
-                  ToolTip.Tip="Prune"
-                  Command="{Binding PruneCommand}">
-            <PathIcon Data="{StaticResource DeleteRegular}" />
           </Button>
         </StackPanel>
 
@@ -79,11 +69,6 @@
                     Orientation="Horizontal"
                     Spacing="2"
                     IsVisible="{Binding HasSelection}">
-          <Button Classes="icon"
-                  ToolTip.Tip="Push selected"
-                  Command="{Binding PushSelectedCommand}">
-            <PathIcon Data="{StaticResource ArrowUploadRegular}" />
-          </Button>
           <Button Classes="icon"
                   ToolTip.Tip="Delete selected"
                   Command="{Binding DeleteSelectedCommand}">
@@ -99,10 +84,12 @@
             Classes="glass-panel"
             CornerRadius="16"
             ClipToBounds="True">
-      <TableView ItemsSource="{Binding Images}"
+      <Grid>
+        <TableView ItemsSource="{Binding Images}"
                  Theme="{StaticResource GlassTableTheme}"
                  Background="Transparent"
                  BorderThickness="0"
+                 IsVisible="{Binding HasItems}"
                  CanUserResizeColumns="False">
         <TableView.Columns>
 
@@ -119,39 +106,27 @@
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
 
-          <!-- Repository (selectable text) -->
-          <TableViewColumn Header="Repository" Width="Auto">
+          <!-- Image (selectable text) -->
+          <TableViewColumn Header="Image" Width="Auto">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ImageItem">
-                <SelectableTextBlock Text="{Binding Repository}"
-                                     VerticalAlignment="Center"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextBrush}" />
-              </DataTemplate>
-            </TableViewColumn.CellTemplate>
-          </TableViewColumn>
-
-          <!-- Tag (selectable text) -->
-          <TableViewColumn Header="Tag" Width="Auto">
-            <TableViewColumn.CellTemplate>
-              <DataTemplate x:DataType="models:ImageItem">
-                <SelectableTextBlock Text="{Binding Tag}"
-                                     VerticalAlignment="Center"
-                                     FontFamily="Cascadia Code,Consolas,monospace"
-                                     Foreground="{DynamicResource TextDimBrush}" />
-              </DataTemplate>
-            </TableViewColumn.CellTemplate>
-          </TableViewColumn>
-
-          <!-- Image ID (selectable text) -->
-          <TableViewColumn Header="Image ID" Width="Auto">
-            <TableViewColumn.CellTemplate>
-              <DataTemplate x:DataType="models:ImageItem">
-                <SelectableTextBlock Text="{Binding ShortId}"
-                                     VerticalAlignment="Center"
-                                     FontFamily="Cascadia Code,Consolas,monospace"
-                                     FontSize="11"
-                                     Foreground="{DynamicResource TextDimBrush}" />
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SelectableTextBlock Text="{Binding RepoTag}"
+                                         VerticalAlignment="Center"
+                                         FontWeight="SemiBold"
+                                         Foreground="{DynamicResource TextBrush}" />
+                    <Button Classes="icon"
+                            ToolTip.Tip="Copy name"
+                            Click="OnCopyImageName">
+                      <PathIcon Data="{StaticResource CopyRegular}" />
+                    </Button>
+                  </StackPanel>
+                  <SelectableTextBlock Text="{Binding Id}"
+                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextDimBrush}" />
+                </StackPanel>
               </DataTemplate>
             </TableViewColumn.CellTemplate>
           </TableViewColumn>
@@ -208,6 +183,100 @@
           </TableViewColumn>
         </TableView.Columns>
       </TableView>
+
+      <!-- Loading state -->
+      <StackPanel HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Spacing="14"
+                  MinHeight="200"
+                  IsVisible="{Binding IsLoading}">
+        <ProgressBar Width="180"
+                     Margin="0,12,0,0"
+                     IsIndeterminate="True"
+                     Foreground="{DynamicResource AccentBrush}" />
+        <TextBlock Text="Loading images&#x2026;"
+                   HorizontalAlignment="Center"
+                   FontSize="13"
+                   Foreground="{DynamicResource TextDimBrush}" />
+      </StackPanel>
+
+      <!-- Empty state (no images at all) -->
+      <StackPanel HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Spacing="10"
+                  MinHeight="200"
+                  MaxWidth="360"
+                  IsVisible="{Binding IsEmpty}">
+        <PathIcon Data="{StaticResource CloudRegular}"
+                  Width="40" Height="40"
+                  Foreground="{DynamicResource TextDimBrush}" />
+        <TextBlock Text="No images yet"
+                   HorizontalAlignment="Center"
+                   FontSize="15"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}" />
+        <TextBlock Text="Pull an image from a registry to get started."
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   FontSize="13"
+                   Foreground="{DynamicResource TextDimBrush}" />
+        <Button Content="Pull image"
+                HorizontalAlignment="Center"
+                Margin="0,4,0,0"
+                Command="{Binding PullCommand}" />
+      </StackPanel>
+
+      <!-- No results (search filter matched nothing) -->
+      <StackPanel HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Spacing="10"
+                  MinHeight="200"
+                  MaxWidth="360"
+                  IsVisible="{Binding HasNoResults}">
+        <PathIcon Data="{StaticResource SearchRegular}"
+                  Width="40" Height="40"
+                  Foreground="{DynamicResource TextDimBrush}" />
+        <TextBlock Text="No matching images"
+                   HorizontalAlignment="Center"
+                   FontSize="15"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}" />
+        <TextBlock Text="Try a different search term."
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   FontSize="13"
+                   Foreground="{DynamicResource TextDimBrush}" />
+      </StackPanel>
+
+      <!-- Error state -->
+      <StackPanel HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Spacing="10"
+                  MinHeight="200"
+                  MaxWidth="420"
+                  IsVisible="{Binding HasError}">
+        <PathIcon Data="{StaticResource WarningRegular}"
+                  Width="40" Height="40"
+                  Foreground="{DynamicResource TextDimBrush}" />
+        <TextBlock Text="Couldn't load images"
+                   HorizontalAlignment="Center"
+                   FontSize="15"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}" />
+        <SelectableTextBlock Text="{Binding ErrorMessage}"
+                             HorizontalAlignment="Center"
+                             TextAlignment="Center"
+                             TextWrapping="Wrap"
+                             FontSize="13"
+                             Foreground="{DynamicResource TextDimBrush}" />
+        <Button Content="Retry"
+                HorizontalAlignment="Center"
+                Margin="0,4,0,0"
+                Command="{Binding RefreshCommand}" />
+      </StackPanel>
+    </Grid>
     </Border>
   </Grid>
 

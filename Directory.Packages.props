@@ -11,7 +11,15 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.0" />
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
+    <PackageVersion Include="Serilog" Version="4.3.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.2" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageVersion Include="CliWrap" Version="3.10.2" />
   </ItemGroup>
 
   <!-- Test dependencies -->

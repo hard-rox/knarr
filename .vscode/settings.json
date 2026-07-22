@@ -5,6 +5,7 @@
         "axaml",
         "Knarr",
         "Mvvm",
+        "Serilog",
         "slnx",
         "wslc",
         "Xunit"

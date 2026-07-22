@@ -1,15 +1,43 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Knarr.App.Features.Images;
-using Xunit;
+using Knarr.App.Models;
+using Knarr.Service;
+using Knarr.Service.Models;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Knarr.App.Tests.Features.Images;
 
 public class ImagesViewModelTests
 {
-    [Fact]
-    public void DefaultState_SeedsImages()
+    private static readonly IReadOnlyList<ContainerImage> _sampleImages =
+    [
+        new() { Id = "111111111111", Repository = "nginx", Tag = "latest", Size = "187 MB" },
+        new() { Id = "222222222222", Repository = "postgres", Tag = "16", Size = "438 MB" },
+        new() { Id = "333333333333", Repository = "redis", Tag = "7-alpine", Size = "41 MB" },
+        new() { Id = "444444444444", Repository = "worker", Tag = "dev", Size = "312 MB" },
+        new() { Id = "555555555555", Repository = "ubuntu", Tag = "24.04", Size = "78 MB" },
+    ];
+
+    private static IContainerCliProvider ProviderWith(IReadOnlyList<ContainerImage> images)
     {
-        var vm = new ImagesViewModel();
+        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        provider.ListImagesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(images));
+        return provider;
+    }
+
+    private static ImagesViewModel CreateViewModel() => new(ProviderWith(_sampleImages), NullLogger<ImagesViewModel>.Instance);
+
+    [Fact]
+    public void DefaultState_LoadsImages()
+    {
+        ImagesViewModel vm = CreateViewModel();
 
         Assert.Equal(5, vm.Images.Count);
         Assert.Contains(vm.Images, i => i.Repository == "nginx");
@@ -19,7 +47,8 @@ public class ImagesViewModelTests
     [Fact]
     public void SearchText_FiltersByRepository()
     {
-        var vm = new ImagesViewModel { SearchText = "redis" };
+        ImagesViewModel vm = CreateViewModel();
+        vm.SearchText = "redis";
 
         Assert.Single(vm.Images);
         Assert.Equal("redis", vm.Images[0].Repository);
@@ -28,7 +57,8 @@ public class ImagesViewModelTests
     [Fact]
     public void SearchText_FiltersByTag_CaseInsensitive()
     {
-        var vm = new ImagesViewModel { SearchText = "LATEST" };
+        ImagesViewModel vm = CreateViewModel();
+        vm.SearchText = "LATEST";
 
         Assert.Single(vm.Images);
         Assert.Equal("nginx", vm.Images[0].Repository);
@@ -37,7 +67,8 @@ public class ImagesViewModelTests
     [Fact]
     public void SearchText_Cleared_RestoresAllImages()
     {
-        var vm = new ImagesViewModel { SearchText = "redis" };
+        ImagesViewModel vm = CreateViewModel();
+        vm.SearchText = "redis";
         Assert.Single(vm.Images);
 
         vm.SearchText = string.Empty;
@@ -48,18 +79,15 @@ public class ImagesViewModelTests
     [Fact]
     public void ToolbarAndRowCommands_DoNotThrow()
     {
-        var vm = new ImagesViewModel();
-        var image = vm.Images.First();
+        ImagesViewModel vm = CreateViewModel();
+        ImageItem image = vm.Images.First();
 
         vm.RefreshCommand.Execute(null);
         vm.BuildCommand.Execute(null);
         vm.PullCommand.Execute(null);
-        vm.PushCommand.Execute(null);
         vm.ImportCommand.Execute(null);
-        vm.PruneCommand.Execute(null);
         vm.RunCommand.Execute(image);
         vm.TagCommand.Execute(image);
-        vm.PushImageCommand.Execute(image);
         vm.InspectCommand.Execute(image);
         vm.RemoveCommand.Execute(image);
     }
@@ -67,7 +95,7 @@ public class ImagesViewModelTests
     [Fact]
     public void Selection_TracksCountAndHasSelection()
     {
-        var vm = new ImagesViewModel();
+        ImagesViewModel vm = CreateViewModel();
         Assert.False(vm.HasSelection);
         Assert.Equal(0, vm.SelectedCount);
 
@@ -82,7 +110,7 @@ public class ImagesViewModelTests
     [Fact]
     public void AllSelected_IsNull_WhenSelectionIsMixed()
     {
-        var vm = new ImagesViewModel();
+        ImagesViewModel vm = CreateViewModel();
 
         vm.Images[0].IsSelected = true;
 
@@ -92,7 +120,7 @@ public class ImagesViewModelTests
     [Fact]
     public void AllSelected_SetTrue_SelectsEveryRow()
     {
-        var vm = new ImagesViewModel();
+        ImagesViewModel vm = CreateViewModel();
 
         vm.AllSelected = true;
 
@@ -109,10 +137,108 @@ public class ImagesViewModelTests
     [Fact]
     public void BulkCommands_DoNotThrow()
     {
-        var vm = new ImagesViewModel();
+        ImagesViewModel vm = CreateViewModel();
         vm.AllSelected = true;
 
-        vm.PushSelectedCommand.Execute(null);
         vm.DeleteSelectedCommand.Execute(null);
+    }
+
+    [Fact]
+    public void DeleteSelected_RoutesEverySelectedRepoTagInOneForcedProviderCall()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+        vm.Images[0].IsSelected = true;
+        vm.Images[2].IsSelected = true;
+
+        vm.DeleteSelectedCommand.Execute(null);
+
+        provider.Received(1).RemoveImagesAsync(
+            Arg.Is<IReadOnlyList<string>>(refs =>
+                refs != null && refs.Count == 2 && refs.Contains("nginx:latest") && refs.Contains("redis:7-alpine")),
+            force: true,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void DeleteSelected_WithNoSelection_DoesNotCallProvider()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+
+        vm.DeleteSelectedCommand.Execute(null);
+
+        provider.DidNotReceive().RemoveImagesAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void LoadedState_HasItems()
+    {
+        ImagesViewModel vm = CreateViewModel();
+
+        Assert.True(vm.HasItems);
+        Assert.False(vm.IsLoading);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.HasError);
+        Assert.False(vm.HasNoResults);
+    }
+
+    [Fact]
+    public void EmptyState_WhenCliReturnsNoImages()
+    {
+        ImagesViewModel vm = new ImagesViewModel(ProviderWith([]), NullLogger<ImagesViewModel>.Instance);
+
+        Assert.True(vm.IsEmpty);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.HasError);
+        Assert.False(vm.HasNoResults);
+    }
+
+    [Fact]
+    public void ErrorState_WhenCliThrows()
+    {
+        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        provider.ListImagesAsync(Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("cli unreachable"));
+
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+
+        Assert.True(vm.HasError);
+        Assert.Equal("cli unreachable", vm.ErrorMessage);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.HasNoResults);
+    }
+
+    [Fact]
+    public void NoResultsState_WhenSearchMatchesNothing()
+    {
+        ImagesViewModel vm = CreateViewModel();
+        vm.SearchText = "zzz-no-such-image";
+
+        Assert.True(vm.HasNoResults);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.HasError);
+    }
+
+    [Fact]
+    public void LoadingState_WhileListInFlight()
+    {
+        TaskCompletionSource<IReadOnlyList<ContainerImage>> tcs = new TaskCompletionSource<IReadOnlyList<ContainerImage>>();
+        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        provider.ListImagesAsync(Arg.Any<CancellationToken>())
+            .Returns(tcs.Task);
+
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+
+        Assert.True(vm.IsLoading);
+        Assert.False(vm.HasItems);
+        Assert.False(vm.IsEmpty);
+
+        tcs.SetResult([]);
+
+        Assert.False(vm.IsLoading);
+        Assert.True(vm.IsEmpty);
     }
 }
