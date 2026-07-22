@@ -29,6 +29,7 @@
       <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.28" />
       <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
       <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
+      <SolidColorBrush x:Key="IconButtonIdleBrush" Color="#FFFFFF" Opacity="0.24" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
@@ -51,6 +52,7 @@
       <SolidColorBrush x:Key="StripBrush" Color="#FFFFFF" Opacity="0.04" />
       <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
       <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
+      <SolidColorBrush x:Key="IconButtonIdleBrush" Color="#FFFFFF" Opacity="0.06" />
     </ResourceDictionary>
 
   </ResourceDictionary.ThemeDictionaries>
@@ -64,8 +66,7 @@
 
       The two keyed resources below are picked up implicitly by all TableViews in the app:
       they hide the vertical header separators and align cell content with header content.
-      The companion Styles (Button.icon, row-selection suppression) live in App.axaml because
-      style selectors cannot be declared inside a ResourceDictionary.
+      Companion selectors (Button.icon, row-selection suppression) live in Themes/Styles.axaml.
     -->
 
   <!-- Remove the vertical separator lines drawn between header cells. -->

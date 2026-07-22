@@ -1,0 +1,70 @@
+<Styles xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Shared glass panel surface for cards, toolbars, and table wrappers. -->
+  <Style Selector="Border.glass-panel">
+    <Setter Property="Background" Value="{DynamicResource GlassFillBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="BoxShadow" Value="0 8 32 0 #2E1F2687" />
+  </Style>
+
+  <!-- Round icon button used across action toolbars. -->
+  <Style Selector="Button.icon">
+    <Setter Property="Background" Value="{DynamicResource IconButtonIdleBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="5" />
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+  </Style>
+  <Style Selector="Button.icon:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+  <Style Selector="Button.icon PathIcon">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+  </Style>
+
+  <!-- Disable row chrome; table selection is checkbox-driven in this app. -->
+  <Style Selector="TableViewRow:pointerover /template/ Border#Border">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TableViewRow:pressed /template/ Border#Border">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TableViewRow:selected /template/ Border#Border">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TableViewRow:selected:pointerover /template/ Border#Border">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TableViewRow:selected:pressed /template/ Border#Border">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="TextBox.search">
+    <Setter Property="MinHeight" Value="36" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+  <Style Selector="TextBox.search /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource GlassFillBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BoxShadow" Value="0 2 8 0 #1A1F2687" />
+  </Style>
+  <Style Selector="TextBox.search:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+  </Style>
+  <Style Selector="TextBox.search:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+
+</Styles>

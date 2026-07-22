@@ -12,10 +12,7 @@
   <Grid RowDefinitions="Auto,*" Margin="24" RowSpacing="16">
 
     <!-- Action bar: search (always) + toolbar / bulk actions -->
-    <Border Grid.Row="0"
-            Classes="glass-panel"
-            Padding="14,10">
-      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
 
         <!-- Search -->
         <TextBox Grid.Column="0"
@@ -76,7 +73,6 @@
           </Button>
         </StackPanel>
       </Grid>
-    </Border>
 
     <!-- Glass panel hosting the table -->
     <Border Grid.Row="1"
@@ -208,6 +204,7 @@
                   MaxWidth="360"
                   IsVisible="{Binding IsEmpty}">
         <PathIcon Data="{StaticResource CloudRegular}"
+                  Margin="0,20,0,0"
                   Width="40" Height="40"
                   Foreground="{DynamicResource TextDimBrush}" />
         <TextBlock Text="No images yet"
@@ -235,6 +232,7 @@
                   MaxWidth="360"
                   IsVisible="{Binding HasNoResults}">
         <PathIcon Data="{StaticResource SearchRegular}"
+                  Margin="0,20,0,0"
                   Width="40" Height="40"
                   Foreground="{DynamicResource TextDimBrush}" />
         <TextBlock Text="No matching images"
@@ -258,6 +256,7 @@
                   MaxWidth="420"
                   IsVisible="{Binding HasError}">
         <PathIcon Data="{StaticResource WarningRegular}"
+                  Margin="0,20,0,0"
                   Width="40" Height="40"
                   Foreground="{DynamicResource TextDimBrush}" />
         <TextBlock Text="Couldn't load images"
