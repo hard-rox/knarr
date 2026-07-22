@@ -7,7 +7,7 @@ using CliWrap.Buffered;
 
 namespace Knarr.Service;
 
-internal sealed partial class WslcCliProvider : IContainerCliProvider
+internal sealed partial class WslcCliProvider(ILogger<WslcCliProvider> logger) : IContainerCliProvider
 {
     private const string _executable = "wslc";
     private const string _emDash = "\u2014";
@@ -87,6 +87,7 @@ internal sealed partial class WslcCliProvider : IContainerCliProvider
 
     private async Task<(string Version, bool Reachable)> ProbeVersionAsync(CancellationToken cancellationToken)
     {
+        logger.LogDebug("Executing CLI command: {Command} --version", _executable);
         try
         {
             BufferedCommandResult result = await Cli.Wrap(_executable)
@@ -95,16 +96,26 @@ internal sealed partial class WslcCliProvider : IContainerCliProvider
                 .ExecuteBufferedAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return !result.IsSuccess ? ("not detected", false) : (ParseVersion(result.StandardOutput), true);
+            if (!result.IsSuccess)
+            {
+                logger.LogWarning("CLI probe failed: {Command} --version (exit {ExitCode})", _executable, result.ExitCode);
+                return ("not detected", false);
+            }
+
+            return (ParseVersion(result.StandardOutput), true);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            logger.LogWarning(ex, "CLI probe threw: {Command} --version", _executable);
             return ("not detected", false);
         }
     }
 
-    private static async Task<string> RunAsync(CancellationToken cancellationToken, params string[] arguments)
+    private async Task<string> RunAsync(CancellationToken cancellationToken, params string[] arguments)
     {
+        var command = $"{_executable} {string.Join(' ', arguments)}";
+        logger.LogDebug("Executing CLI command: {Command}", command);
+
         BufferedCommandResult result = await Cli.Wrap(_executable)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
@@ -113,10 +124,11 @@ internal sealed partial class WslcCliProvider : IContainerCliProvider
 
         if (result.IsSuccess)
         {
+            logger.LogDebug("CLI command succeeded: {Command}", command);
             return result.StandardOutput;
         }
 
-        var command = $"{_executable} {string.Join(' ', arguments)}";
+        logger.LogError("CLI command failed: {Command} (exit {ExitCode}): {Error}", command, result.ExitCode, result.StandardError);
         throw new CliCommandException(command, result.ExitCode, result.StandardError);
     }
 

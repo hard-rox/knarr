@@ -48,6 +48,7 @@ csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
 csharp_style_inlined_variable_declaration = true:suggestion
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
 
 # Naming: private fields with _ prefix
 dotnet_naming_rule.private_fields_underscore.symbols = private_fields

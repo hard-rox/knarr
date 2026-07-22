@@ -1,23 +1,35 @@
+using Avalonia.Threading;
 using Knarr.Service.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.Images;
 
-public partial class ImagesViewModel : ViewModelBase
+public partial class ImagesViewModel : ViewModelBase, IDisposable
 {
+    private static readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
+
     private readonly IContainerCliProvider _cliProvider;
+    private readonly ILogger<ImagesViewModel> _logger;
     private readonly List<ImageItem> _allImages = [];
 
-    public ImagesViewModel(IContainerCliProvider cliProvider)
+    private DispatcherTimer? _refreshTimer;
+    private bool _loadInFlight;
+
+    public ImagesViewModel(IContainerCliProvider cliProvider, ILogger<ImagesViewModel> logger)
     {
         _cliProvider = cliProvider;
+        _logger = logger;
         Images = [];
         _ = LoadAsync();
+        StartAutoRefresh();
     }
 
     /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ImagesViewModel()
     {
         _cliProvider = null!;
+        _logger = NullLogger<ImagesViewModel>.Instance;
         Images = [];
     }
 
@@ -133,7 +145,11 @@ public partial class ImagesViewModel : ViewModelBase
 
     // Toolbar commands — each maps 1:1 onto a CLI invocation via the provider, then reloads.
     [RelayCommand]
-    private Task Refresh() => LoadAsync();
+    private Task Refresh()
+    {
+        _logger.LogInformation("Manual images refresh requested");
+        return LoadAsync();
+    }
 
     [RelayCommand]
     private void Build()
@@ -188,16 +204,23 @@ public partial class ImagesViewModel : ViewModelBase
 
     /// <summary>
     /// Loads (or reloads) the image list from the CLI. Safe to call repeatedly; concurrent calls
-    /// are coalesced. Failures are surfaced via <see cref="ErrorMessage"/> and never throw.
+    /// are coalesced. When <paramref name="showLoading"/> is false (background auto-refresh) the
+    /// loading indicator is not toggled, so the table stays visible without flicker. Failures are
+    /// surfaced via <see cref="ErrorMessage"/> and never throw.
     /// </summary>
-    private async Task LoadAsync(CancellationToken cancellationToken = default)
+    private async Task LoadAsync(bool showLoading = true, CancellationToken cancellationToken = default)
     {
-        if (IsLoading)
+        if (_loadInFlight)
         {
             return;
         }
 
-        IsLoading = true;
+        _loadInFlight = true;
+        if (showLoading)
+        {
+            IsLoading = true;
+        }
+
         ErrorMessage = null;
         try
         {
@@ -221,10 +244,16 @@ public partial class ImagesViewModel : ViewModelBase
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Failed to load images");
         }
         finally
         {
-            IsLoading = false;
+            if (showLoading)
+            {
+                IsLoading = false;
+            }
+
+            _loadInFlight = false;
         }
     }
 
@@ -238,8 +267,40 @@ public partial class ImagesViewModel : ViewModelBase
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Image action failed");
         }
 
         await LoadAsync().ConfigureAwait(true);
+    }
+
+    /// <summary>Starts the periodic background refresh of the image list.</summary>
+    private void StartAutoRefresh()
+    {
+        if (_refreshTimer is not null)
+        {
+            return;
+        }
+
+        _refreshTimer = new DispatcherTimer { Interval = _refreshInterval };
+        _refreshTimer.Tick += async (_, _) => await LoadAsync(showLoading: false).ConfigureAwait(true);
+        _refreshTimer.Start();
+        _logger.LogDebug("Images auto-refresh started ({Interval}s)", _refreshInterval.TotalSeconds);
+    }
+
+    public void Dispose()
+    {
+        if (_refreshTimer is not null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer = null;
+            _logger.LogDebug("Images auto-refresh stopped");
+        }
+
+        foreach (ImageItem item in _allImages)
+        {
+            item.PropertyChanged -= OnImagePropertyChanged;
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

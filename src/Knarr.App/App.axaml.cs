@@ -18,6 +18,7 @@ public partial class App : Application
             collection.AddCommonServices();
 
             ServiceProvider services = collection.BuildServiceProvider();
+
             MainWindowViewModel viewModel = services.GetRequiredService<MainWindowViewModel>();
 
             desktop.MainWindow = new MainWindow

@@ -1,22 +1,44 @@
+using System;
+using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
+using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
 using Knarr.App.Features.Shell;
 using Knarr.App.Features.Sidebar;
 using Knarr.App.Services;
 using Knarr.Service;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace Knarr.App.Tests.Features.Shell;
 
 public class MainWindowViewModelTests
 {
+    private static IServiceProvider BuildServices(IContainerCliProvider cliProvider)
+    {
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddSingleton(cliProvider);
+        services.AddTransient<DashboardViewModel>();
+        services.AddTransient<ContainersViewModel>();
+        services.AddTransient<ImagesViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        return services.BuildServiceProvider();
+    }
+
     private static MainWindowViewModel CreateViewModel(
         IThemeService? themeService = null,
         SidebarViewModel? sidebar = null)
     {
         themeService ??= Substitute.For<IThemeService>();
-        sidebar ??= new SidebarViewModel(Substitute.For<IContainerCliProvider>());
-        return new MainWindowViewModel(themeService, sidebar);
+        if (sidebar is null)
+        {
+            IContainerCliProvider cliProvider = Substitute.For<IContainerCliProvider>();
+            sidebar = new SidebarViewModel(BuildServices(cliProvider), cliProvider, NullLogger<SidebarViewModel>.Instance);
+        }
+
+        return new MainWindowViewModel(themeService, sidebar, NullLogger<MainWindowViewModel>.Instance);
     }
 
     [Fact]

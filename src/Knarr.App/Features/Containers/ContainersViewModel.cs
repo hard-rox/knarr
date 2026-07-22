@@ -1,4 +1,7 @@
+using Avalonia.Threading;
 using Knarr.Service.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Container = Knarr.Service.Models.Container;
 
 namespace Knarr.App.Features.Containers;
@@ -8,24 +11,33 @@ namespace Knarr.App.Features.Containers;
 /// lifecycle actions, each of which maps 1:1 onto a single CLI command via
 /// <see cref="IContainerCliProvider"/>. Data is loaded from the host container CLI.
 /// </summary>
-public partial class ContainersViewModel : ViewModelBase
+public partial class ContainersViewModel : ViewModelBase, IDisposable
 {
+    private static readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
+
     private readonly IContainerCliProvider _cliProvider;
+    private readonly ILogger<ContainersViewModel> _logger;
     private readonly List<ContainerItem> _allContainers = [];
 
-    public ContainersViewModel(IContainerCliProvider cliProvider)
+    private DispatcherTimer? _refreshTimer;
+    private bool _loadInFlight;
+
+    public ContainersViewModel(IContainerCliProvider cliProvider, ILogger<ContainersViewModel> logger)
     {
         _cliProvider = cliProvider;
+        _logger = logger;
         Containers = new ObservableCollection<ContainerItem>();
 
         // Kick off the initial load; property updates marshal back to the UI thread.
         _ = LoadAsync();
+        StartAutoRefresh();
     }
 
     /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ContainersViewModel()
     {
         _cliProvider = null!;
+        _logger = NullLogger<ContainersViewModel>.Instance;
         Containers = new ObservableCollection<ContainerItem>();
     }
 
@@ -153,16 +165,23 @@ public partial class ContainersViewModel : ViewModelBase
 
     /// <summary>
     /// Loads (or reloads) the container list from the CLI. Safe to call repeatedly; concurrent
-    /// calls are coalesced. Failures are surfaced via <see cref="ErrorMessage"/> and never throw.
+    /// calls are coalesced. When <paramref name="showLoading"/> is false (background auto-refresh)
+    /// the loading indicator is not toggled, so the table stays visible without flicker. Failures
+    /// are surfaced via <see cref="ErrorMessage"/> and never throw.
     /// </summary>
-    private async Task LoadAsync(CancellationToken cancellationToken = default)
+    private async Task LoadAsync(bool showLoading = true, CancellationToken cancellationToken = default)
     {
-        if (IsLoading)
+        if (_loadInFlight)
         {
             return;
         }
 
-        IsLoading = true;
+        _loadInFlight = true;
+        if (showLoading)
+        {
+            IsLoading = true;
+        }
+
         ErrorMessage = null;
         try
         {
@@ -191,16 +210,26 @@ public partial class ContainersViewModel : ViewModelBase
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Failed to load containers");
         }
         finally
         {
-            IsLoading = false;
+            if (showLoading)
+            {
+                IsLoading = false;
+            }
+
+            _loadInFlight = false;
         }
     }
 
     // Lifecycle commands — each maps 1:1 onto a CLI invocation via the provider, then reloads.
     [RelayCommand]
-    private Task Refresh() => LoadAsync();
+    private Task Refresh()
+    {
+        _logger.LogInformation("Manual containers refresh requested");
+        return LoadAsync();
+    }
 
     [RelayCommand]
     private void RunContainer()
@@ -280,8 +309,40 @@ public partial class ContainersViewModel : ViewModelBase
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Container action failed");
         }
 
         await LoadAsync().ConfigureAwait(true);
+    }
+
+    /// <summary>Starts the periodic background refresh of the container list.</summary>
+    private void StartAutoRefresh()
+    {
+        if (_refreshTimer is not null)
+        {
+            return;
+        }
+
+        _refreshTimer = new DispatcherTimer { Interval = _refreshInterval };
+        _refreshTimer.Tick += async (_, _) => await LoadAsync(showLoading: false).ConfigureAwait(true);
+        _refreshTimer.Start();
+        _logger.LogDebug("Containers auto-refresh started ({Interval}s)", _refreshInterval.TotalSeconds);
+    }
+
+    public void Dispose()
+    {
+        if (_refreshTimer is not null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer = null;
+            _logger.LogDebug("Containers auto-refresh stopped");
+        }
+
+        foreach (ContainerItem item in _allContainers)
+        {
+            item.PropertyChanged -= OnContainerPropertyChanged;
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

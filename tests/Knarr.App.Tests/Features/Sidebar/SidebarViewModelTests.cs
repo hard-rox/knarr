@@ -1,18 +1,37 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Knarr.App.Features.Containers;
+using Knarr.App.Features.Dashboard;
+using Knarr.App.Features.Images;
+using Knarr.App.Features.Settings;
 using Knarr.App.Features.Sidebar;
 using Knarr.Service;
 using Knarr.Service.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace Knarr.App.Tests.Features.Sidebar;
 
 public class SidebarViewModelTests
 {
+    private static IServiceProvider BuildServices(IContainerCliProvider cliProvider)
+    {
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddSingleton(cliProvider);
+        services.AddTransient<DashboardViewModel>();
+        services.AddTransient<ContainersViewModel>();
+        services.AddTransient<ImagesViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        return services.BuildServiceProvider();
+    }
+
     private static SidebarViewModel CreateViewModel(IContainerCliProvider? cliProvider = null)
     {
         cliProvider ??= Substitute.For<IContainerCliProvider>();
-        return new SidebarViewModel(cliProvider);
+        return new SidebarViewModel(BuildServices(cliProvider), cliProvider, NullLogger<SidebarViewModel>.Instance);
     }
 
     [Fact]

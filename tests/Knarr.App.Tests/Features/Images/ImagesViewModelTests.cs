@@ -7,6 +7,7 @@ using Knarr.App.Features.Images;
 using Knarr.App.Models;
 using Knarr.Service;
 using Knarr.Service.Models;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -31,7 +32,7 @@ public class ImagesViewModelTests
         return provider;
     }
 
-    private static ImagesViewModel CreateViewModel() => new(ProviderWith(_sampleImages));
+    private static ImagesViewModel CreateViewModel() => new(ProviderWith(_sampleImages), NullLogger<ImagesViewModel>.Instance);
 
     [Fact]
     public void DefaultState_LoadsImages()
@@ -146,7 +147,7 @@ public class ImagesViewModelTests
     public void DeleteSelected_RoutesEverySelectedRepoTagInOneForcedProviderCall()
     {
         IContainerCliProvider provider = ProviderWith(_sampleImages);
-        ImagesViewModel vm = new ImagesViewModel(provider);
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
         vm.Images[0].IsSelected = true;
         vm.Images[2].IsSelected = true;
 
@@ -163,7 +164,7 @@ public class ImagesViewModelTests
     public void DeleteSelected_WithNoSelection_DoesNotCallProvider()
     {
         IContainerCliProvider provider = ProviderWith(_sampleImages);
-        ImagesViewModel vm = new ImagesViewModel(provider);
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
 
         vm.DeleteSelectedCommand.Execute(null);
 
@@ -185,7 +186,7 @@ public class ImagesViewModelTests
     [Fact]
     public void EmptyState_WhenCliReturnsNoImages()
     {
-        ImagesViewModel vm = new ImagesViewModel(ProviderWith([]));
+        ImagesViewModel vm = new ImagesViewModel(ProviderWith([]), NullLogger<ImagesViewModel>.Instance);
 
         Assert.True(vm.IsEmpty);
         Assert.False(vm.HasItems);
@@ -200,7 +201,7 @@ public class ImagesViewModelTests
         provider.ListImagesAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("cli unreachable"));
 
-        ImagesViewModel vm = new ImagesViewModel(provider);
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
 
         Assert.True(vm.HasError);
         Assert.Equal("cli unreachable", vm.ErrorMessage);
@@ -229,7 +230,7 @@ public class ImagesViewModelTests
         provider.ListImagesAsync(Arg.Any<CancellationToken>())
             .Returns(tcs.Task);
 
-        ImagesViewModel vm = new ImagesViewModel(provider);
+        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
 
         Assert.True(vm.IsLoading);
         Assert.False(vm.HasItems);
