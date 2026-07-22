@@ -143,6 +143,34 @@ public class ImagesViewModelTests
     }
 
     [Fact]
+    public void DeleteSelected_RoutesEverySelectedRepoTagInOneForcedProviderCall()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        ImagesViewModel vm = new ImagesViewModel(provider);
+        vm.Images[0].IsSelected = true;
+        vm.Images[2].IsSelected = true;
+
+        vm.DeleteSelectedCommand.Execute(null);
+
+        provider.Received(1).RemoveImagesAsync(
+            Arg.Is<IReadOnlyList<string>>(refs =>
+                refs != null && refs.Count == 2 && refs.Contains("nginx:latest") && refs.Contains("redis:7-alpine")),
+            force: true,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void DeleteSelected_WithNoSelection_DoesNotCallProvider()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        ImagesViewModel vm = new ImagesViewModel(provider);
+
+        vm.DeleteSelectedCommand.Execute(null);
+
+        provider.DidNotReceive().RemoveImagesAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void LoadedState_HasItems()
     {
         ImagesViewModel vm = CreateViewModel();

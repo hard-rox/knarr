@@ -7,7 +7,7 @@ using CliWrap.Buffered;
 
 namespace Knarr.Service;
 
-internal sealed partial class WslcContainerCliProvider : IContainerCliProvider
+internal sealed partial class WslcCliProvider : IContainerCliProvider
 {
     private const string _executable = "wslc";
     private const string _emDash = "\u2014";
@@ -37,6 +37,21 @@ internal sealed partial class WslcContainerCliProvider : IContainerCliProvider
             ? RunAsync(cancellationToken, "remove", "--force", id)
             : RunAsync(cancellationToken, "remove", id);
 
+    public Task StartContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default)
+        => RunBatchLoopAsync(id => StartContainerAsync(id, cancellationToken), ids);
+
+    public Task StopContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default)
+        => ids.Count == 0
+            ? Task.CompletedTask
+            : RunAsync(cancellationToken, ["stop", .. ids]);
+
+    public Task RemoveContainersAsync(IReadOnlyList<string> ids, bool force = false, CancellationToken cancellationToken = default)
+        => ids.Count == 0
+            ? Task.CompletedTask
+            : force
+                ? RunAsync(cancellationToken, ["remove", "--force", .. ids])
+                : RunAsync(cancellationToken, ["remove", .. ids]);
+
     public async Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default)
     {
         var json = await RunAsync(cancellationToken, "images", "--format", "json").ConfigureAwait(false);
@@ -50,6 +65,13 @@ internal sealed partial class WslcContainerCliProvider : IContainerCliProvider
         => force
             ? RunAsync(cancellationToken, "rmi", "--force", reference)
             : RunAsync(cancellationToken, "rmi", reference);
+
+    public Task RemoveImagesAsync(IReadOnlyList<string> references, bool force = false, CancellationToken cancellationToken = default)
+        => references.Count == 0
+            ? Task.CompletedTask
+            : force
+                ? RunAsync(cancellationToken, ["rmi", "--force", .. references])
+                : RunAsync(cancellationToken, ["rmi", .. references]);
 
     public async Task<PlatformInfo> GetPlatformInfoAsync(CancellationToken cancellationToken = default)
     {
@@ -96,6 +118,32 @@ internal sealed partial class WslcContainerCliProvider : IContainerCliProvider
 
         var command = $"{_executable} {string.Join(' ', arguments)}";
         throw new CliCommandException(command, result.ExitCode, result.StandardError);
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> for every id, collecting any <see cref="CliCommandException"/>
+    /// so a single failing item does not abort the batch. Aggregated failures surface as a
+    /// <see cref="BulkCliCommandException"/>.
+    /// </summary>
+    private static async Task RunBatchLoopAsync(Func<string, Task> action, IReadOnlyList<string> ids)
+    {
+        List<CliCommandException> failures = [];
+        foreach (var id in ids)
+        {
+            try
+            {
+                await action(id).ConfigureAwait(false);
+            }
+            catch (CliCommandException ex)
+            {
+                failures.Add(ex);
+            }
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new BulkCliCommandException(failures);
+        }
     }
 
     internal static IReadOnlyList<Container> ParseContainers(string json)

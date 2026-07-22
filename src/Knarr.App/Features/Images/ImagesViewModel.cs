@@ -153,14 +153,14 @@ public partial class ImagesViewModel : ViewModelBase
         // Import file picker is a later milestone.
     }
 
-    // Bulk (multiselect) commands operate on every ticked row.
+    // Bulk (multiselect) commands — the provider runs each batch as a single command session.
     [RelayCommand]
-    private async Task DeleteSelected()
+    private Task DeleteSelected()
     {
-        foreach (ImageItem image in SelectedImages.ToList())
-        {
-            await Remove(image).ConfigureAwait(true);
-        }
+        var references = SelectedImages.Select(i => i.RepoTag).ToList();
+        return references.Count == 0
+            ? Task.CompletedTask
+            : ExecuteAndReloadAsync(ct => _cliProvider.RemoveImagesAsync(references, force: true, ct));
     }
 
     // Row commands.

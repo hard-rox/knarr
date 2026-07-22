@@ -10,18 +10,26 @@ namespace Knarr.Service;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the platform-appropriate <see cref="IContainerCliProvider"/>. Only Windows (wslc)
-    /// is supported for now; other platforms throw <see cref="PlatformNotSupportedException"/>.
+    /// Registers the platform-appropriate <see cref="IContainerCliProvider"/>: Windows uses
+    /// <c>wslc</c>, macOS uses Apple's <c>container</c> CLI. Other platforms throw
+    /// <see cref="PlatformNotSupportedException"/>.
     /// </summary>
     public static IServiceCollection AddContainerServices(this IServiceCollection services)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            services.AddSingleton<IContainerCliProvider, WslcCliProvider>();
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            services.AddSingleton<IContainerCliProvider, AppleContainerCliProvider>();
+        }
+        else
         {
             throw new PlatformNotSupportedException(
-                "Knarr currently supports only Windows (wslc). Other platforms are not yet implemented.");
+                "Knarr supports only Windows (wslc) and macOS (container). This platform is not implemented.");
         }
 
-        services.AddSingleton<IContainerCliProvider, WslcContainerCliProvider>();
         return services;
     }
 }

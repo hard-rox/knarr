@@ -36,7 +36,7 @@ public class CliProviderParsingTests
         ]
         """;
 
-        IReadOnlyList<Container> containers = WslcContainerCliProvider.ParseContainers(json);
+        IReadOnlyList<Container> containers = WslcCliProvider.ParseContainers(json);
 
         Assert.Equal(2, containers.Count);
 
@@ -68,7 +68,7 @@ public class CliProviderParsingTests
         ]
         """;
 
-        ContainerImage image = Assert.Single(WslcContainerCliProvider.ParseImages(json));
+        ContainerImage image = Assert.Single(WslcCliProvider.ParseImages(json));
 
         Assert.Equal("rabbitmq", image.Repository);
         Assert.Equal("management", image.Tag);
@@ -81,12 +81,107 @@ public class CliProviderParsingTests
     [Fact]
     public void ParseContainers_EmptyArray_ReturnsEmpty()
     {
-        Assert.Empty(WslcContainerCliProvider.ParseContainers("[]"));
+        Assert.Empty(WslcCliProvider.ParseContainers("[]"));
     }
 
     [Fact]
     public void ParseImages_EmptyArray_ReturnsEmpty()
     {
-        Assert.Empty(WslcContainerCliProvider.ParseImages("[]"));
+        Assert.Empty(WslcCliProvider.ParseImages("[]"));
+    }
+}
+
+/// <summary>
+/// Unit tests for <see cref="BulkCliCommandException"/>, which aggregates the per-item failures of a
+/// bulk operation that loops one CLI invocation per item.
+/// </summary>
+public class BulkCliCommandExceptionTests
+{
+    [Fact]
+    public void Message_ForSingleFailure_MatchesUnderlyingCommand()
+    {
+        CliCommandException inner = new CliCommandException("container start abc", 1, "boom");
+        BulkCliCommandException ex = new BulkCliCommandException([inner]);
+
+        Assert.Single(ex.Failures);
+        Assert.Equal(inner.Message, ex.Message);
+    }
+
+    [Fact]
+    public void Message_ForMultipleFailures_ListsEveryFailure()
+    {
+        CliCommandException first = new CliCommandException("container start abc", 1, "boom");
+        CliCommandException second = new CliCommandException("container start def", 1, "kaboom");
+
+        BulkCliCommandException ex = new BulkCliCommandException([first, second]);
+
+        Assert.Equal(2, ex.Failures.Count);
+        Assert.Contains("2 commands failed", ex.Message);
+        Assert.Contains("boom", ex.Message);
+        Assert.Contains("kaboom", ex.Message);
+    }
+}
+
+/// <summary>
+/// Unit tests for the Apple <c>container</c> provider's JSON parsing and shaping. The sample
+/// payloads match the real <c>container list --format json</c> / <c>container image list --format json</c>
+/// output structure (nested configuration/status, ISO 8601 dates).
+/// </summary>
+public class AppleCliProviderParsingTests
+{
+    [Fact]
+    public void ParseContainers_ShapesIdImageStateAndDates()
+    {
+        const string json = """
+        [{"configuration":{"capAdd":[],"capDrop":[],"creationDate":"2026-07-22T01:29:45Z","dns":{"nameservers":[],"options":[],"searchDomains":[]},"id":"dcf0335b-14f3-4afa-b5f0-dce3f3462c52","image":{"descriptor":{"digest":"sha256:c3cbe1cc1aa588a64951ac6286e0df7b27fe2e6324b1001c619bb358770c0178","mediaType":"application/vnd.oci.image.index.v1+json","size":12212},"reference":"docker.io/library/hello-world:latest"},"initProcess":{"arguments":[],"environment":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"executable":"/hello","rlimits":[],"supplementalGroups":[],"terminal":false,"user":{"id":{"gid":0,"uid":0}},"workingDirectory":"/"},"labels":{},"mounts":[],"networks":[{"network":"default","options":{"hostname":"dcf0335b-14f3-4afa-b5f0-dce3f3462c52","mtu":1280}}],"platform":{"architecture":"arm64","os":"linux"},"publishedPorts":[],"publishedSockets":[],"readOnly":false,"resources":{"cpuOverhead":1,"cpus":4,"memoryInBytes":1073741824},"rosetta":false,"runtimeHandler":"container-runtime-linux","ssh":false,"sysctls":{},"useInit":false,"virtualization":false},"id":"dcf0335b-14f3-4afa-b5f0-dce3f3462c52","status":{"networks":[],"startedDate":"2026-07-22T01:29:46Z","state":"stopped"}}]
+        """;
+
+        Container container = Assert.Single(AppleContainerCliProvider.ParseContainers(json));
+
+        Assert.Equal("dcf0335b-14f3-4afa-b5f0-dce3f3462c52", container.Id);
+        Assert.Equal("dcf0335b-14f3-4afa-b5f0-dce3f3462c52", container.Name);
+        Assert.Equal("docker.io/library/hello-world:latest", container.Image);
+        Assert.Equal(ContainerState.Exited, container.State);
+        Assert.Equal("\u2014", container.Ports);
+        Assert.Equal(new DateTimeOffset(2026, 7, 22, 1, 29, 45, TimeSpan.Zero), container.CreatedAt);
+        Assert.Equal(new DateTimeOffset(2026, 7, 22, 1, 29, 46, TimeSpan.Zero), container.StateChangedAt);
+    }
+
+    [Fact]
+    public void ParseImages_ShapesRepositoryTagIdAndSize()
+    {
+        const string json = """
+        [{"configuration":{"creationDate":"2026-03-23T21:34:00Z","descriptor":{"digest":"sha256:c3cbe1cc1aa588a64951ac6286e0df7b27fe2e6324b1001c619bb358770c0178","mediaType":"application/vnd.oci.image.index.v1+json","size":12212},"name":"docker.io/library/hello-world:latest"},"id":"c3cbe1cc1aa588a64951ac6286e0df7b27fe2e6324b1001c619bb358770c0178","variants":[{"digest":"sha256:5099b89d7666cc2186cad769ddc262ddc7c335b33f5fe79f9ffe50a01282b23e","platform":{"architecture":"arm64","os":"linux","variant":"v8"},"size":4768}]},{"configuration":{"creationDate":"1970-01-01T00:00:00Z","descriptor":{"digest":"sha256:7d9231be1863c289ba522363b5069a5c073c62f34eb240797b0fa289c09cc952","mediaType":"application/vnd.oci.image.index.v1+json","size":306},"name":"ghcr.io/apple/containerization/vminit:0.33.3"},"id":"7d9231be1863c289ba522363b5069a5c073c62f34eb240797b0fa289c09cc952","variants":[{"digest":"sha256:43113e6a2b8a1a99ec9bf97e919e44621590d4c6ed0f862cf30d2fe17d663338","platform":{"architecture":"arm64","os":"linux","variant":"v8"},"size":66840050}]}]
+        """;
+
+        IReadOnlyList<ContainerImage> images = AppleContainerCliProvider.ParseImages(json);
+
+        Assert.Equal(2, images.Count);
+
+        ContainerImage hello = images[0];
+        Assert.Equal("docker.io/library/hello-world", hello.Repository);
+        Assert.Equal("latest", hello.Tag);
+        Assert.Equal("c3cbe1cc1aa5", hello.Id);
+        Assert.Equal(12, hello.Id.Length);
+        Assert.Equal("4.7 KB", hello.Size);
+        Assert.Equal(new DateTimeOffset(2026, 3, 23, 21, 34, 0, TimeSpan.Zero), hello.Created);
+
+        ContainerImage vminit = images[1];
+        Assert.Equal("ghcr.io/apple/containerization/vminit", vminit.Repository);
+        Assert.Equal("0.33.3", vminit.Tag);
+        Assert.Equal("7d9231be1863", vminit.Id);
+        Assert.Equal("63.7 MB", vminit.Size);
+    }
+
+    [Fact]
+    public void ParseContainers_EmptyArray_ReturnsEmpty()
+    {
+        Assert.Empty(AppleContainerCliProvider.ParseContainers("[]"));
+    }
+
+    [Fact]
+    public void ParseImages_EmptyArray_ReturnsEmpty()
+    {
+        Assert.Empty(AppleContainerCliProvider.ParseImages("[]"));
     }
 }

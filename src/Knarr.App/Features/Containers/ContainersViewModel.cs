@@ -132,8 +132,8 @@ public partial class ContainersViewModel : ViewModelBase
         {
             var term = SearchText.Trim();
             filtered = _allContainers.Where(c =>
-                c.Name.Contains(term, System.StringComparison.OrdinalIgnoreCase) ||
-                c.Image.Contains(term, System.StringComparison.OrdinalIgnoreCase));
+                c.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                c.Image.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
         Containers.Clear();
@@ -155,7 +155,7 @@ public partial class ContainersViewModel : ViewModelBase
     /// Loads (or reloads) the container list from the CLI. Safe to call repeatedly; concurrent
     /// calls are coalesced. Failures are surfaced via <see cref="ErrorMessage"/> and never throw.
     /// </summary>
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    private async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         if (IsLoading)
         {
@@ -208,32 +208,32 @@ public partial class ContainersViewModel : ViewModelBase
         // Run wizard is a later milestone.
     }
 
-    // Bulk (multiselect) commands — operate on every ticked row.
+    // Bulk (multiselect) commands — the provider runs each batch as a single command session.
     [RelayCommand]
-    private async Task StartSelected()
+    private Task StartSelected()
     {
-        foreach (ContainerItem container in SelectedContainers.ToList())
-        {
-            await Start(container).ConfigureAwait(true);
-        }
+        var ids = SelectedContainers.Select(c => c.Id).ToList();
+        return ids.Count == 0
+            ? Task.CompletedTask
+            : ExecuteAndReloadAsync(ct => _cliProvider.StartContainersAsync(ids, ct));
     }
 
     [RelayCommand]
-    private async Task StopSelected()
+    private Task StopSelected()
     {
-        foreach (ContainerItem container in SelectedContainers.ToList())
-        {
-            await Stop(container).ConfigureAwait(true);
-        }
+        var ids = SelectedContainers.Select(c => c.Id).ToList();
+        return ids.Count == 0
+            ? Task.CompletedTask
+            : ExecuteAndReloadAsync(ct => _cliProvider.StopContainersAsync(ids, ct));
     }
 
     [RelayCommand]
-    private async Task DeleteSelected()
+    private Task DeleteSelected()
     {
-        foreach (ContainerItem container in SelectedContainers.ToList())
-        {
-            await Remove(container).ConfigureAwait(true);
-        }
+        var ids = SelectedContainers.Select(c => c.Id).ToList();
+        return ids.Count == 0
+            ? Task.CompletedTask
+            : ExecuteAndReloadAsync(ct => _cliProvider.RemoveContainersAsync(ids, force: true, ct));
     }
 
     [RelayCommand]

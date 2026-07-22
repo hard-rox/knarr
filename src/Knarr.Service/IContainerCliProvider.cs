@@ -25,6 +25,25 @@ public interface IContainerCliProvider
     /// <summary>Removes a container (<c>remove</c>), optionally forcing a running one.</summary>
     Task RemoveContainerAsync(string id, bool force = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Starts several containers. The <c>start</c> command takes a single container, so this loops
+    /// over <paramref name="ids"/> and aggregates any per-container failures into a single
+    /// <see cref="BulkCliCommandException"/>. No-ops on an empty list.
+    /// </summary>
+    Task StartContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Stops several containers in a single <c>stop</c> invocation (the CLI accepts multiple ids).
+    /// No-ops on an empty list.
+    /// </summary>
+    Task StopContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes several containers in a single <c>remove</c> invocation (the CLI accepts multiple
+    /// ids), optionally forcing running ones. No-ops on an empty list.
+    /// </summary>
+    Task RemoveContainersAsync(IReadOnlyList<string> ids, bool force = false, CancellationToken cancellationToken = default);
+
     // ----- Images -----
 
     /// <summary>Lists local images (<c>images --format JSON</c>).</summary>
@@ -35,6 +54,12 @@ public interface IContainerCliProvider
 
     /// <summary>Removes an image (<c>rmi</c>), optionally forcing.</summary>
     Task RemoveImageAsync(string reference, bool force = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes several images in a single <c>rmi</c> invocation (the CLI accepts multiple
+    /// references), optionally forcing. No-ops on an empty list.
+    /// </summary>
+    Task RemoveImagesAsync(IReadOnlyList<string> references, bool force = false, CancellationToken cancellationToken = default);
 
     // ----- Platform -----
 

@@ -146,6 +146,66 @@ public class ContainersViewModelTests
     }
 
     [Fact]
+    public void StartSelected_RoutesEverySelectedIdInOneProviderCall()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleContainers);
+        ContainersViewModel vm = new ContainersViewModel(provider);
+        vm.Containers[0].IsSelected = true;
+        vm.Containers[2].IsSelected = true;
+
+        vm.StartSelectedCommand.Execute(null);
+
+        provider.Received(1).StartContainersAsync(
+            Arg.Is<IReadOnlyList<string>>(ids =>
+                ids != null && ids.Count == 2 && ids.Contains("aaaaaaaaaaaa") && ids.Contains("cccccccccccc")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void StopSelected_RoutesEverySelectedIdInOneProviderCall()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleContainers);
+        ContainersViewModel vm = new ContainersViewModel(provider);
+        vm.AllSelected = true;
+
+        vm.StopSelectedCommand.Execute(null);
+
+        provider.Received(1).StopContainersAsync(
+            Arg.Is<IReadOnlyList<string>>(ids => ids != null && ids.Count == 4),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void DeleteSelected_RoutesEverySelectedIdInOneForcedProviderCall()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleContainers);
+        ContainersViewModel vm = new ContainersViewModel(provider);
+        vm.Containers[1].IsSelected = true;
+
+        vm.DeleteSelectedCommand.Execute(null);
+
+        provider.Received(1).RemoveContainersAsync(
+            Arg.Is<IReadOnlyList<string>>(ids => ids != null && ids.Count == 1 && ids.Contains("bbbbbbbbbbbb")),
+            force: true,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void BulkCommand_WithNoSelection_DoesNotCallProvider()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleContainers);
+        ContainersViewModel vm = new ContainersViewModel(provider);
+
+        vm.StartSelectedCommand.Execute(null);
+        vm.StopSelectedCommand.Execute(null);
+        vm.DeleteSelectedCommand.Execute(null);
+
+        provider.DidNotReceive().StartContainersAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
+        provider.DidNotReceive().StopContainersAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
+        provider.DidNotReceive().RemoveContainersAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void LoadedState_HasItems()
     {
         ContainersViewModel vm = CreateViewModel();
