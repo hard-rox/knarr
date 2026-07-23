@@ -52,7 +52,7 @@ public interface IContainerCliProvider
     Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Pulls an image from a registry (<c>pull</c>).</summary>
-    // Task PullImageAsync(string reference, CancellationToken cancellationToken = default);
+    Task PullImageAsync(string reference, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Pulls an image from a registry (<c>pull</c>), streaming the command transcript line-by-line as

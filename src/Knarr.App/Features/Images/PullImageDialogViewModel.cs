@@ -1,24 +1,17 @@
-using System.Text;
 using System.Text.RegularExpressions;
-using Knarr.App.Controls;
-using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.Images;
 
 /// <summary>
-/// View model for the modal image-pull dialog. Streams the pull command transcript into a
-/// <see cref="TerminalOutputView"/>-friendly collection, gates the Pull action behind strict
-/// OCI-style reference validation, supports cancellation and copy-to-clipboard, and stays open in a
-/// terminal (success/error/canceled) state after the command completes. Each dialog open starts a
-/// fresh session via <see cref="Reset"/>.
+/// View model for the modal image-pull dialog. Runs a single buffered pull command (the CLI does
+/// not stream output incrementally), gates the Pull action behind strict OCI-style reference
+/// validation, and supports cancellation. Stays open showing a status message after the command
+/// completes. Each dialog open starts a fresh session via <see cref="Reset"/>.
 /// </summary>
 public partial class PullImageDialogViewModel : ViewModelBase
 {
-    /// <summary>Maximum number of transcript lines retained; older lines are dropped when exceeded.</summary>
-    private const int MaxLines = 5000;
-
     // Pragmatic OCI/distribution reference grammar: optional registry host[:port]/, path, optional
     // :tag, optional @digest. Anchored and compiled for fast, allocation-light validation on input.
     [GeneratedRegex(
@@ -38,7 +31,6 @@ public partial class PullImageDialogViewModel : ViewModelBase
     {
         _cliProvider = cliProvider;
         _logger = logger;
-        Output = [];
     }
 
     /// <summary>Design-time constructor.</summary>
@@ -46,20 +38,13 @@ public partial class PullImageDialogViewModel : ViewModelBase
     {
         _cliProvider = null!;
         _logger = NullLogger<PullImageDialogViewModel>.Instance;
-        Output = [];
     }
 
     /// <summary>Raised after a pull completes successfully so the host can refresh its image list.</summary>
     public event EventHandler? PullSucceeded;
 
-    /// <summary>Raised when the user copies the transcript; carries the full text for the view to place on the clipboard.</summary>
-    public event EventHandler<string>? CopyRequested;
-
     /// <summary>Raised when the dialog should close.</summary>
     public event EventHandler? CloseRequested;
-
-    /// <summary>The streamed command transcript bound to the reusable terminal panel.</summary>
-    public ObservableCollection<CliOutputLine> Output { get; }
 
     /// <summary>The image reference the user intends to pull (e.g. <c>docker.io/library/alpine:3.20</c>).</summary>
     [ObservableProperty]
@@ -72,29 +57,15 @@ public partial class PullImageDialogViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     public partial bool IsRunning { get; set; }
 
-    /// <summary>Lifecycle state driving the terminal panel accent and the status label.</summary>
-    [ObservableProperty]
-    public partial TerminalState State { get; set; } = TerminalState.Idle;
-
-    /// <summary>Human-readable status shown alongside the terminal panel.</summary>
+    /// <summary>Human-readable status shown to the user (in progress / success / error / canceled).</summary>
     [ObservableProperty]
     public partial string? StatusMessage { get; set; }
-
-    /// <summary>True when the transcript was capped and older lines were dropped.</summary>
-    [ObservableProperty]
-    public partial bool IsTruncated { get; set; }
-
-    /// <summary>Note describing the truncation, shown by the terminal panel when <see cref="IsTruncated"/> is true.</summary>
-    [ObservableProperty]
-    public partial string? TruncationNote { get; set; }
 
     /// <summary>True when the current <see cref="ImageReference"/> is a syntactically valid image reference.</summary>
     private bool CanPull =>
         !IsRunning
         && !string.IsNullOrWhiteSpace(ImageReference)
         && ReferenceRegex().IsMatch(ImageReference.Trim());
-
-    private bool HasOutput => Output.Count > 0;
 
     /// <summary>Resets the dialog to a fresh session, optionally seeding the reference input.</summary>
     public void Reset(string? initialReference)
@@ -104,13 +75,8 @@ public partial class PullImageDialogViewModel : ViewModelBase
         _cts = null;
 
         ImageReference = initialReference?.Trim() ?? string.Empty;
-        Output.Clear();
-        IsTruncated = false;
-        TruncationNote = null;
         IsRunning = false;
-        State = TerminalState.Idle;
         StatusMessage = null;
-        CopyOutputCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(CanPull))]
@@ -118,52 +84,27 @@ public partial class PullImageDialogViewModel : ViewModelBase
     {
         var reference = ImageReference.Trim();
 
-        Output.Clear();
-        IsTruncated = false;
-        TruncationNote = null;
-        CopyOutputCommand.NotifyCanExecuteChanged();
-
         IsRunning = true;
-        State = TerminalState.Running;
         StatusMessage = $"Pulling {reference}\u2026";
         _logger.LogInformation("Pulling image {Reference}", reference);
 
         _cts = new CancellationTokenSource();
+        var succeeded = false;
         try
         {
-            await foreach (CliOutputLine line in _cliProvider
-                .PullImageStreamingAsync(reference, _cts.Token)
-                .ConfigureAwait(true))
-            {
-                AddLine(line);
+            await _cliProvider.PullImageAsync(reference, _cts.Token).ConfigureAwait(true);
 
-                if (line.Kind == CliOutputKind.Exit)
-                {
-                    if (line.ExitCode == 0)
-                    {
-                        State = TerminalState.Success;
-                        StatusMessage = $"Pulled {reference}.";
-                    }
-                    else
-                    {
-                        State = TerminalState.Error;
-                        StatusMessage = $"Pull failed (exit code {line.ExitCode}).";
-                    }
-                }
-            }
+            succeeded = true;
+            StatusMessage = $"Pulled {reference}.";
         }
         catch (OperationCanceledException)
         {
-            State = TerminalState.Canceled;
             StatusMessage = "Pull canceled.";
-            AddLine(CliOutputLine.ForStandardError("Pull canceled by user."));
             _logger.LogInformation("Pull canceled for {Reference}", reference);
         }
         catch (Exception ex)
         {
-            State = TerminalState.Error;
             StatusMessage = ex.Message;
-            AddLine(CliOutputLine.ForStandardError(ex.Message));
             _logger.LogError(ex, "Pull failed for {Reference}", reference);
         }
         finally
@@ -173,7 +114,7 @@ public partial class PullImageDialogViewModel : ViewModelBase
             _cts = null;
         }
 
-        if (State == TerminalState.Success)
+        if (succeeded)
         {
             PullSucceeded?.Invoke(this, EventArgs.Empty);
         }
@@ -182,41 +123,10 @@ public partial class PullImageDialogViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(IsRunning))]
     private void Cancel() => _cts?.Cancel();
 
-    [RelayCommand(CanExecute = nameof(HasOutput))]
-    private void CopyOutput()
-    {
-        StringBuilder builder = new StringBuilder();
-        foreach (CliOutputLine line in Output)
-        {
-            builder.AppendLine(line.Text);
-        }
-
-        CopyRequested?.Invoke(this, builder.ToString());
-    }
-
     [RelayCommand]
     private void Close()
     {
         _cts?.Cancel();
         CloseRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void AddLine(CliOutputLine line)
-    {
-        Output.Add(line);
-
-        if (Output.Count > MaxLines)
-        {
-            var removeCount = Output.Count - MaxLines;
-            for (var i = 0; i < removeCount; i++)
-            {
-                Output.RemoveAt(0);
-            }
-
-            IsTruncated = true;
-            TruncationNote = $"Output truncated to the most recent {MaxLines:N0} lines.";
-        }
-
-        CopyOutputCommand.NotifyCanExecuteChanged();
     }
 }

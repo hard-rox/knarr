@@ -1,12 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Knarr.App.Controls;
 using Knarr.App.Features.Images;
 using Knarr.Service;
-using Knarr.Service.Models;
+using Knarr.Service.Exceptions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -16,41 +13,11 @@ public class PullImageDialogViewModelTests
 {
     private const string ValidReference = "docker.io/library/alpine:3.20";
 
-    private static PullImageDialogViewModel CreateViewModel(
-        out IContainerCliProvider provider,
-        IEnumerable<CliOutputLine>? streamed = null)
+    private static PullImageDialogViewModel CreateViewModel(out IContainerCliProvider provider)
     {
         provider = Substitute.For<IContainerCliProvider>();
-        if (streamed is not null)
-        {
-            provider
-                .PullImageStreamingAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(_ => ToAsyncStream(streamed));
-        }
-
         return new PullImageDialogViewModel(provider, NullLogger<PullImageDialogViewModel>.Instance);
     }
-
-    private static async IAsyncEnumerable<CliOutputLine> ToAsyncStream(
-        IEnumerable<CliOutputLine> lines,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        foreach (CliOutputLine line in lines)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Yield();
-            yield return line;
-        }
-    }
-
-#pragma warning disable CS1998 // async iterator intentionally has no awaits before throwing
-    private static async IAsyncEnumerable<CliOutputLine> ThrowsCanceledStream(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        yield return CliOutputLine.ForCommand("container image pull alpine");
-        throw new OperationCanceledException();
-    }
-#pragma warning restore CS1998
 
     [Theory]
     [InlineData("alpine")]
@@ -81,15 +48,12 @@ public class PullImageDialogViewModelTests
     }
 
     [Fact]
-    public async Task Pull_Success_SetsSuccessStateAndRaisesEvent()
+    public async Task Pull_Success_SetsStatusMessageAndRaisesEvent()
     {
-        CliOutputLine[] lines = new[]
-        {
-            CliOutputLine.ForCommand("container image pull alpine"),
-            CliOutputLine.ForStandardOutput("Downloading layers..."),
-            CliOutputLine.ForExit(0),
-        };
-        PullImageDialogViewModel vm = CreateViewModel(out _, lines);
+        PullImageDialogViewModel vm = CreateViewModel(out IContainerCliProvider provider);
+        provider
+            .PullImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         vm.ImageReference = ValidReference;
 
         var succeeded = false;
@@ -97,22 +61,19 @@ public class PullImageDialogViewModelTests
 
         await vm.PullCommand.ExecuteAsync(null);
 
-        Assert.Equal(TerminalState.Success, vm.State);
         Assert.False(vm.IsRunning);
-        Assert.Equal(3, vm.Output.Count);
+        Assert.Contains("Pulled", vm.StatusMessage);
         Assert.True(succeeded);
     }
 
     [Fact]
-    public async Task Pull_NonZeroExit_SetsErrorState()
+    public async Task Pull_CommandFailure_SetsErrorStatusMessage()
     {
-        CliOutputLine[] lines = new[]
-        {
-            CliOutputLine.ForCommand("container image pull alpine"),
-            CliOutputLine.ForStandardError("manifest not found"),
-            CliOutputLine.ForExit(1),
-        };
-        PullImageDialogViewModel vm = CreateViewModel(out _, lines);
+        PullImageDialogViewModel vm = CreateViewModel(out IContainerCliProvider provider);
+        var exception = new CliCommandException("wslc pull alpine", 1, "manifest not found");
+        provider
+            .PullImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(exception));
         vm.ImageReference = ValidReference;
 
         var succeeded = false;
@@ -120,86 +81,37 @@ public class PullImageDialogViewModelTests
 
         await vm.PullCommand.ExecuteAsync(null);
 
-        Assert.Equal(TerminalState.Error, vm.State);
         Assert.False(vm.IsRunning);
+        Assert.Equal(exception.Message, vm.StatusMessage);
         Assert.False(succeeded);
     }
 
     [Fact]
-    public async Task Pull_Canceled_SetsCanceledState()
+    public async Task Pull_Canceled_SetsCanceledStatusMessage()
     {
-        IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
+        PullImageDialogViewModel vm = CreateViewModel(out IContainerCliProvider provider);
         provider
-            .PullImageStreamingAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(_ => ThrowsCanceledStream());
-        PullImageDialogViewModel vm =
-            new(provider, NullLogger<PullImageDialogViewModel>.Instance) { ImageReference = ValidReference };
-
-        await vm.PullCommand.ExecuteAsync(null);
-
-        Assert.Equal(TerminalState.Canceled, vm.State);
-        Assert.False(vm.IsRunning);
-    }
-
-    [Fact]
-    public async Task Pull_CapsOutputToMaxLines()
-    {
-        List<CliOutputLine> lines = new List<CliOutputLine> { CliOutputLine.ForCommand("container image pull alpine") };
-        for (var i = 0; i < 6000; i++)
-        {
-            lines.Add(CliOutputLine.ForStandardOutput($"layer {i}"));
-        }
-
-        lines.Add(CliOutputLine.ForExit(0));
-
-        PullImageDialogViewModel vm = CreateViewModel(out _, lines);
+            .PullImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new OperationCanceledException()));
         vm.ImageReference = ValidReference;
 
         await vm.PullCommand.ExecuteAsync(null);
 
-        Assert.Equal(5000, vm.Output.Count);
-        Assert.True(vm.IsTruncated);
-        Assert.False(string.IsNullOrEmpty(vm.TruncationNote));
-    }
-
-    [Fact]
-    public void CopyOutput_RaisesCopyRequestedWithTranscript()
-    {
-        CliOutputLine[] lines = new[]
-        {
-            CliOutputLine.ForCommand("container image pull alpine"),
-            CliOutputLine.ForStandardOutput("Downloading layers..."),
-        };
-        PullImageDialogViewModel vm = CreateViewModel(out _);
-        foreach (CliOutputLine line in lines)
-        {
-            vm.Output.Add(line);
-        }
-
-        string? copied = null;
-        vm.CopyRequested += (_, text) => copied = text;
-
-        vm.CopyOutputCommand.Execute(null);
-
-        Assert.NotNull(copied);
-        Assert.Contains("container image pull alpine", copied);
-        Assert.Contains("Downloading layers...", copied);
+        Assert.False(vm.IsRunning);
+        Assert.Equal("Pull canceled.", vm.StatusMessage);
     }
 
     [Fact]
     public void Reset_ClearsSessionAndSeedsReference()
     {
         PullImageDialogViewModel vm = CreateViewModel(out _);
-        vm.Output.Add(CliOutputLine.ForStandardOutput("stale"));
-        vm.IsTruncated = true;
-        vm.State = TerminalState.Error;
+        vm.StatusMessage = "stale";
 
         vm.Reset("nginx:latest");
 
         Assert.Equal("nginx:latest", vm.ImageReference);
-        Assert.Empty(vm.Output);
-        Assert.False(vm.IsTruncated);
-        Assert.Equal(TerminalState.Idle, vm.State);
+        Assert.Null(vm.StatusMessage);
+        Assert.False(vm.IsRunning);
     }
 
     [Fact]
@@ -215,3 +127,4 @@ public class PullImageDialogViewModelTests
         Assert.True(closed);
     }
 }
+
