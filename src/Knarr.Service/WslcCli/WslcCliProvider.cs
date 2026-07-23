@@ -8,17 +8,14 @@ using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using CliWrap;
 using CliWrap.Buffered;
-using CliWrap.Builders;
+using CliWrap.EventStream;
+using Knarr.Service.Exceptions;
 
-namespace Knarr.Service;
+namespace Knarr.Service.WslcCli;
 
-/// <summary>
-/// <see cref="IContainerCliProvider"/> backed by Apple's first-party <c>container</c> CLI on macOS.
-/// Every method maps 1:1 onto a single <c>container</c> invocation.
-/// </summary>
-internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCliProvider> logger) : IContainerCliProvider
+internal sealed partial class WslcCliProvider(ILogger<WslcCliProvider> logger) : IContainerCliProvider
 {
-    private const string _executable = "container";
+    private const string _executable = "wslc";
     private const string _emDash = "\u2014";
 
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
@@ -43,8 +40,8 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
 
     public Task RemoveContainerAsync(string id, bool force = false, CancellationToken cancellationToken = default)
         => force
-            ? RunAsync(cancellationToken, "delete", "--force", id)
-            : RunAsync(cancellationToken, "delete", id);
+            ? RunAsync(cancellationToken, "remove", "--force", id)
+            : RunAsync(cancellationToken, "remove", id);
 
     public Task StartContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default)
         => RunBatchLoopAsync(id => StartContainerAsync(id, cancellationToken), ids);
@@ -58,39 +55,39 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
         => ids.Count == 0
             ? Task.CompletedTask
             : force
-                ? RunAsync(cancellationToken, ["delete", "--force", .. ids])
-                : RunAsync(cancellationToken, ["delete", .. ids]);
+                ? RunAsync(cancellationToken, ["remove", "--force", .. ids])
+                : RunAsync(cancellationToken, ["remove", .. ids]);
 
     public async Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default)
     {
-        var json = await RunAsync(cancellationToken, "image", "list", "--format", "json").ConfigureAwait(false);
+        var json = await RunAsync(cancellationToken, "images", "--format", "json").ConfigureAwait(false);
         return ParseImages(json);
     }
 
     public Task PullImageAsync(string reference, CancellationToken cancellationToken = default)
-        => RunAsync(cancellationToken, "image", "pull", reference);
+        => RunAsync(cancellationToken, "pull", reference);
 
     public IAsyncEnumerable<CliOutputLine> PullImageStreamingAsync(string reference, CancellationToken cancellationToken = default)
-        => RunStreamingAsync(cancellationToken, "image", "pull", reference);
+        => RunStreamingAsync(cancellationToken, "pull", reference);
 
     public Task RemoveImageAsync(string reference, bool force = false, CancellationToken cancellationToken = default)
         => force
-            ? RunAsync(cancellationToken, "image", "delete", "--force", reference)
-            : RunAsync(cancellationToken, "image", "delete", reference);
+            ? RunAsync(cancellationToken, "rmi", "--force", reference)
+            : RunAsync(cancellationToken, "rmi", reference);
 
     public Task RemoveImagesAsync(IReadOnlyList<string> references, bool force = false, CancellationToken cancellationToken = default)
         => references.Count == 0
             ? Task.CompletedTask
             : force
-                ? RunAsync(cancellationToken, ["image", "delete", "--force", .. references])
-                : RunAsync(cancellationToken, ["image", "delete", .. references]);
+                ? RunAsync(cancellationToken, ["rmi", "--force", .. references])
+                : RunAsync(cancellationToken, ["rmi", .. references]);
 
     public async Task<PlatformInfo> GetPlatformInfoAsync(CancellationToken cancellationToken = default)
     {
         var (version, reachable) = await ProbeVersionAsync(cancellationToken).ConfigureAwait(false);
         return new PlatformInfo
         {
-            PlatformName = "macOS",
+            PlatformName = "Windows",
             CliName = _executable,
             CliVersion = version,
             IsCliReachable = reachable,
@@ -307,7 +304,7 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
     /// <summary>
     /// Runs <paramref name="action"/> for every id, collecting any <see cref="CliCommandException"/>
     /// so a single failing item does not abort the batch. Aggregated failures surface as a
-    /// <see cref="BulkCliCommandException"/>.
+    /// <see cref="AggregateCliCommandException"/>.
     /// </summary>
     private static async Task RunBatchLoopAsync(Func<string, Task> action, IReadOnlyList<string> ids)
     {
@@ -326,84 +323,65 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
 
         if (failures.Count > 0)
         {
-            throw new BulkCliCommandException(failures);
+            throw new AggregateCliCommandException(failures);
         }
     }
 
     internal static IReadOnlyList<Container> ParseContainers(string json)
     {
-        List<AppleContainerElement> elements =
-            JsonSerializer.Deserialize<List<AppleContainerElement>>(json, _jsonOptions) ?? [];
-        return elements.Select(MapContainer).ToList();
+        List<ContainerResponse> responses = JsonSerializer.Deserialize<List<ContainerResponse>>(json, _jsonOptions) ?? [];
+        return responses.Select(MapContainer).ToList();
     }
 
     internal static IReadOnlyList<ContainerImage> ParseImages(string json)
     {
-        List<AppleImageElement> elements =
-            JsonSerializer.Deserialize<List<AppleImageElement>>(json, _jsonOptions) ?? [];
-        return elements.Select(MapImage).ToList();
+        List<ImageResponse> responses = JsonSerializer.Deserialize<List<ImageResponse>>(json, _jsonOptions) ?? [];
+        return responses.Select(MapImage).ToList();
     }
 
-    private static Container MapContainer(AppleContainerElement element) => new()
+    private static Container MapContainer(ContainerResponse response) => new()
     {
-        // The Apple CLI uses the (user-supplied or generated) id as both id and name; keep it intact.
-        Id = element.Id,
-        Name = element.Id,
-        Image = element.Configuration.Image.Reference,
-        State = MapState(element.Status.State),
-        Ports = FormatPorts(element.Configuration.PublishedPorts),
-        CreatedAt = element.Configuration.CreationDate,
-        StateChangedAt = element.Status.StartedDate ?? element.Configuration.CreationDate,
+        Id = ShortenId(response.Id),
+        Name = response.Name,
+        Image = response.Image,
+        State = MapState(response.State),
+        Ports = FormatPorts(response.Ports),
+        CreatedAt = DateTimeOffset.FromUnixTimeSeconds(response.CreatedAt),
+        StateChangedAt = DateTimeOffset.FromUnixTimeSeconds(response.StateChangedAt),
     };
 
-    private static ContainerImage MapImage(AppleImageElement element)
+    private static ContainerImage MapImage(ImageResponse response) => new()
     {
-        var (repository, tag) = SplitReference(element.Configuration.Name);
-        return new ContainerImage
-        {
-            Repository = repository,
-            Tag = tag,
-            Id = ShortenId(StripDigestAlgorithm(element.Id)),
-            Created = element.Configuration.CreationDate,
-            Size = FormatSize(element.Variants?.Sum(v => v.Size) ?? 0),
-        };
-    }
+        Repository = response.Repository,
+        Tag = response.Tag,
+        Id = ShortenId(StripDigestAlgorithm(response.Id)),
+        Created = DateTimeOffset.FromUnixTimeSeconds(response.Created),
+        Size = FormatSize(response.Size),
+    };
 
-    private static ContainerState MapState(string state) => state.ToLowerInvariant() switch
+    private static ContainerState MapState(int state) => state switch
     {
-        "running" => ContainerState.Running,
-        "stopped" or "exited" => ContainerState.Exited,
-        "created" => ContainerState.Created,
-        "paused" => ContainerState.Paused,
+        2 => ContainerState.Running,
+        3 => ContainerState.Exited,
         _ => ContainerState.Unknown,
     };
 
-    private static string FormatPorts(IReadOnlyList<ApplePublishedPort>? ports)
+    private static string FormatPorts(IReadOnlyList<PortResponse>? ports)
     {
         if (ports is null || ports.Count == 0)
         {
             return _emDash;
         }
 
-        return string.Join(
-            '\n',
-            ports.Select(p => $"{p.HostPort}\u2192{p.ContainerPort}/{FormatProtocol(p.Proto)}"));
+        return string.Join('\n', ports.Select(p => $"{p.HostPort}\u2192{p.ContainerPort}/{FormatProtocol(p.Protocol)}"));
     }
 
-    private static string FormatProtocol(string? protocol) =>
-        string.IsNullOrWhiteSpace(protocol) ? "tcp" : protocol.ToLowerInvariant();
-
-    private static (string Repository, string Tag) SplitReference(string reference)
+    private static string FormatProtocol(int protocol) => protocol switch
     {
-        var lastColon = reference.LastIndexOf(':');
-        var lastSlash = reference.LastIndexOf('/');
-
-        // A colon only denotes a tag when it appears after the final path separator; otherwise it is
-        // a registry port (e.g. "localhost:5000/img") and the reference carries no explicit tag.
-        return lastColon > lastSlash
-            ? (reference[..lastColon], reference[(lastColon + 1)..])
-            : (reference, "latest");
-    }
+        6 => "tcp",
+        17 => "udp",
+        _ => protocol.ToString(CultureInfo.InvariantCulture),
+    };
 
     private static string ShortenId(string id) => id.Length > 12 ? id[..12] : id;
 

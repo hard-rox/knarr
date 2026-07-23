@@ -18,11 +18,11 @@ public static class ServiceCollectionExtensions
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            services.AddSingleton<IContainerCliProvider, WslcCliProvider>();
+            services.AddSingleton<IContainerCliProvider, WslcCli.WslcCliProvider>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            services.AddSingleton<IContainerCliProvider, AppleContainerCliProvider>();
+            services.AddSingleton<IContainerCliProvider, AppleContainerCli.AppleContainerCliProvider>();
         }
         else
         {

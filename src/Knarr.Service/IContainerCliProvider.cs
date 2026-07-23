@@ -1,3 +1,5 @@
+using Knarr.Service.Exceptions;
+
 namespace Knarr.Service;
 
 /// <summary>
@@ -28,7 +30,7 @@ public interface IContainerCliProvider
     /// <summary>
     /// Starts several containers. The <c>start</c> command takes a single container, so this loops
     /// over <paramref name="ids"/> and aggregates any per-container failures into a single
-    /// <see cref="BulkCliCommandException"/>. No-ops on an empty list.
+    /// <see cref="AggregateCliCommandException"/>. No-ops on an empty list.
     /// </summary>
     Task StartContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default);
 

@@ -1,15 +1,15 @@
 using System.Linq;
 
-namespace Knarr.Service;
+namespace Knarr.Service.Exceptions;
 
 /// <summary>
 /// Thrown when a bulk operation that runs one CLI invocation per item (e.g. starting several
 /// containers) has one or more individual failures. Carries every underlying
 /// <see cref="CliCommandException"/> so the UI can surface each failing command together.
 /// </summary>
-public sealed class BulkCliCommandException : Exception
+public sealed class AggregateCliCommandException : Exception
 {
-    public BulkCliCommandException(IReadOnlyList<CliCommandException> failures)
+    public AggregateCliCommandException(IReadOnlyList<CliCommandException> failures)
         : base(BuildMessage(failures))
     {
         Failures = failures;
