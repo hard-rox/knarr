@@ -33,17 +33,29 @@
                                                                  IsEnabled="{Binding !IsRunning}"
                                                                  FontFamily="Cascadia Code,Consolas,monospace" />
                                 <Button Grid.Column="1"
-                                                                Content="Pull"
                                                                 Classes="accent"
                                                                 Command="{Binding PullCommand}"
-                                                                IsVisible="{Binding !IsRunning}" />
+                                                                IsVisible="{Binding !IsRunning}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Data="{StaticResource ArrowDownloadRegular}" Width="14" Height="14" />
+                                                <TextBlock Text="Pull" />
+                                        </StackPanel>
+                                </Button>
                                 <Button Grid.Column="1"
-                                                                Content="Cancel"
                                                                 Command="{Binding CancelCommand}"
-                                                                IsVisible="{Binding IsRunning}" />
+                                                                IsVisible="{Binding IsRunning}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Data="{StaticResource StopRegular}" Width="14" Height="14" />
+                                                <TextBlock Text="Cancel" />
+                                        </StackPanel>
+                                </Button>
                                 <Button Grid.Column="2"
-                                                                Content="Close"
-                                                                Command="{Binding CloseCommand}" />
+                                                                Command="{Binding CloseCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Data="{StaticResource DismissRegular}" Width="14" Height="14" />
+                                                <TextBlock Text="Close" />
+                                        </StackPanel>
+                                </Button>
                         </Grid>
     </StackPanel>
 

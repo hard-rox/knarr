@@ -6,6 +6,10 @@
       Brushes are resolved via DynamicResource so they swap live when the
       requested theme variant changes (System / Light / Dark).
     -->
+
+  <!-- Shared, theme-agnostic corner radius for Button/TextBox (matches the sidebar's expanded nav-item radius). -->
+  <CornerRadius x:Key="ControlCornerRadius">12</CornerRadius>
+
   <ResourceDictionary.ThemeDictionaries>
 
     <ResourceDictionary x:Key="Light">
@@ -30,6 +34,11 @@
       <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.60" />
       <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.45" />
       <SolidColorBrush x:Key="IconButtonIdleBrush" Color="#FFFFFF" Opacity="0.24" />
+
+      <!-- Accent-tinted glass for the primary CTA (Button.accent): translucent, not solid. -->
+      <SolidColorBrush x:Key="AccentGlassBrush" Color="#0A84FF" Opacity="0.16" />
+      <SolidColorBrush x:Key="AccentGlassHoverBrush" Color="#0A84FF" Opacity="0.24" />
+      <SolidColorBrush x:Key="AccentStrokeBrush" Color="#0A84FF" Opacity="0.55" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
@@ -53,6 +62,11 @@
       <SolidColorBrush x:Key="StrokeBrush" Color="#FFFFFF" Opacity="0.14" />
       <SolidColorBrush x:Key="HoverBrush" Color="#FFFFFF" Opacity="0.10" />
       <SolidColorBrush x:Key="IconButtonIdleBrush" Color="#FFFFFF" Opacity="0.06" />
+
+      <!-- Accent-tinted glass for the primary CTA (Button.accent): translucent, not solid. -->
+      <SolidColorBrush x:Key="AccentGlassBrush" Color="#0A84FF" Opacity="0.20" />
+      <SolidColorBrush x:Key="AccentGlassHoverBrush" Color="#0A84FF" Opacity="0.30" />
+      <SolidColorBrush x:Key="AccentStrokeBrush" Color="#0A84FF" Opacity="0.45" />
     </ResourceDictionary>
 
   </ResourceDictionary.ThemeDictionaries>

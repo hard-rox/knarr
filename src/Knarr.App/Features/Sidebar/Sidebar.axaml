@@ -40,7 +40,7 @@
         <Style Selector="ListBox.nav ListBoxItem">
             <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
         </Style>

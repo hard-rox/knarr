@@ -10,11 +10,34 @@
     <Setter Property="BoxShadow" Value="0 8 32 0 #2E1F2687" />
   </Style>
 
+  <!-- Unified glass Button: default look for every labeled action (dialog buttons, CTAs, …). -->
+  <Style Selector="Button">
+    <Setter Property="Background" Value="{DynamicResource GlassFillBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+    <Setter Property="Padding" Value="14,8" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+  </Style>
+  <Style Selector="Button:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+
+  <!-- Accent CTA: same shape as the default Button, but tinted with the brand accent (still glass, not solid). -->
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource AccentGlassBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStrokeBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+  </Style>
+  <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentGlassHoverBrush}" />
+  </Style>
+
   <!-- Round icon button used across action toolbars. -->
   <Style Selector="Button.icon">
     <Setter Property="Background" Value="{DynamicResource IconButtonIdleBrush}" />
     <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="Padding" Value="5" />
+    <Setter Property="Padding" Value="8" />
     <Setter Property="CornerRadius" Value="999" />
     <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
   </Style>
@@ -44,9 +67,30 @@
     <Setter Property="Background" Value="Transparent" />
   </Style>
 
+  <!-- Unified glass TextBox: default look for labeled fields (dialog inputs, forms, …). -->
+  <Style Selector="TextBox">
+    <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+  <Style Selector="TextBox /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource GlassFillBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+  </Style>
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+
   <Style Selector="TextBox.search">
     <Setter Property="MinHeight" Value="36" />
-    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
     <Setter Property="Padding" Value="8,0" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
