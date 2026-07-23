@@ -1,5 +1,3 @@
-using Knarr.Service.Models;
-
 namespace Knarr.Service.Tests;
 
 /// <summary>

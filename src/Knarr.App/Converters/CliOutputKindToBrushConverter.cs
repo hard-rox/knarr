@@ -20,7 +20,7 @@ public sealed class CliOutputKindToBrushConverter : IValueConverter
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var kind = value as CliOutputKind? ?? CliOutputKind.StandardOutput;
+        CliOutputKind kind = value as CliOutputKind? ?? CliOutputKind.StandardOutput;
 
         return kind switch
         {

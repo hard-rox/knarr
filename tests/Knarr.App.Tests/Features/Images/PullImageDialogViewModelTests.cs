@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,7 +83,7 @@ public class PullImageDialogViewModelTests
     [Fact]
     public async Task Pull_Success_SetsSuccessStateAndRaisesEvent()
     {
-        var lines = new[]
+        CliOutputLine[] lines = new[]
         {
             CliOutputLine.ForCommand("container image pull alpine"),
             CliOutputLine.ForStandardOutput("Downloading layers..."),
@@ -107,7 +106,7 @@ public class PullImageDialogViewModelTests
     [Fact]
     public async Task Pull_NonZeroExit_SetsErrorState()
     {
-        var lines = new[]
+        CliOutputLine[] lines = new[]
         {
             CliOutputLine.ForCommand("container image pull alpine"),
             CliOutputLine.ForStandardError("manifest not found"),
@@ -145,7 +144,7 @@ public class PullImageDialogViewModelTests
     [Fact]
     public async Task Pull_CapsOutputToMaxLines()
     {
-        var lines = new List<CliOutputLine> { CliOutputLine.ForCommand("container image pull alpine") };
+        List<CliOutputLine> lines = new List<CliOutputLine> { CliOutputLine.ForCommand("container image pull alpine") };
         for (var i = 0; i < 6000; i++)
         {
             lines.Add(CliOutputLine.ForStandardOutput($"layer {i}"));
@@ -166,7 +165,7 @@ public class PullImageDialogViewModelTests
     [Fact]
     public void CopyOutput_RaisesCopyRequestedWithTranscript()
     {
-        var lines = new[]
+        CliOutputLine[] lines = new[]
         {
             CliOutputLine.ForCommand("container image pull alpine"),
             CliOutputLine.ForStandardOutput("Downloading layers..."),

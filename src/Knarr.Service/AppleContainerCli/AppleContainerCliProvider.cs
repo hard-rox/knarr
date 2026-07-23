@@ -159,7 +159,7 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
         logger.LogDebug("Executing CLI command (streaming): {Command}", commandLine);
         yield return CliOutputLine.ForCommand(commandLine);
 
-        using var forcefulCts = new CancellationTokenSource();
+        using CancellationTokenSource forcefulCts = new CancellationTokenSource();
         // When the caller cancels, request a graceful stop and schedule a forceful kill as a fallback.
         await using CancellationTokenRegistration link = cancellationToken.Register(
             () => forcefulCts.CancelAfter(TimeSpan.FromSeconds(3)));
@@ -168,7 +168,7 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
         StreamingPipeState stdOut = new(channel.Writer, CliOutputKind.StandardOutput);
         StreamingPipeState stdErr = new(channel.Writer, CliOutputKind.StandardError);
 
-        var runTask = Task.Run(async () =>
+        Task runTask = Task.Run(async () =>
         {
             try
             {
@@ -236,11 +236,11 @@ internal sealed partial class AppleContainerCliProvider(ILogger<AppleContainerCl
             }
 
             Span<char> chars = stackalloc char[chunk.Length];
-            _decoder.Convert(chunk, chars, flush: false, out _, out int charsUsed, out _);
+            _decoder.Convert(chunk, chars, flush: false, out _, out var charsUsed, out _);
 
             for (var i = 0; i < charsUsed; i++)
             {
-                char c = chars[i];
+                var c = chars[i];
 
                 if (c == '\r' || c == '\n')
                 {

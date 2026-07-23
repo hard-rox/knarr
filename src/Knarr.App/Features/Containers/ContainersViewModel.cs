@@ -241,7 +241,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private Task StartSelected()
     {
-        var ids = SelectedContainers.Select(c => c.Id).ToList();
+        List<string> ids = SelectedContainers.Select(c => c.Id).ToList();
         return ids.Count == 0
             ? Task.CompletedTask
             : ExecuteAndReloadAsync(ct => _cliProvider.StartContainersAsync(ids, ct));
@@ -250,7 +250,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private Task StopSelected()
     {
-        var ids = SelectedContainers.Select(c => c.Id).ToList();
+        List<string> ids = SelectedContainers.Select(c => c.Id).ToList();
         return ids.Count == 0
             ? Task.CompletedTask
             : ExecuteAndReloadAsync(ct => _cliProvider.StopContainersAsync(ids, ct));
@@ -259,7 +259,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private Task DeleteSelected()
     {
-        var ids = SelectedContainers.Select(c => c.Id).ToList();
+        List<string> ids = SelectedContainers.Select(c => c.Id).ToList();
         return ids.Count == 0
             ? Task.CompletedTask
             : ExecuteAndReloadAsync(ct => _cliProvider.RemoveContainersAsync(ids, force: true, ct));

@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using Knarr.App.Models;
 
 namespace Knarr.App.Features.Images;
 

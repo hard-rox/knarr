@@ -185,7 +185,7 @@ public partial class PullImageDialogViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(HasOutput))]
     private void CopyOutput()
     {
-        var builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         foreach (CliOutputLine line in Output)
         {
             builder.AppendLine(line.Text);

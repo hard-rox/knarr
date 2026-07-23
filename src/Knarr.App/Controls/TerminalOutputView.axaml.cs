@@ -130,7 +130,7 @@ public class TerminalOutputView : TemplatedControl
 
     private void UpdateHasOutput()
     {
-        var lines = Lines;
+        IEnumerable? lines = Lines;
         if (lines is null)
         {
             HasOutput = false;

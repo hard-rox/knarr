@@ -194,7 +194,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private Task DeleteSelected()
     {
-        var references = SelectedImages.Select(ResolveImageReference).ToList();
+        List<string> references = SelectedImages.Select(ResolveImageReference).ToList();
         return references.Count == 0
             ? Task.CompletedTask
             : ExecuteAndReloadAsync(ct => _cliProvider.RemoveImagesAsync(references, force: true, ct));
