@@ -7,7 +7,7 @@ namespace Knarr.App;
 
 sealed class Program
 {
-    private const int ATTACH_PARENT_PROCESS = -1;
+    private const int _attachParentProcess = -1;
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -79,7 +79,7 @@ sealed class Program
             return;
         }
 
-        if (AttachConsole(ATTACH_PARENT_PROCESS))
+        if (AttachConsole(_attachParentProcess))
         {
             StreamWriter stdout = new(Console.OpenStandardOutput()) { AutoFlush = true };
             Console.SetOut(stdout);

@@ -16,7 +16,7 @@ public sealed class CliOutputKindToBrushConverter : IValueConverter
 {
     public static readonly CliOutputKindToBrushConverter Instance = new();
 
-    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromRgb(0xD1, 0x35, 0x2B));
+    private static readonly IBrush _errorBrush = new SolidColorBrush(Color.FromRgb(0xD1, 0x35, 0x2B));
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -24,7 +24,7 @@ public sealed class CliOutputKindToBrushConverter : IValueConverter
 
         return kind switch
         {
-            CliOutputKind.StandardError => ErrorBrush,
+            CliOutputKind.StandardError => _errorBrush,
             CliOutputKind.Command => ResolveBrush("TextDimBrush"),
             CliOutputKind.Exit => ResolveBrush("TextDimBrush"),
             _ => ResolveBrush("TextBrush"),

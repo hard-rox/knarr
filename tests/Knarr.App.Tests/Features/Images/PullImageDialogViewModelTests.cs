@@ -11,7 +11,7 @@ namespace Knarr.App.Tests.Features.Images;
 
 public class PullImageDialogViewModelTests
 {
-    private const string ValidReference = "docker.io/library/alpine:3.20";
+    private const string _validReference = "docker.io/library/alpine:3.20";
 
     private static PullImageDialogViewModel CreateViewModel(out IContainerCliProvider provider)
     {
@@ -54,7 +54,7 @@ public class PullImageDialogViewModelTests
         provider
             .PullImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
-        vm.ImageReference = ValidReference;
+        vm.ImageReference = _validReference;
 
         var succeeded = false;
         vm.PullSucceeded += (_, _) => succeeded = true;
@@ -74,7 +74,7 @@ public class PullImageDialogViewModelTests
         provider
             .PullImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException(exception));
-        vm.ImageReference = ValidReference;
+        vm.ImageReference = _validReference;
 
         var succeeded = false;
         vm.PullSucceeded += (_, _) => succeeded = true;
@@ -93,7 +93,7 @@ public class PullImageDialogViewModelTests
         provider
             .PullImageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new OperationCanceledException()));
-        vm.ImageReference = ValidReference;
+        vm.ImageReference = _validReference;
 
         await vm.PullCommand.ExecuteAsync(null);
 
