@@ -46,19 +46,14 @@
                     Spacing="2"
                     IsVisible="{Binding !HasSelection}">
           <Button Classes="icon"
-                  ToolTip.Tip="Build"
-                  Command="{Binding BuildCommand}">
-            <PathIcon Data="{StaticResource CubeRegular}" />
+                  ToolTip.Tip="Refresh"
+                  Command="{Binding RefreshCommand}">
+            <PathIcon Data="{StaticResource ArrowClockwiseRegular}" />
           </Button>
           <Button Classes="icon"
                   ToolTip.Tip="Pull"
                   Command="{Binding PullCommand}">
             <PathIcon Data="{StaticResource ArrowDownloadRegular}" />
-          </Button>
-          <Button Classes="icon"
-                  ToolTip.Tip="Import"
-                  Command="{Binding ImportCommand}">
-            <PathIcon Data="{StaticResource ArrowImportRegular}" />
           </Button>
         </StackPanel>
 
@@ -103,21 +98,25 @@
           </TableViewColumn>
 
           <!-- Image (selectable text) -->
-          <TableViewColumn Header="Image" Width="Auto">
+          <TableViewColumn Header="Image" Width="*">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ImageItem">
                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <SelectableTextBlock Text="{Binding RepoTag}"
+                  <Grid ColumnDefinitions="*,Auto">
+                    <SelectableTextBlock Grid.Column="0"
+                                         Text="{Binding RepoTag}"
                                          VerticalAlignment="Center"
+                                         TextWrapping="Wrap"
                                          FontWeight="SemiBold"
                                          Foreground="{DynamicResource TextBrush}" />
-                    <Button Classes="icon"
+                    <Button Grid.Column="1"
+                            Classes="icon"
+                            VerticalAlignment="Center"
                             ToolTip.Tip="Copy name"
                             Click="OnCopyImageName">
                       <PathIcon Data="{StaticResource CopyRegular}" />
                     </Button>
-                  </StackPanel>
+                  </Grid>
                   <SelectableTextBlock Text="{Binding Id}"
                                        FontFamily="Cascadia Code,Consolas,monospace"
                                        FontSize="11"

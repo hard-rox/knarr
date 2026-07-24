@@ -4,8 +4,8 @@
         x:Class="Knarr.App.Features.Images.PullImageDialog"
         x:DataType="vm:PullImageDialogViewModel"
         Title="Pull image"
-        Width="620" Height="220"
-        MinWidth="480" MinHeight="200"
+        Width="620" Height="150"
+        MinWidth="480" MinHeight="130"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="{DynamicResource BackgroundBaseBrush}">
