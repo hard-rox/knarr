@@ -3,7 +3,6 @@
              xmlns:vm="using:Knarr.App.Features.Sidebar"
              xmlns:models="using:Knarr.App.Models"
              xmlns:conv="using:Knarr.App.Converters"
-             xmlns:aconv="using:Avalonia.Data.Converters"
              x:Class="Knarr.App.Features.Sidebar.Sidebar"
              x:DataType="vm:SidebarViewModel">
 
@@ -41,7 +40,7 @@
         <Style Selector="ListBox.nav ListBoxItem">
             <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
         </Style>
@@ -56,6 +55,21 @@
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <!-- In collapsed mode, nav items behave like round icon buttons. -->
+        <Style Selector="ListBox.nav.collapsed ListBoxItem">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Background" Value="{DynamicResource IconButtonIdleBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="ListBox.nav.collapsed ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+            <Setter Property="CornerRadius" Value="18"/>
         </Style>
     </UserControl.Styles>
 
@@ -118,35 +132,39 @@
 
             <!-- Navigation -->
             <ListBox Classes="nav"
+                     Classes.collapsed="{Binding IsSidebarCollapsed}"
                      ItemsSource="{Binding NavigationItems}"
                      SelectedItem="{Binding SelectedItem}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="models:NavigationItem">
-                        <Grid ColumnDefinitions="18,*,Auto">
-                            <PathIcon Grid.Column="0"
-                                      Classes="nav-icon"
+                        <Grid>
+                            <Grid ColumnDefinitions="18,*,Auto"
+                                  IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarExpanded}">
+                                <PathIcon Grid.Column="0"
+                                          Classes="nav-icon"
+                                          HorizontalAlignment="Center"
+                                          Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Title}"
+                                           Margin="11,0,0,0"
+                                           VerticalAlignment="Center"/>
+                                <Border Grid.Column="2"
+                                        Background="{DynamicResource GlassStrongBrush}"
+                                        CornerRadius="10"
+                                        Padding="8,1"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding HasBadge}">
+                                    <TextBlock Text="{Binding Badge}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextDimBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <PathIcon Classes="nav-icon"
                                       HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarCollapsed}"
                                       Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding Title}"
-                                       Margin="11,0,0,0"
-                                       VerticalAlignment="Center"
-                                       IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarExpanded}"/>
-                            <Border Grid.Column="2"
-                                    Background="{DynamicResource GlassStrongBrush}"
-                                    CornerRadius="10"
-                                    Padding="8,1"
-                                    VerticalAlignment="Center">
-                                <Border.IsVisible>
-                                    <MultiBinding Converter="{x:Static aconv:BoolConverters.And}">
-                                        <Binding Path="HasBadge"/>
-                                        <Binding Path="$parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarExpanded"/>
-                                    </MultiBinding>
-                                </Border.IsVisible>
-                                <TextBlock Text="{Binding Badge}"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource TextDimBrush}"/>
-                            </Border>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

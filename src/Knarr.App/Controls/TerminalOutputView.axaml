@@ -1,0 +1,75 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Knarr.App.Controls"
+                    xmlns:conv="using:Knarr.App.Converters"
+                    xmlns:models="using:Knarr.Service.Models">
+  <Design.PreviewWith>
+    <controls:TerminalOutputView Width="480" Height="220" />
+  </Design.PreviewWith>
+
+  <ControlTheme x:Key="{x:Type controls:TerminalOutputView}" TargetType="controls:TerminalOutputView">
+    <Setter Property="Background" Value="{DynamicResource BackgroundBaseBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Placeholder" Value="Output will appear here." />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="8"
+                ClipToBounds="True">
+          <Grid RowDefinitions="*,Auto">
+            <ScrollViewer Name="PART_ScrollViewer"
+                          Grid.Row="0"
+                          Padding="12,10"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+              <Panel>
+                <!-- Placeholder shown while there is no output yet. -->
+                <TextBlock Text="{TemplateBinding Placeholder}"
+                           FontFamily="Cascadia Code,Consolas,monospace"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextDimBrush}"
+                           IsVisible="{Binding !HasOutput, RelativeSource={RelativeSource TemplatedParent}}" />
+                <ItemsControl ItemsSource="{TemplateBinding Lines}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="models:CliOutputLine">
+                      <TextBlock Text="{Binding Text}"
+                                 FontFamily="Cascadia Code,Consolas,monospace"
+                                 FontSize="12"
+                                 TextWrapping="Wrap"
+                                 Foreground="{Binding Kind, Converter={x:Static conv:CliOutputKindToBrushConverter.Instance}}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Panel>
+            </ScrollViewer>
+
+            <Border Grid.Row="1"
+                    IsVisible="{TemplateBinding IsTruncated}"
+                    Background="{DynamicResource StripBrush}"
+                    Padding="12,6">
+              <TextBlock Text="{TemplateBinding TruncationNote}"
+                         FontSize="11"
+                         Foreground="{DynamicResource TextDimBrush}" />
+            </Border>
+          </Grid>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:running">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="^:error">
+      <Setter Property="BorderBrush" Value="#D1352B" />
+    </Style>
+    <Style Selector="^:success">
+      <Setter Property="BorderBrush" Value="#1A9C3F" />
+    </Style>
+    <Style Selector="^:canceled">
+      <Setter Property="BorderBrush" Value="#C47800" />
+    </Style>
+  </ControlTheme>
+</ResourceDictionary>

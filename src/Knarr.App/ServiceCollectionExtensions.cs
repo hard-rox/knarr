@@ -32,6 +32,12 @@ public static class ServiceCollectionExtensions
             collection.AddTransient<ImagesViewModel>();
             collection.AddTransient<SettingsViewModel>();
 
+            // Dialog view models are resolved per-open; ImagesViewModel takes a factory so each
+            // pull dialog starts as a fresh, independently-scoped session.
+            collection.AddTransient<PullImageDialogViewModel>();
+            collection.AddTransient<Func<PullImageDialogViewModel>>(sp =>
+                sp.GetRequiredService<PullImageDialogViewModel>);
+
             collection.AddTransient<SidebarViewModel>();
             collection.AddTransient<MainWindowViewModel>();
         }

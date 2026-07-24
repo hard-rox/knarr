@@ -62,7 +62,10 @@ public partial class SidebarViewModel : ViewModelBase
     private NavigationItem? _selectedItem;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSidebarCollapsed))]
     private bool _isSidebarExpanded = true;
+
+    public bool IsSidebarCollapsed => !IsSidebarExpanded;
 
     [ObservableProperty]
     private string _platformName = "Windows";
