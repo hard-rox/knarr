@@ -197,7 +197,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
             _allContainers.Clear();
             foreach (Container summary in summaries)
             {
-                ContainerItem item = new ContainerItem(summary);
+                ContainerItem item = new(summary);
                 item.PropertyChanged += OnContainerPropertyChanged;
                 _allContainers.Add(item);
             }

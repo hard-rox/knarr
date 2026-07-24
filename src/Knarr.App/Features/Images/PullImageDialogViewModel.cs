@@ -10,7 +10,10 @@ namespace Knarr.App.Features.Images;
 /// validation, and supports cancellation. Stays open showing a status message after the command
 /// completes. Each dialog open starts a fresh session via <see cref="Reset"/>.
 /// </summary>
-public partial class PullImageDialogViewModel : ViewModelBase
+public partial class PullImageDialogViewModel(
+    IContainerCliProvider cliProvider,
+    ILogger<PullImageDialogViewModel> logger)
+    : ViewModelBase
 {
     // Pragmatic OCI/distribution reference grammar: optional registry host[:port]/, path, optional
     // :tag, optional @digest. Anchored and compiled for fast, allocation-light validation on input.
@@ -22,22 +25,11 @@ public partial class PullImageDialogViewModel : ViewModelBase
         RegexOptions.CultureInvariant)]
     private static partial Regex ReferenceRegex();
 
-    private readonly IContainerCliProvider _cliProvider;
-    private readonly ILogger<PullImageDialogViewModel> _logger;
-
     private CancellationTokenSource? _cts;
 
-    public PullImageDialogViewModel(IContainerCliProvider cliProvider, ILogger<PullImageDialogViewModel> logger)
-    {
-        _cliProvider = cliProvider;
-        _logger = logger;
-    }
-
     /// <summary>Design-time constructor.</summary>
-    public PullImageDialogViewModel()
+    public PullImageDialogViewModel() : this(null!, NullLogger<PullImageDialogViewModel>.Instance)
     {
-        _cliProvider = null!;
-        _logger = NullLogger<PullImageDialogViewModel>.Instance;
     }
 
     /// <summary>Raised after a pull completes successfully so the host can refresh its image list.</summary>
@@ -86,13 +78,13 @@ public partial class PullImageDialogViewModel : ViewModelBase
 
         IsRunning = true;
         StatusMessage = $"Pulling {reference}\u2026";
-        _logger.LogInformation("Pulling image {Reference}", reference);
+        logger.LogInformation("Pulling image {Reference}", reference);
 
         _cts = new CancellationTokenSource();
         var succeeded = false;
         try
         {
-            await _cliProvider.PullImageAsync(reference, _cts.Token).ConfigureAwait(true);
+            await cliProvider.PullImageAsync(reference, _cts.Token).ConfigureAwait(true);
 
             succeeded = true;
             StatusMessage = $"Pulled {reference}.";
@@ -100,12 +92,12 @@ public partial class PullImageDialogViewModel : ViewModelBase
         catch (OperationCanceledException)
         {
             StatusMessage = "Pull canceled.";
-            _logger.LogInformation("Pull canceled for {Reference}", reference);
+            logger.LogInformation("Pull canceled for {Reference}", reference);
         }
         catch (Exception ex)
         {
             StatusMessage = ex.Message;
-            _logger.LogError(ex, "Pull failed for {Reference}", reference);
+            logger.LogError(ex, "Pull failed for {Reference}", reference);
         }
         finally
         {

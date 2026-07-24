@@ -156,11 +156,16 @@ internal sealed partial class WslcCliProvider(ILogger<WslcCliProvider> logger) :
         logger.LogDebug("Executing CLI command (streaming): {Command}", commandLine);
         yield return CliOutputLine.ForCommand(commandLine);
 
+        using CancellationTokenSource forcefulCts = new();
+        // When the caller cancels, request a graceful stop and schedule a forceful kill as a fallback.
+        await using CancellationTokenRegistration link = cancellationToken.Register(
+            () => forcefulCts.CancelAfter(TimeSpan.FromSeconds(3)));
+
         Command command = Cli.Wrap(_executable)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None);
 
-        await foreach (CommandEvent line in command.ListenAsync(cancellationToken))
+        await foreach (CommandEvent line in command.ListenAsync(Encoding.UTF8, Encoding.UTF8, forcefulCts.Token, cancellationToken))
         {
             switch (line)
             {

@@ -270,7 +270,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
             _allImages.Clear();
             foreach (ContainerImage summary in summaries)
             {
-                ImageItem item = new ImageItem(summary);
+                ImageItem item = new(summary);
                 item.PropertyChanged += OnImagePropertyChanged;
                 _allImages.Add(item);
             }

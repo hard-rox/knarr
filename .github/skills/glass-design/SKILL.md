@@ -57,7 +57,7 @@ All tokens are theme-variant aware and resolved with `{DynamicResource ...}`.
 
 ## Reusable building blocks
 
-### Glass panel — `Border.glass-panel` (App.axaml)
+### Glass panel — `Border.glass-panel` (src/Knarr.App/Themes/Styles.axaml)
 
 The standard card surface: `GlassFillBrush` fill, `StrokeBrush` hairline, soft shadow,
 `CornerRadius=14`. Use it for toolbars, cards, and table containers.

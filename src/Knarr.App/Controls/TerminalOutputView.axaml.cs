@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 namespace Knarr.App.Controls;
 
@@ -49,6 +50,8 @@ public class TerminalOutputView : TemplatedControl
 
     private ScrollViewer? _scrollViewer;
     private INotifyCollectionChanged? _observedCollection;
+    private bool _isCollectionSubscribed;
+    private bool _isAttachedToVisualTree;
 
     public IEnumerable? Lines
     {
@@ -111,21 +114,62 @@ public class TerminalOutputView : TemplatedControl
         ScrollToEnd();
     }
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _isAttachedToVisualTree = true;
+        AttachCollectionObserver();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        DetachCollectionObserver();
+        _isAttachedToVisualTree = false;
+        base.OnDetachedFromVisualTree(e);
+    }
+
     private void HookCollection(IEnumerable? lines)
     {
-        if (_observedCollection is not null)
+        if (ReferenceEquals(_observedCollection, lines))
         {
-            _observedCollection.CollectionChanged -= OnLinesCollectionChanged;
-            _observedCollection = null;
+            UpdateHasOutput();
+            return;
         }
+
+        DetachCollectionObserver();
+        _observedCollection = null;
 
         if (lines is INotifyCollectionChanged incc)
         {
             _observedCollection = incc;
-            incc.CollectionChanged += OnLinesCollectionChanged;
+            AttachCollectionObserver();
         }
 
         UpdateHasOutput();
+    }
+
+    private void AttachCollectionObserver()
+    {
+        INotifyCollectionChanged? observedCollection = _observedCollection;
+        if (_isCollectionSubscribed || observedCollection is null || !_isAttachedToVisualTree)
+        {
+            return;
+        }
+
+        observedCollection.CollectionChanged += OnLinesCollectionChanged;
+        _isCollectionSubscribed = true;
+    }
+
+    private void DetachCollectionObserver()
+    {
+        INotifyCollectionChanged? observedCollection = _observedCollection;
+        if (!_isCollectionSubscribed || observedCollection is null)
+        {
+            return;
+        }
+
+        observedCollection.CollectionChanged -= OnLinesCollectionChanged;
+        _isCollectionSubscribed = false;
     }
 
     private void UpdateHasOutput()

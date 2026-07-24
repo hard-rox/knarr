@@ -101,8 +101,8 @@ public class AggregateCliCommandExceptionTests
     [Fact]
     public void Message_ForSingleFailure_MatchesUnderlyingCommand()
     {
-        CliCommandException inner = new CliCommandException("container start abc", 1, "boom");
-        AggregateCliCommandException ex = new AggregateCliCommandException([inner]);
+        CliCommandException inner = new("container start abc", 1, "boom");
+        AggregateCliCommandException ex = new([inner]);
 
         Assert.Single(ex.Failures);
         Assert.Equal(inner.Message, ex.Message);
@@ -111,10 +111,10 @@ public class AggregateCliCommandExceptionTests
     [Fact]
     public void Message_ForMultipleFailures_ListsEveryFailure()
     {
-        CliCommandException first = new CliCommandException("container start abc", 1, "boom");
-        CliCommandException second = new CliCommandException("container start def", 1, "kaboom");
+        CliCommandException first = new("container start abc", 1, "boom");
+        CliCommandException second = new("container start def", 1, "kaboom");
 
-        AggregateCliCommandException ex = new AggregateCliCommandException([first, second]);
+        AggregateCliCommandException ex = new([first, second]);
 
         Assert.Equal(2, ex.Failures.Count);
         Assert.Contains("2 commands failed", ex.Message);

@@ -217,7 +217,7 @@ public class ImagesViewModelTests
     public void DeleteSelected_RoutesEverySelectedRepoTagInOneForcedProviderCall()
     {
         IContainerCliProvider provider = ProviderWith(_sampleImages);
-        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance);
         vm.Images[0].IsSelected = true;
         vm.Images[2].IsSelected = true;
 
@@ -234,7 +234,7 @@ public class ImagesViewModelTests
     public void DeleteSelected_WithNoSelection_DoesNotCallProvider()
     {
         IContainerCliProvider provider = ProviderWith(_sampleImages);
-        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance);
 
         vm.DeleteSelectedCommand.Execute(null);
 
@@ -256,7 +256,7 @@ public class ImagesViewModelTests
     [Fact]
     public void EmptyState_WhenCliReturnsNoImages()
     {
-        ImagesViewModel vm = new ImagesViewModel(ProviderWith([]), NullLogger<ImagesViewModel>.Instance);
+        ImagesViewModel vm = new(ProviderWith([]), NullLogger<ImagesViewModel>.Instance);
 
         Assert.True(vm.IsEmpty);
         Assert.False(vm.HasItems);
@@ -271,7 +271,7 @@ public class ImagesViewModelTests
         provider.ListImagesAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("cli unreachable"));
 
-        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance);
 
         Assert.True(vm.HasError);
         Assert.Equal("cli unreachable", vm.ErrorMessage);
@@ -295,12 +295,12 @@ public class ImagesViewModelTests
     [Fact]
     public void LoadingState_WhileListInFlight()
     {
-        TaskCompletionSource<IReadOnlyList<ContainerImage>> tcs = new TaskCompletionSource<IReadOnlyList<ContainerImage>>();
+        TaskCompletionSource<IReadOnlyList<ContainerImage>> tcs = new();
         IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
         provider.ListImagesAsync(Arg.Any<CancellationToken>())
             .Returns(tcs.Task);
 
-        ImagesViewModel vm = new ImagesViewModel(provider, NullLogger<ImagesViewModel>.Instance);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance);
 
         Assert.True(vm.IsLoading);
         Assert.False(vm.HasItems);
