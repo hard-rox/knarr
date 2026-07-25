@@ -14,7 +14,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            ServiceCollection collection = new ServiceCollection();
+            ServiceCollection collection = new();
             collection.AddCommonServices();
 
             ServiceProvider services = collection.BuildServiceProvider();

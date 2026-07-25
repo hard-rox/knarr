@@ -20,8 +20,13 @@ visually consistent with the rest of the app.
   text and data are the focus. Use `TextBrush` for primary text, `TextDimBrush` for secondary.
 - **Theme-variant aware.** Every surface must look right in both Light and Dark. Always bind to the
   theme tokens (via `DynamicResource`) — never hard-code colors in a view.
-- **Consistency via shared resources.** Reuse the tokens, `Border.glass-panel`, `Button.icon`, and
-  `GlassTableTheme` below instead of inventing per-view styling.
+- **Consistency via shared resources.** Reuse the tokens, `Border.glass-panel`, the default `Button`/
+  `TextBox`, `Button.accent`, `Button.icon`, and `GlassTableTheme` below instead of inventing per-view
+  styling.
+- **One corner radius for controls.** `Button`, `Button.accent`, `TextBox`, and `TextBox.search` all
+  share the `ControlCornerRadius` token (12px — the same radius as the sidebar's expanded nav items).
+  `Button.icon` is the one exception: it stays fully round (pill) since it's a compact toolbar action,
+  not a labeled control.
 
 ## Design tokens (`src/Knarr.App/Themes/Glass.axaml`)
 
@@ -39,6 +44,10 @@ All tokens are theme-variant aware and resolved with `{DynamicResource ...}`.
 | `StripBrush` | Subtle tinted strip (table header row, pill background). |
 | `StrokeBrush` | Hairline light border on glass surfaces. |
 | `HoverBrush` | Hover fill for interactive controls. |
+| `IconButtonIdleBrush` | Idle fill for `Button.icon`. |
+| `AccentGlassBrush` / `AccentGlassHoverBrush` | Accent-tinted translucent fill for `Button.accent` (idle / hover) — the CTA stays glass, never a solid color block. |
+| `AccentStrokeBrush` | Accent-tinted border for `Button.accent`. |
+| `ControlCornerRadius` | Shared, theme-agnostic `CornerRadius` (12) for `Button`/`TextBox`. Reference it with `{StaticResource ControlCornerRadius}` instead of hard-coding `12`. |
 
 **Rules**
 - Bind to these tokens with `{DynamicResource Key}` so surfaces swap correctly on theme change.
@@ -48,7 +57,7 @@ All tokens are theme-variant aware and resolved with `{DynamicResource ...}`.
 
 ## Reusable building blocks
 
-### Glass panel — `Border.glass-panel` (App.axaml)
+### Glass panel — `Border.glass-panel` (src/Knarr.App/Themes/Styles.axaml)
 
 The standard card surface: `GlassFillBrush` fill, `StrokeBrush` hairline, soft shadow,
 `CornerRadius=14`. Use it for toolbars, cards, and table containers.
@@ -67,15 +76,64 @@ The standard card surface: `GlassFillBrush` fill, `StrokeBrush` hairline, soft s
 Do not manually re-set `Background`/`BorderBrush`/`BorderThickness`/`BoxShadow` — that's what the
 class provides.
 
-### Icon button — `Button.icon` (App.axaml)
+### Buttons — default `Button`, `Button.accent`, `Button.icon` (Themes/Styles.axaml)
 
-Minimal transparent button for row actions and bulk actions. Transparent chrome, `HoverBrush` on
-hover, 14x14 icon. Pair with a `PathIcon` whose `Data` comes from `Themes/Icons.axaml`.
+All three share the same glassmorphism approach (translucent fill, hairline stroke, `HoverBrush`/
+accent-tinted hover) and the same `ControlCornerRadius` (except `Button.icon`, which is a pill).
+
+- **Default `Button`** — any labeled action that isn't the primary CTA (dialog "Cancel"/"Close",
+  secondary actions, …). `GlassFillBrush` fill, `StrokeBrush` border, `TextBrush` foreground.
+  Give it an icon + label when a suitable icon exists — don't ship text-only buttons where an icon
+  would clarify the action:
+
+  ```xml
+  <Button Command="{Binding CloseCommand}">
+    <StackPanel Orientation="Horizontal" Spacing="6">
+      <PathIcon Data="{StaticResource DismissRegular}" Width="14" Height="14" />
+      <TextBlock Text="Close" />
+    </StackPanel>
+  </Button>
+  ```
+
+- **`Button.accent`** — the primary CTA (e.g. "Pull", "Pull image"). Same shape as the default
+  `Button`, but tinted with `AccentGlassBrush`/`AccentStrokeBrush`/`AccentBrush` — still translucent
+  glass, never a solid accent block:
+
+  ```xml
+  <Button Classes="accent" Command="{Binding PullCommand}">
+    <StackPanel Orientation="Horizontal" Spacing="6">
+      <PathIcon Data="{StaticResource ArrowDownloadRegular}" Width="14" Height="14" />
+      <TextBlock Text="Pull" />
+    </StackPanel>
+  </Button>
+  ```
+
+- **`Button.icon`** — minimal, round/pill transparent button for row actions and bulk actions in
+  toolbars. `IconButtonIdleBrush` idle fill, `HoverBrush` on hover, `Padding=8`, 14x14 icon. Pair with a
+  `PathIcon` whose `Data` comes from `Themes/Icons.axaml`. Use this only for compact icon-only actions
+  (table toolbars) — use the default `Button`/`Button.accent` for labeled dialog/form actions.
+
+  ```xml
+  <Button Classes="icon" ToolTip.Tip="Logs" Command="{Binding LogsCommand}">
+    <PathIcon Data="{StaticResource TextBulletListRegular}" />
+  </Button>
+  ```
+
+### Text fields — default `TextBox`, `TextBox.search` (Themes/Styles.axaml)
+
+Both share the same glass fill/border/hover/focus treatment and `ControlCornerRadius`; `TextBox.search`
+adds a taller `MinHeight` (36) and is meant for the search-with-icon pattern.
 
 ```xml
-<Button Classes="icon" ToolTip.Tip="Logs" Command="{Binding LogsCommand}">
-  <PathIcon Data="{StaticResource TextBulletListRegular}" />
-</Button>
+<!-- Plain labeled field -->
+<TextBox Text="{Binding ImageReference}" PlaceholderText="docker.io/library/alpine:3.20" />
+
+<!-- Search field with a leading icon -->
+<TextBox Classes="search" Width="280" PlaceholderText="Search containers&#x2026;" Text="{Binding SearchText}">
+  <TextBox.InnerLeftContent>
+    <PathIcon Data="{StaticResource SearchRegular}" Width="14" Height="14" Foreground="{DynamicResource TextDimBrush}" />
+  </TextBox.InnerLeftContent>
+</TextBox>
 ```
 
 ### Data table — `GlassTableTheme` (Glass.axaml)
@@ -129,14 +187,20 @@ Table conventions:
 ## Do / Don't
 
 **Do**
-- Reuse `glass-panel`, `Button.icon`, and `GlassTableTheme`.
+- Reuse `glass-panel`, the default `Button`/`TextBox`, `Button.accent`, `Button.icon`, and
+  `GlassTableTheme`.
+- Reference `{StaticResource ControlCornerRadius}` instead of hard-coding `12` on new controls.
+- Give non-icon buttons an icon + label when a suitable icon exists in `Themes/Icons.axaml` (add a new
+  `StreamGeometry` there if it doesn't).
 - Bind every color to a `Glass.axaml` token via `DynamicResource`.
 - Verify both Light and Dark variants look correct.
 - Keep the ViewModel UI-framework-agnostic; put styling in AXAML.
 
 **Don't**
 - Hard-code hex colors or opaque backgrounds in a view.
-- Re-declare the table theme, icon button, or panel styling per feature.
+- Re-declare the table theme, button, text field, or panel styling per feature.
+- Give `Button.accent` (or any button) a solid, non-translucent fill — CTAs stay glass, just
+  accent-tinted.
 - Use WPF-isms (Triggers, `Visibility`, `DependencyProperty`). Use Avalonia selectors, `IsVisible`,
   and `StyledProperty`.
 - Add unused tokens to `Glass.axaml`.
@@ -144,8 +208,9 @@ Table conventions:
 ## Reference files
 
 - Tokens + `GlassTableTheme`: `src/Knarr.App/Themes/Glass.axaml`
-- Global styles (`glass-panel`, `Button.icon`, row-selection, button shadows): `src/Knarr.App/App.axaml`
+- Global selector styles (`glass-panel`, `Button`/`Button.accent`/`Button.icon`, `TextBox`/`TextBox.search`,
+  row-selection): `src/Knarr.App/Themes/Styles.axaml`
 - Icon geometries: `src/Knarr.App/Themes/Icons.axaml`
 - Status pill control: `src/Knarr.App/Controls/Pill.axaml`
-- Worked example: `src/Knarr.App/Features/Containers/ContainersView.axaml`
+- Worked example: `src/Knarr.App/Features/Containers/ContainersView.axaml`, `src/Knarr.App/Features/Images/PullImageDialog.axaml`
 - Full guideline: `docs/DESIGN.md`

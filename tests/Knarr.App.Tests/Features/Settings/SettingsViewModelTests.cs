@@ -7,7 +7,7 @@ public class SettingsViewModelTests
     [Fact]
     public void DefaultState_IsValid()
     {
-        SettingsViewModel vm = new SettingsViewModel();
+        SettingsViewModel vm = new();
 
         Assert.NotNull(vm);
     }

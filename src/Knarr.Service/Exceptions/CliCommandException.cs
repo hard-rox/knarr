@@ -1,4 +1,4 @@
-namespace Knarr.Service;
+namespace Knarr.Service.Exceptions;
 
 /// <summary>
 /// Thrown when a container CLI command exits with a non-zero status. Carries the failing command

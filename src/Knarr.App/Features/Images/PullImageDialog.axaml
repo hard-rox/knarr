@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Knarr.App.Features.Images"
+        x:Class="Knarr.App.Features.Images.PullImageDialog"
+        x:DataType="vm:PullImageDialogViewModel"
+        Title="Pull image"
+        Width="620" Height="150"
+        MinWidth="480" MinHeight="130"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BackgroundBaseBrush}">
+
+  <Design.DataContext>
+    <vm:PullImageDialogViewModel />
+  </Design.DataContext>
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding PullCommand}" />
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+  </Window.KeyBindings>
+
+        <Grid Margin="20" RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
+
+    <!-- Reference input -->
+                <StackPanel Grid.Row="0" Spacing="6">
+      <TextBlock Text="Image reference"
+                 FontWeight="SemiBold"
+                 Foreground="{DynamicResource TextBrush}" />
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <TextBox Grid.Column="0"
+                                                                 Text="{Binding ImageReference}"
+                                                                 PlaceholderText="docker.io/library/alpine:3.20"
+                                                                 IsEnabled="{Binding !IsRunning}"
+                                                                 FontFamily="Cascadia Code,Consolas,monospace" />
+                                <Button Grid.Column="1"
+                                                                Classes="accent"
+                                                                Command="{Binding PullCommand}"
+                                                                IsVisible="{Binding !IsRunning}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Data="{StaticResource ArrowDownloadRegular}" Width="14" Height="14" />
+                                                <TextBlock Text="Pull" />
+                                        </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1"
+                                                                Command="{Binding CancelCommand}"
+                                                                IsVisible="{Binding IsRunning}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Data="{StaticResource StopRegular}" Width="14" Height="14" />
+                                                <TextBlock Text="Cancel" />
+                                        </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2"
+                                                                Command="{Binding CloseCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Data="{StaticResource DismissRegular}" Width="14" Height="14" />
+                                                <TextBlock Text="Close" />
+                                        </StackPanel>
+                                </Button>
+                        </Grid>
+    </StackPanel>
+
+    <!-- Status line -->
+    <TextBlock Grid.Row="1"
+               Text="{Binding StatusMessage}"
+               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+               FontSize="12"
+               Foreground="{DynamicResource TextDimBrush}" />
+
+    <!-- In-flight progress -->
+    <ProgressBar Grid.Row="2"
+                 IsIndeterminate="True"
+                 IsVisible="{Binding IsRunning}"
+                 Foreground="{DynamicResource AccentBrush}" />
+  </Grid>
+</Window>

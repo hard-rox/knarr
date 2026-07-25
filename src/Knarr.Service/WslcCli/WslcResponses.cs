@@ -1,4 +1,4 @@
-namespace Knarr.Service;
+namespace Knarr.Service.WslcCli;
 
 internal sealed record ContainerResponse(
     long CreatedAt,

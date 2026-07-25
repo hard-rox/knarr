@@ -1,4 +1,4 @@
-namespace Knarr.Service;
+namespace Knarr.Service.AppleContainerCli;
 
 // Deserialization shapes for the Apple `container` CLI JSON output. These mirror the nested
 // structure emitted by `container list --format json` and `container image list --format json`

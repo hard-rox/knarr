@@ -1,3 +1,5 @@
+using Knarr.Service.Exceptions;
+
 namespace Knarr.Service;
 
 /// <summary>
@@ -28,7 +30,7 @@ public interface IContainerCliProvider
     /// <summary>
     /// Starts several containers. The <c>start</c> command takes a single container, so this loops
     /// over <paramref name="ids"/> and aggregates any per-container failures into a single
-    /// <see cref="BulkCliCommandException"/>. No-ops on an empty list.
+    /// <see cref="AggregateCliCommandException"/>. No-ops on an empty list.
     /// </summary>
     Task StartContainersAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default);
 
@@ -51,6 +53,16 @@ public interface IContainerCliProvider
 
     /// <summary>Pulls an image from a registry (<c>pull</c>).</summary>
     Task PullImageAsync(string reference, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Pulls an image from a registry (<c>pull</c>), streaming the command transcript line-by-line as
+    /// the process runs. The first emitted line is the exact command executed (transparency); stdout
+    /// and stderr lines follow in arrival order; a final <see cref="CliOutputKind.Exit"/> line carries
+    /// the exit code. Cancellation is cooperative: <paramref name="cancellationToken"/> requests a
+    /// graceful stop (interrupt signal) with a forceful kill as a fallback. A non-zero exit is
+    /// reported via the terminating <see cref="CliOutputKind.Exit"/> line rather than by throwing.
+    /// </summary>
+    IAsyncEnumerable<CliOutputLine> PullImageStreamingAsync(string reference, CancellationToken cancellationToken = default);
 
     /// <summary>Removes an image (<c>rmi</c>), optionally forcing.</summary>
     Task RemoveImageAsync(string reference, bool force = false, CancellationToken cancellationToken = default);

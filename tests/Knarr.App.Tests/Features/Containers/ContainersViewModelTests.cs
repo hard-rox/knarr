@@ -150,7 +150,7 @@ public class ContainersViewModelTests
     public void StartSelected_RoutesEverySelectedIdInOneProviderCall()
     {
         IContainerCliProvider provider = ProviderWith(_sampleContainers);
-        ContainersViewModel vm = new ContainersViewModel(provider, NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance);
         vm.Containers[0].IsSelected = true;
         vm.Containers[2].IsSelected = true;
 
@@ -166,7 +166,7 @@ public class ContainersViewModelTests
     public void StopSelected_RoutesEverySelectedIdInOneProviderCall()
     {
         IContainerCliProvider provider = ProviderWith(_sampleContainers);
-        ContainersViewModel vm = new ContainersViewModel(provider, NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance);
         vm.AllSelected = true;
 
         vm.StopSelectedCommand.Execute(null);
@@ -180,7 +180,7 @@ public class ContainersViewModelTests
     public void DeleteSelected_RoutesEverySelectedIdInOneForcedProviderCall()
     {
         IContainerCliProvider provider = ProviderWith(_sampleContainers);
-        ContainersViewModel vm = new ContainersViewModel(provider, NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance);
         vm.Containers[1].IsSelected = true;
 
         vm.DeleteSelectedCommand.Execute(null);
@@ -195,7 +195,7 @@ public class ContainersViewModelTests
     public void BulkCommand_WithNoSelection_DoesNotCallProvider()
     {
         IContainerCliProvider provider = ProviderWith(_sampleContainers);
-        ContainersViewModel vm = new ContainersViewModel(provider, NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance);
 
         vm.StartSelectedCommand.Execute(null);
         vm.StopSelectedCommand.Execute(null);
@@ -221,7 +221,7 @@ public class ContainersViewModelTests
     [Fact]
     public void EmptyState_WhenCliReturnsNoContainers()
     {
-        ContainersViewModel vm = new ContainersViewModel(ProviderWith([]), NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(ProviderWith([]), NullLogger<ContainersViewModel>.Instance);
 
         Assert.True(vm.IsEmpty);
         Assert.False(vm.HasItems);
@@ -236,7 +236,7 @@ public class ContainersViewModelTests
         provider.ListContainersAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("cli unreachable"));
 
-        ContainersViewModel vm = new ContainersViewModel(provider, NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance);
 
         Assert.True(vm.HasError);
         Assert.Equal("cli unreachable", vm.ErrorMessage);
@@ -260,12 +260,12 @@ public class ContainersViewModelTests
     [Fact]
     public void LoadingState_WhileListInFlight()
     {
-        TaskCompletionSource<IReadOnlyList<Container>> tcs = new TaskCompletionSource<IReadOnlyList<Container>>();
+        TaskCompletionSource<IReadOnlyList<Container>> tcs = new();
         IContainerCliProvider provider = Substitute.For<IContainerCliProvider>();
         provider.ListContainersAsync(Arg.Any<CancellationToken>())
             .Returns(tcs.Task);
 
-        ContainersViewModel vm = new ContainersViewModel(provider, NullLogger<ContainersViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance);
 
         Assert.True(vm.IsLoading);
         Assert.False(vm.HasItems);
