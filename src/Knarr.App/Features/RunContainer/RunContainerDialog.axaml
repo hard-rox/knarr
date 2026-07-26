@@ -30,6 +30,7 @@
           <TextBox Text="{Binding ImageReference}"
                    PlaceholderText="docker.io/library/alpine:3.20"
                    IsEnabled="{Binding !IsRunning}"
+                   IsReadOnly="{Binding !IsImageEditable}"
                    FontFamily="Cascadia Code,Consolas,monospace" />
         </StackPanel>
 
@@ -141,11 +142,21 @@
         <!-- Command preview -->
         <StackPanel Spacing="6">
           <TextBlock Text="Command" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
-          <TextBox Text="{Binding CommandPreview, Mode=OneWay}"
-                   IsReadOnly="True"
-                   TextWrapping="Wrap"
-                   FontFamily="Cascadia Code,Consolas,monospace"
-                   FontSize="12" />
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Grid.Column="0"
+                     Text="{Binding CommandPreview, Mode=OneWay}"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     FontFamily="Cascadia Code,Consolas,monospace"
+                     FontSize="12" />
+            <Button Grid.Column="1"
+                    Classes="icon"
+                    VerticalAlignment="Top"
+                    ToolTip.Tip="Copy command"
+                    Click="OnCopyCommand">
+              <PathIcon Data="{StaticResource CopyRegular}" Width="14" Height="14" />
+            </Button>
+          </Grid>
         </StackPanel>
 
         <!-- Interactive logs (foreground runs only) -->
@@ -179,13 +190,6 @@
           <StackPanel Orientation="Horizontal" Spacing="6">
             <PathIcon Data="{StaticResource PlayRegular}" Width="14" Height="14" />
             <TextBlock Text="Run" />
-          </StackPanel>
-        </Button>
-        <Button Command="{Binding CancelCommand}"
-                IsVisible="{Binding IsRunning}">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <PathIcon Data="{StaticResource StopRegular}" Width="14" Height="14" />
-            <TextBlock Text="Cancel" />
           </StackPanel>
         </Button>
         <Button Command="{Binding CloseCommand}">

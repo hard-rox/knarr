@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 
 namespace Knarr.App.Features.RunContainer;
 
@@ -23,6 +25,15 @@ public partial class RunContainerDialog : Window
     }
 
     private void OnCloseRequested(object? sender, EventArgs e) => Close();
+
+    private async void OnCopyCommand(object? sender, RoutedEventArgs e)
+    {
+        if (_viewModel is { CommandPreview: { Length: > 0 } command } &&
+            TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(command);
+        }
+    }
 
     private void OnClosed(object? sender, EventArgs e)
     {

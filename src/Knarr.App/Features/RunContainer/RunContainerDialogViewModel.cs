@@ -61,10 +61,16 @@ public partial class RunContainerDialogViewModel : ViewModelBase
     [ObservableProperty]
     public partial string ContainerName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Whether the image reference can be edited. False when the dialog is opened from the Images
+    /// view (the image is fixed to the selected row); true when opened from the Containers view.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsImageEditable { get; set; } = true;
+
     /// <summary>True while a run is in flight.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     public partial bool IsRunning { get; set; }
 
     /// <summary>Human-readable status shown to the user (success / error / canceled).</summary>
@@ -90,11 +96,13 @@ public partial class RunContainerDialogViewModel : ViewModelBase
 
     private bool CanRun => !IsRunning && !string.IsNullOrWhiteSpace(ImageReference);
 
-    /// <summary>Resets the dialog to a fresh session, seeding the image reference.</summary>
-    public void Reset(string? initialImage)
+    /// <summary>
+    /// Resets the dialog to a fresh session, seeding the image reference and whether it may be
+    /// edited (<paramref name="imageEditable"/> is false when launched from the Images view).
+    /// </summary>
+    public void Reset(string? initialImage, bool imageEditable = true)
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        RequestCancellation();
         _cts = null;
 
         foreach (EnvironmentVariableEntry entry in EnvironmentVariables)
@@ -113,6 +121,7 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         OutputLines.Clear();
 
         ImageReference = initialImage?.Trim() ?? string.Empty;
+        IsImageEditable = imageEditable;
         Detach = true;
         RemoveOnExit = false;
         ContainerName = string.Empty;
@@ -159,14 +168,38 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand(CanExecute = nameof(IsRunning))]
-    private void Cancel() => _cts?.Cancel();
-
     [RelayCommand]
     private void Close()
     {
-        _cts?.Cancel();
+        RequestCancellation();
         CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Requests cancellation of the in-flight run on a background thread. CliWrap runs its graceful
+    /// (Ctrl+C) cancellation handler synchronously inside <see cref="CancellationTokenSource.Cancel()"/>;
+    /// on Windows that console signalling is blocking, so cancelling on the UI thread freezes the app.
+    /// Offloading keeps the UI responsive while the process is interrupted.
+    /// </summary>
+    private void RequestCancellation()
+    {
+        CancellationTokenSource? cts = _cts;
+        if (cts is null)
+        {
+            return;
+        }
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The run already completed and disposed the source; nothing left to cancel.
+            }
+        });
     }
 
     private async Task RunDetachedAsync(RunContainerOptions options)

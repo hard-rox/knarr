@@ -220,7 +220,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         }
 
         RunContainerDialogViewModel dialogViewModel = _runDialogFactory();
-        dialogViewModel.Reset(image.RepoTag);
+        dialogViewModel.Reset(image.RepoTag, imageEditable: false);
         dialogViewModel.ContainerStarted += OnContainerStarted;
         RunDialogRequested?.Invoke(this, dialogViewModel);
     }
