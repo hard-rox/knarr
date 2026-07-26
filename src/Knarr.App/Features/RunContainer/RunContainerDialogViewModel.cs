@@ -26,9 +26,11 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         _logger = logger;
         EnvironmentVariables = [];
         Volumes = [];
+        Ports = [];
         OutputLines = [];
         EnvironmentVariables.CollectionChanged += OnEntriesChanged;
         Volumes.CollectionChanged += OnEntriesChanged;
+        Ports.CollectionChanged += OnEntriesChanged;
         UpdateCommandPreview();
     }
 
@@ -71,6 +73,7 @@ public partial class RunContainerDialogViewModel : ViewModelBase
     /// <summary>True while a run is in flight.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
+    [NotifyPropertyChangedFor(nameof(CanAddPort))]
     public partial bool IsRunning { get; set; }
 
     /// <summary>Human-readable status shown to the user (success / error / canceled).</summary>
@@ -90,6 +93,17 @@ public partial class RunContainerDialogViewModel : ViewModelBase
 
     /// <summary>Editable volume-mount rows; starts empty, grown via <see cref="AddVolumeCommand"/>.</summary>
     public ObservableCollection<VolumeMountEntry> Volumes { get; }
+
+    /// <summary>Editable port-mapping rows; starts empty, grown via <see cref="AddPortCommand"/>.</summary>
+    public ObservableCollection<PortMappingEntry> Ports { get; }
+
+    /// <summary>When true, publishes all exposed ports to random host ports (<c>--publish-all</c>).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanAddPort))]
+    public partial bool PublishAllPorts { get; set; }
+
+    /// <summary>Whether a new port-mapping row may be added (disabled while running or publishing all).</summary>
+    public bool CanAddPort => !IsRunning && !PublishAllPorts;
 
     /// <summary>Live transcript of the streamed foreground run (command / stdout / stderr / exit).</summary>
     public ObservableCollection<CliOutputLine> OutputLines { get; }
@@ -118,12 +132,20 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         }
 
         Volumes.Clear();
+
+        foreach (PortMappingEntry entry in Ports)
+        {
+            entry.PropertyChanged -= OnEntryPropertyChanged;
+        }
+
+        Ports.Clear();
         OutputLines.Clear();
 
         ImageReference = initialImage?.Trim() ?? string.Empty;
         IsImageEditable = imageEditable;
         Detach = true;
         RemoveOnExit = false;
+        PublishAllPorts = false;
         ContainerName = string.Empty;
         IsRunning = false;
         StatusMessage = null;
@@ -143,6 +165,12 @@ public partial class RunContainerDialogViewModel : ViewModelBase
 
     [RelayCommand]
     private void RemoveVolume(VolumeMountEntry entry) => Volumes.Remove(entry);
+
+    [RelayCommand]
+    private void AddPort() => Ports.Add(new PortMappingEntry());
+
+    [RelayCommand]
+    private void RemovePort(PortMappingEntry entry) => Ports.Remove(entry);
 
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task Run()
@@ -302,6 +330,13 @@ public partial class RunContainerDialogViewModel : ViewModelBase
                 .Where(v => !string.IsNullOrWhiteSpace(v.Source) && !string.IsNullOrWhiteSpace(v.Target))
                 .Select(v => new RunVolumeMount(v.Source.Trim(), v.Target.Trim())),
         ],
+        Ports =
+        [
+            .. Ports
+                .Where(p => !string.IsNullOrWhiteSpace(p.HostPort) && !string.IsNullOrWhiteSpace(p.ContainerPort))
+                .Select(p => new RunPortMapping(p.HostPort.Trim(), p.ContainerPort.Trim())),
+        ],
+        PublishAllPorts = PublishAllPorts,
     };
 
     private void UpdateCommandPreview()
@@ -312,6 +347,8 @@ public partial class RunContainerDialogViewModel : ViewModelBase
     partial void OnDetachChanged(bool value) => UpdateCommandPreview();
 
     partial void OnRemoveOnExitChanged(bool value) => UpdateCommandPreview();
+
+    partial void OnPublishAllPortsChanged(bool value) => UpdateCommandPreview();
 
     partial void OnContainerNameChanged(string value) => UpdateCommandPreview();
 

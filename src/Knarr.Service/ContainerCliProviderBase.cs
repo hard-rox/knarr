@@ -100,9 +100,9 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>
     /// Translates <paramref name="options"/> into the ordered <c>run</c> argument list: the run
     /// verb, boolean flags (<c>--detach</c>/<c>--rm</c>), optional <c>--name</c>, each environment
-    /// variable (<c>--env KEY=VALUE</c>) and volume (<c>--volume SOURCE:TARGET</c>), and finally the
-    /// image reference. Blank entries are skipped so an empty in-progress row never emits an
-    /// argument.
+    /// variable (<c>--env KEY=VALUE</c>), volume (<c>--volume SOURCE:TARGET</c>) and port mapping
+    /// (<c>--publish HOST:CONTAINER</c>), and finally the image reference. Blank entries are skipped
+    /// so an empty in-progress row never emits an argument.
     /// </summary>
     private string[] BuildRunArgs(RunContainerOptions options)
     {
@@ -144,6 +144,22 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
             args.Add("--volume");
             args.Add($"{volume.Source.Trim()}:{volume.Target.Trim()}");
+        }
+
+        foreach (RunPortMapping port in options.Ports)
+        {
+            if (string.IsNullOrWhiteSpace(port.HostPort) || string.IsNullOrWhiteSpace(port.ContainerPort))
+            {
+                continue;
+            }
+
+            args.Add("--publish");
+            args.Add($"{port.HostPort.Trim()}:{port.ContainerPort.Trim()}");
+        }
+
+        if (options.PublishAllPorts)
+        {
+            args.Add("--publish-all");
         }
 
         args.Add(options.ImageReference.Trim());

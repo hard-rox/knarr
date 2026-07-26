@@ -23,6 +23,12 @@ public sealed record RunContainerOptions
 
     /// <summary>Volume mounts passed as <c>--volume SOURCE:TARGET</c>, in order.</summary>
     public IReadOnlyList<RunVolumeMount> Volumes { get; init; } = [];
+
+    /// <summary>Port mappings passed as <c>--publish HOST:CONTAINER</c>, in order.</summary>
+    public IReadOnlyList<RunPortMapping> Ports { get; init; } = [];
+
+    /// <summary>When true, publishes all exposed ports to random host ports (<c>--publish-all</c>).</summary>
+    public bool PublishAllPorts { get; init; }
 }
 
 /// <summary>A single environment variable passed to a container run as <c>--env KEY=VALUE</c>.</summary>
@@ -34,3 +40,8 @@ public sealed record RunEnvironmentVariable(string Key, string Value);
 /// <param name="Source">The host path (or named volume).</param>
 /// <param name="Target">The in-container mount path.</param>
 public sealed record RunVolumeMount(string Source, string Target);
+
+/// <summary>A single port mapping passed to a container run as <c>--publish HOST:CONTAINER</c>.</summary>
+/// <param name="HostPort">The port published on the host.</param>
+/// <param name="ContainerPort">The port exposed inside the container.</param>
+public sealed record RunPortMapping(string HostPort, string ContainerPort);

@@ -139,6 +139,51 @@
           </StackPanel>
         </Expander>
 
+        <!-- Port mappings -->
+        <Expander Header="Port mappings" HorizontalAlignment="Stretch">
+          <StackPanel Spacing="8" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ToggleSwitch IsChecked="{Binding PublishAllPorts}" />
+              <TextBlock Text="Publish all exposed ports to random host ports (--publish-all)"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource TextBrush}" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Ports}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:PortMappingEntry">
+                  <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding HostPort}"
+                             PlaceholderText="host port"
+                             FontFamily="Cascadia Code,Consolas,monospace" />
+                    <TextBlock Grid.Column="1" Text=":" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDimBrush}" />
+                    <TextBox Grid.Column="2"
+                             Text="{Binding ContainerPort}"
+                             PlaceholderText="container port"
+                             FontFamily="Cascadia Code,Consolas,monospace" />
+                    <Button Grid.Column="3"
+                            Classes="icon"
+                            ToolTip.Tip="Remove"
+                            Command="{Binding $parent[Window].((vm:RunContainerDialogViewModel)DataContext).RemovePortCommand}"
+                            CommandParameter="{Binding}">
+                      <PathIcon Data="{StaticResource DeleteRegular}" Width="14" Height="14" />
+                    </Button>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button HorizontalAlignment="Left"
+                    Command="{Binding AddPortCommand}"
+                    IsEnabled="{Binding CanAddPort}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="{StaticResource AddRegular}" Width="14" Height="14" />
+                <TextBlock Text="Add port" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Expander>
+
         <!-- Command preview -->
         <StackPanel Spacing="6">
           <TextBlock Text="Command" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />

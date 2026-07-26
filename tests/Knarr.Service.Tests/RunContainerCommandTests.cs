@@ -60,10 +60,14 @@ public class RunContainerCommandTests
             [
                 new RunVolumeMount("/host/data", "/data"),
             ],
+            Ports =
+            [
+                new RunPortMapping("8080", "80"),
+            ],
         });
 
         Assert.Equal(
-            "wslc run --detach --name cache --env KEY=value --env OTHER=2 --volume /host/data:/data redis:7",
+            "wslc run --detach --name cache --env KEY=value --env OTHER=2 --volume /host/data:/data --publish 8080:80 redis:7",
             command);
     }
 
@@ -85,8 +89,13 @@ public class RunContainerCommandTests
                 new RunVolumeMount("/only-source", "   "),
                 new RunVolumeMount("/a", "/b"),
             ],
+            Ports =
+            [
+                new RunPortMapping("9090", "   "),
+                new RunPortMapping("5000", "5000"),
+            ],
         });
 
-        Assert.Equal("wslc run --detach --env OK=1 --volume /a:/b busybox", command);
+        Assert.Equal("wslc run --detach --env OK=1 --volume /a:/b --publish 5000:5000 busybox", command);
     }
 }
