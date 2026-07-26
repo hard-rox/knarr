@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Knarr.App.Features.RunContainer;
 
 namespace Knarr.App.Features.Images;
 
@@ -19,6 +20,7 @@ public partial class ImagesView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.PullDialogRequested -= OnPullDialogRequested;
+            _viewModel.RunDialogRequested -= OnRunDialogRequested;
         }
 
         _viewModel = DataContext as ImagesViewModel;
@@ -26,12 +28,27 @@ public partial class ImagesView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.PullDialogRequested += OnPullDialogRequested;
+            _viewModel.RunDialogRequested += OnRunDialogRequested;
         }
     }
 
     private async void OnPullDialogRequested(object? sender, PullImageDialogViewModel dialogViewModel)
     {
         PullImageDialog dialog = new() { DataContext = dialogViewModel };
+
+        if (TopLevel.GetTopLevel(this) is Window owner)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+    }
+
+    private async void OnRunDialogRequested(object? sender, RunContainerDialogViewModel dialogViewModel)
+    {
+        RunContainerDialog dialog = new() { DataContext = dialogViewModel };
 
         if (TopLevel.GetTopLevel(this) is Window owner)
         {

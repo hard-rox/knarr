@@ -1,0 +1,201 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Knarr.App.Features.RunContainer"
+        xmlns:controls="using:Knarr.App.Controls"
+        x:Class="Knarr.App.Features.RunContainer.RunContainerDialog"
+        x:DataType="vm:RunContainerDialogViewModel"
+        Title="Run container"
+        Width="640" Height="480"
+        MinWidth="520" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BackgroundBaseBrush}">
+
+  <Design.DataContext>
+    <vm:RunContainerDialogViewModel />
+  </Design.DataContext>
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+  </Window.KeyBindings>
+
+  <Grid Margin="20" RowDefinitions="*,Auto" RowSpacing="14">
+
+    <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="16">
+
+        <!-- Image reference -->
+        <StackPanel Spacing="6">
+          <TextBlock Text="Image" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+          <TextBox Text="{Binding ImageReference}"
+                   PlaceholderText="docker.io/library/alpine:3.20"
+                   IsEnabled="{Binding !IsRunning}"
+                   FontFamily="Cascadia Code,Consolas,monospace" />
+        </StackPanel>
+
+        <!-- Flags -->
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+            <ToggleSwitch IsChecked="{Binding Detach}" IsEnabled="{Binding !IsRunning}" />
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Detach" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+              <TextBlock Text="--detach" FontSize="11" Foreground="{DynamicResource TextDimBrush}" />
+            </StackPanel>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+            <ToggleSwitch IsChecked="{Binding RemoveOnExit}" IsEnabled="{Binding !IsRunning}" />
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Remove on exit" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+              <TextBlock Text="--rm" FontSize="11" Foreground="{DynamicResource TextDimBrush}" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+
+        <!-- Container name (optional) -->
+        <StackPanel Spacing="6">
+          <TextBlock Text="Name (optional)" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+          <TextBox Text="{Binding ContainerName}"
+                   PlaceholderText="web-api"
+                   IsEnabled="{Binding !IsRunning}"
+                   FontFamily="Cascadia Code,Consolas,monospace" />
+        </StackPanel>
+
+        <!-- Environment variables -->
+        <Expander Header="Environment variables" HorizontalAlignment="Stretch">
+          <StackPanel Spacing="8" Margin="0,8,0,0">
+            <ItemsControl ItemsSource="{Binding EnvironmentVariables}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:EnvironmentVariableEntry">
+                  <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding Key}"
+                             PlaceholderText="KEY"
+                             FontFamily="Cascadia Code,Consolas,monospace" />
+                    <TextBlock Grid.Column="1" Text="=" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDimBrush}" />
+                    <TextBox Grid.Column="2"
+                             Text="{Binding Value}"
+                             PlaceholderText="value"
+                             FontFamily="Cascadia Code,Consolas,monospace" />
+                    <Button Grid.Column="3"
+                            Classes="icon"
+                            ToolTip.Tip="Remove"
+                            Command="{Binding $parent[Window].((vm:RunContainerDialogViewModel)DataContext).RemoveEnvironmentVariableCommand}"
+                            CommandParameter="{Binding}">
+                      <PathIcon Data="{StaticResource DeleteRegular}" Width="14" Height="14" />
+                    </Button>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button HorizontalAlignment="Left"
+                    Command="{Binding AddEnvironmentVariableCommand}"
+                    IsEnabled="{Binding !IsRunning}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="{StaticResource AddRegular}" Width="14" Height="14" />
+                <TextBlock Text="Add variable" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Expander>
+
+        <!-- Volume mounts -->
+        <Expander Header="Volume mounts" HorizontalAlignment="Stretch">
+          <StackPanel Spacing="8" Margin="0,8,0,0">
+            <ItemsControl ItemsSource="{Binding Volumes}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:VolumeMountEntry">
+                  <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="8" Margin="0,0,0,8">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding Source}"
+                             PlaceholderText="host path or volume"
+                             FontFamily="Cascadia Code,Consolas,monospace" />
+                    <TextBlock Grid.Column="1" Text=":" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDimBrush}" />
+                    <TextBox Grid.Column="2"
+                             Text="{Binding Target}"
+                             PlaceholderText="/container/path"
+                             FontFamily="Cascadia Code,Consolas,monospace" />
+                    <Button Grid.Column="3"
+                            Classes="icon"
+                            ToolTip.Tip="Remove"
+                            Command="{Binding $parent[Window].((vm:RunContainerDialogViewModel)DataContext).RemoveVolumeCommand}"
+                            CommandParameter="{Binding}">
+                      <PathIcon Data="{StaticResource DeleteRegular}" Width="14" Height="14" />
+                    </Button>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button HorizontalAlignment="Left"
+                    Command="{Binding AddVolumeCommand}"
+                    IsEnabled="{Binding !IsRunning}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="{StaticResource AddRegular}" Width="14" Height="14" />
+                <TextBlock Text="Add mount" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Expander>
+
+        <!-- Command preview -->
+        <StackPanel Spacing="6">
+          <TextBlock Text="Command" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+          <TextBox Text="{Binding CommandPreview, Mode=OneWay}"
+                   IsReadOnly="True"
+                   TextWrapping="Wrap"
+                   FontFamily="Cascadia Code,Consolas,monospace"
+                   FontSize="12" />
+        </StackPanel>
+
+        <!-- Interactive logs (foreground runs only) -->
+        <StackPanel Spacing="6" IsVisible="{Binding !Detach}">
+          <TextBlock Text="Logs" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+          <controls:TerminalOutputView Height="200"
+                                       Lines="{Binding OutputLines}"
+                                       State="{Binding TerminalState}"
+                                       Placeholder="Container logs will appear here once the run starts." />
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Footer: status + progress + actions -->
+    <StackPanel Grid.Row="1" Spacing="10">
+      <TextBlock Text="{Binding StatusMessage}"
+                 IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                 FontSize="12"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextDimBrush}" />
+
+      <ProgressBar IsIndeterminate="True"
+                   IsVisible="{Binding IsRunning}"
+                   Foreground="{DynamicResource AccentBrush}" />
+
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Classes="accent"
+                Command="{Binding RunCommand}"
+                IsVisible="{Binding !IsRunning}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource PlayRegular}" Width="14" Height="14" />
+            <TextBlock Text="Run" />
+          </StackPanel>
+        </Button>
+        <Button Command="{Binding CancelCommand}"
+                IsVisible="{Binding IsRunning}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource StopRegular}" Width="14" Height="14" />
+            <TextBlock Text="Cancel" />
+          </StackPanel>
+        </Button>
+        <Button Command="{Binding CloseCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource DismissRegular}" Width="14" Height="14" />
+            <TextBlock Text="Close" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </StackPanel>
+
+  </Grid>
+</Window>

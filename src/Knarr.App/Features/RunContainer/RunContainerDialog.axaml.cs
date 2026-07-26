@@ -1,12 +1,12 @@
 using Avalonia.Controls;
 
-namespace Knarr.App.Features.Images;
+namespace Knarr.App.Features.RunContainer;
 
-public partial class PullImageDialog : Window
+public partial class RunContainerDialog : Window
 {
-    private PullImageDialogViewModel? _viewModel;
+    private RunContainerDialogViewModel? _viewModel;
 
-    public PullImageDialog()
+    public RunContainerDialog()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
@@ -17,7 +17,7 @@ public partial class PullImageDialog : Window
     {
         _viewModel?.CloseRequested -= OnCloseRequested;
 
-        _viewModel = DataContext as PullImageDialogViewModel;
+        _viewModel = DataContext as RunContainerDialogViewModel;
 
         _viewModel?.CloseRequested += OnCloseRequested;
     }

@@ -41,6 +41,9 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>Command segment that removes an image (e.g. <c>["image", "delete"]</c> or <c>["rmi"]</c>).</summary>
     protected abstract string[] RemoveImageCommand { get; }
 
+    /// <summary>Command segment that runs a container from an image (e.g. <c>["run"]</c>).</summary>
+    protected abstract string[] RunContainerCommand { get; }
+
     /// <summary>Parses the <c>list --all --format JSON</c> payload into shaped containers.</summary>
     protected abstract IReadOnlyList<Container> ParseContainersCore(string json);
 
@@ -84,6 +87,68 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
             : force
                 ? RunAsync(cancellationToken, [.. RemoveContainerCommand, "--force", .. ids])
                 : RunAsync(cancellationToken, [.. RemoveContainerCommand, .. ids]);
+
+    public string BuildRunContainerCommand(RunContainerOptions options)
+        => $"{Executable} {string.Join(' ', BuildRunArgs(options))}";
+
+    public Task<string> RunContainerAsync(RunContainerOptions options, CancellationToken cancellationToken = default)
+        => RunAsync(cancellationToken, BuildRunArgs(options));
+
+    public IAsyncEnumerable<CliOutputLine> RunContainerStreamingAsync(RunContainerOptions options, CancellationToken cancellationToken = default)
+        => RunStreamingAsync(cancellationToken, BuildRunArgs(options));
+
+    /// <summary>
+    /// Translates <paramref name="options"/> into the ordered <c>run</c> argument list: the run
+    /// verb, boolean flags (<c>--detach</c>/<c>--rm</c>), optional <c>--name</c>, each environment
+    /// variable (<c>--env KEY=VALUE</c>) and volume (<c>--volume SOURCE:TARGET</c>), and finally the
+    /// image reference. Blank entries are skipped so an empty in-progress row never emits an
+    /// argument.
+    /// </summary>
+    private string[] BuildRunArgs(RunContainerOptions options)
+    {
+        List<string> args = [.. RunContainerCommand];
+
+        if (options.Detach)
+        {
+            args.Add("--detach");
+        }
+
+        if (options.RemoveOnExit)
+        {
+            args.Add("--rm");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.Name))
+        {
+            args.Add("--name");
+            args.Add(options.Name.Trim());
+        }
+
+        foreach (RunEnvironmentVariable env in options.EnvironmentVariables)
+        {
+            if (string.IsNullOrWhiteSpace(env.Key))
+            {
+                continue;
+            }
+
+            args.Add("--env");
+            args.Add($"{env.Key.Trim()}={env.Value}");
+        }
+
+        foreach (RunVolumeMount volume in options.Volumes)
+        {
+            if (string.IsNullOrWhiteSpace(volume.Source) || string.IsNullOrWhiteSpace(volume.Target))
+            {
+                continue;
+            }
+
+            args.Add("--volume");
+            args.Add($"{volume.Source.Trim()}:{volume.Target.Trim()}");
+        }
+
+        args.Add(options.ImageReference.Trim());
+        return [.. args];
+    }
 
     public async Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default)
     {

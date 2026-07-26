@@ -24,6 +24,8 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     protected override string[] RemoveImageCommand => ["image", "delete"];
 
+    protected override string[] RunContainerCommand => ["run"];
+
     protected override IReadOnlyList<Container> ParseContainersCore(string json) => ParseContainers(json);
 
     protected override IReadOnlyList<ContainerImage> ParseImagesCore(string json) => ParseImages(json);

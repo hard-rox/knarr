@@ -46,6 +46,28 @@ public interface IContainerCliProvider
     /// </summary>
     Task RemoveContainersAsync(IReadOnlyList<string> ids, bool force = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Builds the exact <c>run</c> command line that <paramref name="options"/> would execute,
+    /// without running anything. Used to surface a live, read-only command preview (transparency).
+    /// </summary>
+    string BuildRunContainerCommand(RunContainerOptions options);
+
+    /// <summary>
+    /// Runs a container from an image (<c>run</c>) using <paramref name="options"/>, returning the
+    /// buffered standard output (typically the new container id). Intended for detached runs that
+    /// return immediately.
+    /// </summary>
+    Task<string> RunContainerAsync(RunContainerOptions options, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs a container from an image (<c>run</c>) using <paramref name="options"/>, streaming the
+    /// command transcript line-by-line. The first emitted line is the exact command executed
+    /// (transparency); stdout and stderr lines follow in arrival order; a final
+    /// <see cref="CliOutputKind.Exit"/> line carries the exit code. Intended for foreground
+    /// (non-detached) runs so live logs can be surfaced. Cancellation is cooperative.
+    /// </summary>
+    IAsyncEnumerable<CliOutputLine> RunContainerStreamingAsync(RunContainerOptions options, CancellationToken cancellationToken = default);
+
     // ----- Images -----
 
     /// <summary>Lists local images (<c>images --format JSON</c>).</summary>
