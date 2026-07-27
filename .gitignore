@@ -37,3 +37,11 @@ riderModule.iml
 ## OS
 .DS_Store
 Thumbs.db
+publish/portable/av_libglesv2.dll
+publish/portable/Knarr.App.exe
+publish/portable/Knarr.App.pdb
+publish/portable/Knarr.Service.pdb
+publish/portable/libHarfBuzzSharp.dll
+publish/portable/libHarfBuzzSharp.pdb
+publish/portable/libSkiaSharp.dll
+publish/portable/libSkiaSharp.pdb
