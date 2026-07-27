@@ -144,11 +144,12 @@ jobs:
           & $makeAppx pack /d ./publish/msix /p "./${{ env.APP_NAME }}-win-x64.msix" /o
 
       - name: Compile EXE Installer via Inno Setup
-        uses: aminya/setup-inno-setup@v1
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
 
       - name: Build Installer Package
         shell: pwsh
-        run: iscc installer.iss
+        path: installer.iss
+        options: /O+
 
       - name: Upload portable ZIP
         uses: actions/upload-artifact@v4
