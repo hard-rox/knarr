@@ -1,8 +1,10 @@
 using Avalonia.Threading;
+using Knarr.App.Controls;
 using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
+using Knarr.Service.Exceptions;
 using Knarr.Service.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,12 @@ public partial class SidebarViewModel : ViewModelBase
     private readonly NavigationItem _containersItem;
     private readonly NavigationItem _imagesItem;
 
+    /// <summary>
+    /// Controls the host's container system services. Only registered on macOS, so this stays null
+    /// elsewhere and the sidebar's system control is hidden.
+    /// </summary>
+    private readonly IContainerSystemService? _systemService;
+
     private DispatcherTimer? _badgeTimer;
 
     public SidebarViewModel(
@@ -30,6 +38,7 @@ public partial class SidebarViewModel : ViewModelBase
         _services = services;
         _cliProvider = cliProvider;
         _logger = logger;
+        _systemService = services?.GetService<IContainerSystemService>();
 
         _containersItem = new NavigationItem(
             "Containers", "CubeRegular", createPage: () => _services.GetRequiredService<ContainersViewModel>());
@@ -63,6 +72,7 @@ public partial class SidebarViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSidebarCollapsed))]
+    [NotifyPropertyChangedFor(nameof(IsCollapsedSystemControlVisible))]
     private bool _isSidebarExpanded = true;
 
     public bool IsSidebarCollapsed => !IsSidebarExpanded;
@@ -82,6 +92,80 @@ public partial class SidebarViewModel : ViewModelBase
     private bool _isCliReachable;
 
     public string CliDisplay => $"{CliName} {CliVersion}";
+
+    /// <summary>Whether the host exposes a controllable container system (macOS only).</summary>
+    public bool IsSystemControlVisible => _systemService is not null;
+
+    /// <summary>Whether the collapsed icon rail should show the compact system status dot.</summary>
+    public bool IsCollapsedSystemControlVisible => IsSystemControlVisible && IsSidebarCollapsed;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSystemRunning))]
+    [NotifyPropertyChangedFor(nameof(SystemStatusText))]
+    [NotifyPropertyChangedFor(nameof(SystemPillStatus))]
+    [NotifyPropertyChangedFor(nameof(SystemActionIcon))]
+    [NotifyPropertyChangedFor(nameof(SystemActionTooltip))]
+    private ContainerSystemState _systemState = ContainerSystemState.Unknown;
+
+    /// <summary>Last start/stop failure, or null when the most recent action succeeded.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SystemStatusText))]
+    [NotifyPropertyChangedFor(nameof(SystemPillStatus))]
+    private string? _systemErrorMessage;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ToggleSystemCommand))]
+    [NotifyPropertyChangedFor(nameof(SystemStatusText))]
+    private bool _isSystemBusy;
+
+    public bool IsSystemRunning => SystemState is ContainerSystemState.Running;
+
+    public string SystemStatusText
+    {
+        get
+        {
+            if (IsSystemBusy)
+            {
+                return IsSystemRunning ? "Stopping\u2026" : "Starting\u2026";
+            }
+
+            if (SystemErrorMessage is not null)
+            {
+                return "Error";
+            }
+
+            return SystemState switch
+            {
+                ContainerSystemState.Running => "System running",
+                ContainerSystemState.Unregistered => "System unregistered",
+                ContainerSystemState.NotRunning => "System stopped",
+                _ => "System unknown",
+            };
+        }
+    }
+
+    public PillStatus SystemPillStatus
+    {
+        get
+        {
+            if (SystemErrorMessage is not null)
+            {
+                return PillStatus.Paused;
+            }
+
+            return SystemState switch
+            {
+                ContainerSystemState.Running => PillStatus.Running,
+                ContainerSystemState.Unregistered or ContainerSystemState.NotRunning => PillStatus.Stopped,
+                _ => PillStatus.Neutral,
+            };
+        }
+    }
+
+    public string SystemActionIcon => IsSystemRunning ? "StopRegular" : "PlayRegular";
+
+    public string SystemActionTooltip => SystemErrorMessage
+        ?? (IsSystemRunning ? "Stop the container system" : "Start the container system");
 
     /// <summary>Probes the container CLI for its version. Call once after construction on the UI thread.</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -126,7 +210,65 @@ public partial class SidebarViewModel : ViewModelBase
         {
             _logger.LogWarning(ex, "Failed to refresh sidebar badge counts");
         }
+
+        await RefreshSystemStatusAsync(cancellationToken).ConfigureAwait(true);
     }
+
+    /// <summary>
+    /// Re-reads the container system status. No-ops when the platform has no system service or an
+    /// action is already in flight (the action refreshes on completion itself).
+    /// </summary>
+    private async Task RefreshSystemStatusAsync(CancellationToken cancellationToken = default)
+    {
+        if (_systemService is null || IsSystemBusy)
+        {
+            return;
+        }
+
+        ContainerSystemStatus status = await _systemService.GetStatusAsync(cancellationToken).ConfigureAwait(true);
+        SystemState = status.State;
+    }
+
+    /// <summary>
+    /// Starts or stops the container system depending on its current state, then re-reads the
+    /// status. Failures are logged and surfaced inline on the status pill rather than thrown.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanToggleSystem))]
+    private async Task ToggleSystemAsync(CancellationToken cancellationToken)
+    {
+        if (_systemService is null)
+        {
+            return;
+        }
+
+        IsSystemBusy = true;
+        SystemErrorMessage = null;
+
+        try
+        {
+            if (IsSystemRunning)
+            {
+                await _systemService.StopAsync(cancellationToken).ConfigureAwait(true);
+            }
+            else
+            {
+                await _systemService.StartAsync(cancellationToken).ConfigureAwait(true);
+            }
+        }
+        catch (CliCommandException ex)
+        {
+            _logger.LogWarning(ex, "Container system toggle failed");
+            SystemErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSystemBusy = false;
+        }
+
+        await RefreshSystemStatusAsync(cancellationToken).ConfigureAwait(true);
+    }
+
+    private bool CanToggleSystem() => _systemService is not null && !IsSystemBusy;
 
     partial void OnSelectedItemChanged(NavigationItem? value)
         => _logger.LogInformation("Navigated to {Page}", value?.Title ?? "(none)");
