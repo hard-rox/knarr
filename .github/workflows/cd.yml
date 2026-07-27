@@ -143,13 +143,11 @@ jobs:
           if (-not $makeAppx) { throw "makeappx.exe not found on runner image" }
           & $makeAppx pack /d ./publish/msix /p "./${{ env.APP_NAME }}-win-x64.msix" /o
 
-      - name: Compile EXE Installer via Inno Setup
+      - name: Build MSI with Inno Setup
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
-
-      - name: Build Installer Package
-        shell: pwsh
-        path: installer.iss
-        options: /O+
+        with:
+          path: installer.iss
+          options: /O+
 
       - name: Upload portable ZIP
         uses: actions/upload-artifact@v4
