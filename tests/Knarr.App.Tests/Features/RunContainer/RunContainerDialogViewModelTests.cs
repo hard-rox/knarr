@@ -13,9 +13,10 @@ namespace Knarr.App.Tests.Features.RunContainer;
 
 public class RunContainerDialogViewModelTests
 {
-    private static RunContainerDialogViewModel CreateViewModel(out IContainerCliProvider provider)
+    private static RunContainerDialogViewModel CreateViewModel(out IContainerCliProvider provider, bool supportsPublishAllPorts = true)
     {
         provider = Substitute.For<IContainerCliProvider>();
+        provider.SupportsPublishAllPorts.Returns(supportsPublishAllPorts);
         provider
             .BuildRunContainerCommand(Arg.Any<RunContainerOptions>())
             .Returns(ci => Describe(ci.Arg<RunContainerOptions>()));
@@ -34,6 +35,18 @@ public class RunContainerDialogViewModelTests
         Assert.False(vm.RemoveOnExit);
         Assert.Empty(vm.EnvironmentVariables);
         Assert.Empty(vm.Volumes);
+        Assert.True(vm.SupportsPublishAllPorts);
+    }
+
+    [Fact]
+    public void UnsupportedPublishAll_HidesCapabilityAndKeepsAddPortAvailable()
+    {
+        RunContainerDialogViewModel vm = CreateViewModel(out _, supportsPublishAllPorts: false);
+
+        vm.PublishAllPorts = true;
+
+        Assert.False(vm.SupportsPublishAllPorts);
+        Assert.True(vm.CanAddPort);
     }
 
     [Fact]
@@ -120,6 +133,23 @@ public class RunContainerDialogViewModelTests
         Assert.False(vm.IsRunning);
         Assert.True(started);
         Assert.Contains("abc123", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task Run_Detached_Success_RaisesCloseRequested()
+    {
+        RunContainerDialogViewModel vm = CreateViewModel(out IContainerCliProvider provider);
+        provider
+            .RunContainerAsync(Arg.Any<RunContainerOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("abc123"));
+        vm.ImageReference = "alpine:3.20";
+
+        var closeRequested = false;
+        vm.CloseRequested += (_, _) => closeRequested = true;
+
+        await vm.RunCommand.ExecuteAsync(null);
+
+        Assert.True(closeRequested);
     }
 
     [Fact]

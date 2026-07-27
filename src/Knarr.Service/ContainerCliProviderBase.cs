@@ -44,6 +44,9 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>Command segment that runs a container from an image (e.g. <c>["run"]</c>).</summary>
     protected abstract string[] RunContainerCommand { get; }
 
+    /// <inheritdoc />
+    public virtual bool SupportsPublishAllPorts => true;
+
     /// <summary>Parses the <c>list --all --format JSON</c> payload into shaped containers.</summary>
     protected abstract IReadOnlyList<Container> ParseContainersCore(string json);
 
@@ -157,7 +160,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
             args.Add($"{port.HostPort.Trim()}:{port.ContainerPort.Trim()}");
         }
 
-        if (options.PublishAllPorts)
+        if (options.PublishAllPorts && SupportsPublishAllPorts)
         {
             args.Add("--publish-all");
         }

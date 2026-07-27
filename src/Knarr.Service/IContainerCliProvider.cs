@@ -10,6 +10,11 @@ namespace Knarr.Service;
 /// </summary>
 public interface IContainerCliProvider
 {
+    /// <summary>
+    /// Whether this platform CLI supports <c>run --publish-all</c>.
+    /// </summary>
+    bool SupportsPublishAllPorts { get; }
+
     // ----- Containers -----
 
     /// <summary>Lists all containers (<c>list --all --format JSON</c>).</summary>

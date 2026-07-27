@@ -102,8 +102,11 @@ public partial class RunContainerDialogViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanAddPort))]
     public partial bool PublishAllPorts { get; set; }
 
+    /// <summary>Whether the current platform supports publishing all ports via <c>--publish-all</c>.</summary>
+    public bool SupportsPublishAllPorts => _cliProvider?.SupportsPublishAllPorts ?? true;
+
     /// <summary>Whether a new port-mapping row may be added (disabled while running or publishing all).</summary>
-    public bool CanAddPort => !IsRunning && !PublishAllPorts;
+    public bool CanAddPort => !IsRunning && (!PublishAllPorts || !SupportsPublishAllPorts);
 
     /// <summary>Live transcript of the streamed foreground run (command / stdout / stderr / exit).</summary>
     public ObservableCollection<CliOutputLine> OutputLines { get; }
@@ -261,6 +264,7 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         if (started)
         {
             ContainerStarted?.Invoke(this, EventArgs.Empty);
+            CloseRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -336,7 +340,7 @@ public partial class RunContainerDialogViewModel : ViewModelBase
                 .Where(p => !string.IsNullOrWhiteSpace(p.HostPort) && !string.IsNullOrWhiteSpace(p.ContainerPort))
                 .Select(p => new RunPortMapping(p.HostPort.Trim(), p.ContainerPort.Trim())),
         ],
-        PublishAllPorts = PublishAllPorts,
+        PublishAllPorts = SupportsPublishAllPorts && PublishAllPorts,
     };
 
     private void UpdateCommandPreview()

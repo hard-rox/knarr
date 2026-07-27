@@ -98,7 +98,7 @@
           </TableViewColumn>
 
           <!-- Image (selectable text) -->
-          <TableViewColumn Header="Image" Width="*">
+          <TableViewColumn Header="Image" Width="2*">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ImageItem">
                 <StackPanel VerticalAlignment="Center" Spacing="2">

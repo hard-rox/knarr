@@ -3,6 +3,11 @@
     "avalonia-build-mcp-server": {
       "url": "https://docs-mcp.avaloniaui.net/mcp",
       "type": "http"
+    },
+    "avalonia_devtools": {
+      "type": "stdio",
+      "command": "avdt",
+      "args": ["mcp"]
     }
   },
   "inputs": []

@@ -12,6 +12,9 @@ public class RunContainerCommandTests
     private static IContainerCliProvider CreateProvider()
         => new WslcCli.WslcCliProvider(NullLogger<WslcCli.WslcCliProvider>.Instance);
 
+    private static IContainerCliProvider CreateAppleProvider()
+        => new AppleContainerCli.AppleContainerCliProvider(NullLogger<AppleContainerCli.AppleContainerCliProvider>.Instance);
+
     [Fact]
     public void Build_DefaultDetached_EmitsDetachFlagAndImageLast()
     {
@@ -97,5 +100,19 @@ public class RunContainerCommandTests
         });
 
         Assert.Equal("wslc run --detach --env OK=1 --volume /a:/b --publish 5000:5000 busybox", command);
+    }
+
+    [Fact]
+    public void Build_PublishAllPorts_OmittedOnAppleContainer()
+    {
+        IContainerCliProvider provider = CreateAppleProvider();
+
+        var command = provider.BuildRunContainerCommand(new RunContainerOptions
+        {
+            ImageReference = "alpine:3.20",
+            PublishAllPorts = true,
+        });
+
+        Assert.Equal("container run --detach alpine:3.20", command);
     }
 }
