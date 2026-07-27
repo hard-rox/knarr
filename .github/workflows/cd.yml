@@ -32,33 +32,33 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Setup Java (required by SonarScanner)
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: "17"
+      # - name: Setup Java (required by SonarScanner)
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: zulu
+      #     java-version: "17"
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+      # - name: Cache SonarCloud packages
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.sonar/cache
+      #     key: ${{ runner.os }}-sonar
+      #     restore-keys: ${{ runner.os }}-sonar
 
-      - name: Install dotnet-sonarscanner
-        run: dotnet tool install --global dotnet-sonarscanner
+      # - name: Install dotnet-sonarscanner
+      #   run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Begin SonarCloud analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          dotnet-sonarscanner begin \
-            /k:"${{ secrets.SONAR_PROJECT_KEY }}" \
-            /o:"${{ secrets.SONAR_ORGANIZATION }}" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
-            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+      # - name: Begin SonarCloud analysis
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   run: |
+      #     dotnet-sonarscanner begin \
+      #       /k:"${{ secrets.SONAR_PROJECT_KEY }}" \
+      #       /o:"${{ secrets.SONAR_ORGANIZATION }}" \
+      #       /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+      #       /d:sonar.host.url="https://sonarcloud.io" \
+      #       /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
+      #       /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
 
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION }}
@@ -73,10 +73,10 @@ jobs:
           --collect:"XPlat Code Coverage"
           -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover
 
-      - name: End SonarCloud analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      # - name: End SonarCloud analysis
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Generate markdown coverage summary
         uses: irongut/CodeCoverageSummary@v1.3.0
