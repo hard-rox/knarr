@@ -144,7 +144,7 @@ jobs:
           & $makeAppx pack /d ./publish/msix /p "./${{ env.APP_NAME }}-win-x64.msix" /o
 
       - name: Install WiX Toolset
-        run: dotnet tool install --global WixToolset.Tools
+        run: dotnet tool install --global wix
 
       - name: Build MSI with WiX
         shell: pwsh
@@ -202,7 +202,11 @@ jobs:
           mkdir -p "${{ env.BUNDLE_DIR }}/Contents/Resources"
           cp -R "${{ env.PUBLISH_DIR }}"/* "${{ env.BUNDLE_DIR }}/Contents/MacOS/"
           cp "src/Knarr.App/Info.plist" "${{ env.BUNDLE_DIR }}/Contents/Info.plist"
-          cp "src/Knarr.App/Knarr.icns" "${{ env.BUNDLE_DIR }}/Contents/Resources/Knarr.icns"
+          if [ -f "src/Knarr.App/Knarr.icns" ]; then
+            cp "src/Knarr.App/Knarr.icns" "${{ env.BUNDLE_DIR }}/Contents/Resources/Knarr.icns"
+          else
+            echo "::warning::src/Knarr.App/Knarr.icns not found - bundling without a custom icon"
+          fi
           chmod +x "${{ env.BUNDLE_DIR }}/Contents/MacOS/Knarr.App"
 
       - name: Zip .app bundle
