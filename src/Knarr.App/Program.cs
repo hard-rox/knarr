@@ -2,6 +2,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Serilog;
+using Velopack;
 
 namespace Knarr.App;
 
@@ -15,6 +16,10 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Must run first, before any other code, so Velopack can handle install/update/uninstall
+        // hooks (e.g. creating shortcuts) on first run.
+        VelopackApp.Build().Run();
+
         AttachParentConsole();
         Log.Logger = CreateLogger();
         try

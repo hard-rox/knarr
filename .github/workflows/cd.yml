@@ -1,0 +1,196 @@
+name: CD
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    name: Build & Test with coverage (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Knarr.slnx
+
+      - name: Build
+        run: dotnet build Knarr.slnx -c Release --no-restore
+
+      - name: Test with coverage
+        run: >
+          dotnet test Knarr.slnx -c Release --no-build --verbosity normal
+          --collect:"XPlat Code Coverage;Format=cobertura"
+          --results-directory ./coverage
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Merge coverage report
+        run: >
+          reportgenerator
+          -reports:"./coverage/**/coverage.cobertura.xml"
+          -targetdir:"./coverage/report"
+          -reporttypes:"Cobertura;Html"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage/report
+
+      # ---------------------------------------------------------------------------------
+      # TODO: enable once a SonarCloud project exists for this repo and the SONAR_TOKEN
+      # secret has been added (Settings > Secrets and variables > Actions). Requires a
+      # Java runtime on the runner (actions/setup-java) in addition to the .NET SDK.
+      # ---------------------------------------------------------------------------------
+      # - name: Setup Java (required by the Sonar scanner)
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: "temurin"
+      #     java-version: "17"
+      #
+      # - name: Install Sonar scanner
+      #   run: dotnet tool install --global dotnet-sonarscanner
+      #
+      # - name: Sonar begin
+      #   run: >
+      #     dotnet-sonarscanner begin
+      #     /k:"hard-rox_knarr"
+      #     /o:"hard-rox"
+      #     /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      #     /d:sonar.host.url="https://sonarcloud.io"
+      #     /d:sonar.cs.cobertura.reportsPaths="./coverage/report/Cobertura.xml"
+      #
+      # - name: Rebuild for Sonar analysis
+      #   run: dotnet build Knarr.slnx -c Release
+      #
+      # - name: Sonar end
+      #   run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+  release-windows:
+    name: Release (win-x64)
+    needs: build-test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Derive version from tag
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Publish
+        run: >
+          dotnet publish src/Knarr.App/Knarr.App.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish/win-x64
+
+      - name: Install vpk
+        run: dotnet tool install --global vpk
+
+      # TODO: Use a real code-signing certificate instead of generating a self-signed one. The self-signed certificate is only for testing purposes and will not be trusted by Windows.
+      - name: Generate ephemeral code-signing certificate
+        shell: pwsh
+        run: |
+          $password = -join ((48..57 + 65..90 + 97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ })
+          $cert = New-SelfSignedCertificate -Type CodeSigning -Subject "CN=Knarr" -CertStoreLocation Cert:\CurrentUser\My
+          $securePassword = ConvertTo-SecureString -String $password -Force -AsPlainText
+          Export-PfxCertificate -Cert $cert -FilePath cert.pfx -Password $securePassword | Out-Null
+          "CERT_PASSWORD=$password" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: vpk pack (installer + portable)
+        shell: pwsh
+        run: >
+          vpk pack --packId Knarr --packTitle Knarr --packAuthors "Knarr Contributors"
+          --packVersion ${{ env.VERSION }} --packDir publish/win-x64 --mainExe Knarr.App.exe
+          --icon src/Knarr.App/Assets/knarr.ico --runtime win-x64 -o Releases/win-x64
+          --signParams "/f cert.pfx /p ${{ env.CERT_PASSWORD }} /fd SHA256 /tr http://timestamp.digicert.com /td SHA256"
+
+      - name: Remove certificate artifacts
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Path cert.pfx -ErrorAction SilentlyContinue
+
+      - name: Upload to GitHub Releases (draft)
+        run: >
+          vpk upload github --repoUrl https://github.com/hard-rox/knarr
+          --token ${{ secrets.GITHUB_TOKEN }} -o Releases/win-x64 --channel win
+          --tag ${{ github.ref_name }} --releaseName "Knarr ${{ env.VERSION }}"
+          --publish false --merge true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-win-x64
+          path: Releases/win-x64
+
+  release-osx:
+    name: Release (osx-arm64)
+    needs: [build-test, release-windows]
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Derive version from tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Publish
+        run: >
+          dotnet publish src/Knarr.App/Knarr.App.csproj -c Release -r osx-arm64
+          --self-contained true -p:Version=${{ env.VERSION }} -o publish/osx-arm64
+
+      - name: Install vpk
+        run: dotnet tool install --global vpk
+
+      - name: vpk pack (unsigned)
+        run: >
+          vpk pack --packId Knarr --packTitle Knarr --packAuthors "Knarr Contributors"
+          --packVersion ${{ env.VERSION }} --packDir publish/osx-arm64 --mainExe Knarr.App
+          --icon src/Knarr.App/Assets/knarr.icns --runtime osx-arm64 -o Releases/osx-arm64
+
+      - name: Upload to GitHub Releases (draft, merge)
+        run: >
+          vpk upload github --repoUrl https://github.com/hard-rox/knarr
+          --token ${{ secrets.GITHUB_TOKEN }} -o Releases/osx-arm64 --channel osx
+          --tag ${{ github.ref_name }} --releaseName "Knarr ${{ env.VERSION }}"
+          --publish false --merge true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-osx-arm64
+          path: Releases/osx-arm64
+
+  finalize-release:
+    name: Publish GitHub release
+    needs: [release-windows, release-osx]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "${{ github.ref_name }}" --draft=false --repo hard-rox/knarr

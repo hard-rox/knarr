@@ -20,6 +20,7 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="CliWrap" Version="3.10.2" />
+    <PackageVersion Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
   <!-- Test dependencies -->
