@@ -143,14 +143,12 @@ jobs:
           if (-not $makeAppx) { throw "makeappx.exe not found on runner image" }
           & $makeAppx pack /d ./publish/msix /p "./${{ env.APP_NAME }}-win-x64.msix" /o
 
-      - name: Install WiX Toolset
-        run: dotnet tool install --global wix
+      - name: Compile EXE Installer via Inno Setup
+        uses: aminya/setup-inno-setup@v1
 
-      - name: Build MSI with WiX
+      - name: Build Installer Package
         shell: pwsh
-        run: |
-          $publishDir = (Resolve-Path "${{ env.PUBLISH_DIR }}").Path
-          wix build ./Setup.wxs -arch x64 -d PublishDir="$publishDir" -o "./${{ env.APP_NAME }}-win-x64.msi"
+        run: iscc installer.iss
 
       - name: Upload portable ZIP
         uses: actions/upload-artifact@v4
