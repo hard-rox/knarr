@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Knarr.App.Features.ContainerLogs;
 using Knarr.App.Features.Containers;
 using Knarr.App.Models;
 using Knarr.Service;
@@ -275,5 +276,23 @@ public class ContainersViewModelTests
 
         Assert.False(vm.IsLoading);
         Assert.True(vm.IsEmpty);
+    }
+
+    [Fact]
+    public void Logs_RaisesLogsDialogRequested_ForSelectedContainer()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleContainers);
+        ContainerLogsDialogViewModel dialogViewModel = new(provider, NullLogger<ContainerLogsDialogViewModel>.Instance);
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance, logsDialogFactory: () => dialogViewModel);
+        ContainerItem running = vm.Containers.First(c => c.IsRunning);
+
+        ContainerLogsDialogViewModel? requested = null;
+        vm.LogsDialogRequested += (_, dvm) => requested = dvm;
+
+        vm.LogsCommand.Execute(running);
+
+        Assert.Same(dialogViewModel, requested);
+        Assert.Equal(running.Id, requested!.ContainerId);
+        Assert.Equal(running.Name, requested.ContainerName);
     }
 }

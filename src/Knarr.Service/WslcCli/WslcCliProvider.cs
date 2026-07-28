@@ -26,6 +26,8 @@ internal sealed class WslcCliProvider(ILogger<WslcCliProvider> logger)
 
     protected override string[] RunContainerCommand => ["run"];
 
+    protected override string[] LogsCommand => ["logs"];
+
     protected override IReadOnlyList<Container> ParseContainersCore(string json) => ParseContainers(json);
 
     protected override IReadOnlyList<ContainerImage> ParseImagesCore(string json) => ParseImages(json);

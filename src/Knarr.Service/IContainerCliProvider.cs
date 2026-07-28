@@ -73,6 +73,16 @@ public interface IContainerCliProvider
     /// </summary>
     IAsyncEnumerable<CliOutputLine> RunContainerStreamingAsync(RunContainerOptions options, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Streams a container's logs (<c>logs</c>) using <paramref name="options"/>, emitting each line
+    /// line-by-line as it arrives. The first emitted line is the exact command executed
+    /// (transparency); stdout and stderr lines follow in arrival order; a final
+    /// <see cref="CliOutputKind.Exit"/> line carries the exit code (omitted while following, since
+    /// the process only exits when cancelled). Cancellation is cooperative and is the only way to
+    /// stop a follow (<c>--follow</c>) stream.
+    /// </summary>
+    IAsyncEnumerable<CliOutputLine> StreamContainerLogsAsync(ContainerLogsOptions options, CancellationToken cancellationToken = default);
+
     // ----- Images -----
 
     /// <summary>Lists local images (<c>images --format JSON</c>).</summary>

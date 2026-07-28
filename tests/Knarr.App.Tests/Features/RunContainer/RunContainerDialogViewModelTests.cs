@@ -7,7 +7,6 @@ using Knarr.Service;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.RunContainer;
 

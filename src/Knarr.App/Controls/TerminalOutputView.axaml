@@ -1,8 +1,6 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:controls="using:Knarr.App.Controls"
-                    xmlns:conv="using:Knarr.App.Converters"
-                    xmlns:models="using:Knarr.Service.Models">
+                    xmlns:controls="using:Knarr.App.Controls">
   <Design.PreviewWith>
     <controls:TerminalOutputView Width="480" Height="220" />
   </Design.PreviewWith>
@@ -20,31 +18,35 @@
                 CornerRadius="8"
                 ClipToBounds="True">
           <Grid RowDefinitions="*,Auto">
-            <ScrollViewer Name="PART_ScrollViewer"
-                          Grid.Row="0"
-                          Padding="12,10"
-                          HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Auto">
-              <Panel>
-                <!-- Placeholder shown while there is no output yet. -->
-                <TextBlock Text="{TemplateBinding Placeholder}"
-                           FontFamily="Cascadia Code,Consolas,monospace"
-                           FontSize="12"
-                           Foreground="{DynamicResource TextDimBrush}"
-                           IsVisible="{Binding !HasOutput, RelativeSource={RelativeSource TemplatedParent}}" />
-                <ItemsControl ItemsSource="{TemplateBinding Lines}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="models:CliOutputLine">
-                      <TextBlock Text="{Binding Text}"
-                                 FontFamily="Cascadia Code,Consolas,monospace"
-                                 FontSize="12"
-                                 TextWrapping="Wrap"
-                                 Foreground="{Binding Kind, Converter={x:Static conv:CliOutputKindToBrushConverter.Instance}}" />
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </Panel>
-            </ScrollViewer>
+            <Panel Grid.Row="0">
+              <ScrollViewer Name="PART_ScrollViewer"
+                            Padding="12,10"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Auto">
+                <Panel>
+                  <!-- Placeholder shown while there is no output yet. -->
+                  <TextBlock Text="{TemplateBinding Placeholder}"
+                             FontFamily="Cascadia Code,Consolas,monospace"
+                             FontSize="12"
+                             Foreground="{DynamicResource TextDimBrush}"
+                             IsVisible="{Binding !HasOutput, RelativeSource={RelativeSource TemplatedParent}}" />
+                  <SelectableTextBlock Name="PART_OutputText"
+                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+                </Panel>
+              </ScrollViewer>
+
+              <Button Name="PART_CopyButton"
+                      Classes="icon"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Margin="6"
+                      IsVisible="{Binding HasOutput, RelativeSource={RelativeSource TemplatedParent}}"
+                      ToolTip.Tip="Copy all">
+                <PathIcon Data="{StaticResource CopyRegular}" Width="14" Height="14" />
+              </Button>
+            </Panel>
 
             <Border Grid.Row="1"
                     IsVisible="{TemplateBinding IsTruncated}"
@@ -58,6 +60,7 @@
         </Border>
       </ControlTemplate>
     </Setter>
+
 
     <Style Selector="^:running">
       <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />

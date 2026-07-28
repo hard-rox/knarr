@@ -26,6 +26,8 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     protected override string[] RunContainerCommand => ["run"];
 
+    protected override string[] LogsCommand => ["logs"];
+
     public override bool SupportsPublishAllPorts => false;
 
     protected override IReadOnlyList<Container> ParseContainersCore(string json) => ParseContainers(json);

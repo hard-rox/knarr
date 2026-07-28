@@ -44,6 +44,9 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>Command segment that runs a container from an image (e.g. <c>["run"]</c>).</summary>
     protected abstract string[] RunContainerCommand { get; }
 
+    /// <summary>Command segment that streams a container's logs (e.g. <c>["logs"]</c>).</summary>
+    protected abstract string[] LogsCommand { get; }
+
     /// <inheritdoc />
     public virtual bool SupportsPublishAllPorts => true;
 
@@ -168,6 +171,55 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
         args.Add(options.ImageReference.Trim());
         return [.. args];
     }
+
+    public IAsyncEnumerable<CliOutputLine> StreamContainerLogsAsync(ContainerLogsOptions options, CancellationToken cancellationToken = default)
+        => RunStreamingAsync(cancellationToken, BuildLogsArgs(options));
+
+    /// <summary>
+    /// Translates <paramref name="options"/> into the ordered <c>logs</c> argument list: the logs
+    /// verb, boolean flags (<c>--follow</c>/<c>--timestamps</c>), optional <c>--tail</c>,
+    /// <c>--since</c> and <c>--until</c> (each formatted as RFC3339 UTC), and finally the container
+    /// id.
+    /// </summary>
+    internal string[] BuildLogsArgs(ContainerLogsOptions options)
+    {
+        List<string> args = [.. LogsCommand];
+
+        if (options.Follow)
+        {
+            args.Add("--follow");
+        }
+
+        if (options.Timestamps)
+        {
+            args.Add("--timestamps");
+        }
+
+        if (options.TailLines is { } tail)
+        {
+            args.Add("--tail");
+            args.Add(tail.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (options.Since is { } since)
+        {
+            args.Add("--since");
+            args.Add(FormatTimestamp(since));
+        }
+
+        if (options.Until is { } until)
+        {
+            args.Add("--until");
+            args.Add(FormatTimestamp(until));
+        }
+
+        args.Add(options.ContainerId.Trim());
+        return [.. args];
+    }
+
+    /// <summary>Formats a timestamp as RFC3339 UTC (e.g. <c>2024-01-15T10:30:00Z</c>) for <c>--since</c>/<c>--until</c>.</summary>
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
 
     public async Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default)
     {

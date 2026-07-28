@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Knarr.App.Features.ContainerLogs;
 using Knarr.App.Features.RunContainer;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ContainersViewModel> _logger;
     private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
+    private readonly Func<ContainerLogsDialogViewModel>? _logsDialogFactory;
     private readonly List<ContainerItem> _allContainers = [];
 
     private DispatcherTimer? _refreshTimer;
@@ -27,11 +29,13 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     public ContainersViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ContainersViewModel> logger,
-        Func<RunContainerDialogViewModel>? runDialogFactory = null)
+        Func<RunContainerDialogViewModel>? runDialogFactory = null,
+        Func<ContainerLogsDialogViewModel>? logsDialogFactory = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
         _runDialogFactory = runDialogFactory;
+        _logsDialogFactory = logsDialogFactory;
         Containers = new ObservableCollection<ContainerItem>();
 
         // Kick off the initial load; property updates marshal back to the UI thread.
@@ -54,6 +58,12 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     /// displays the supplied, already-initialised dialog view model modally.
     /// </summary>
     public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
+
+    /// <summary>
+    /// Raised when the container-logs dialog should be shown. The view resolves the owner window and
+    /// displays the supplied, already-initialised dialog view model modally.
+    /// </summary>
+    public event EventHandler<ContainerLogsDialogViewModel>? LogsDialogRequested;
 
     /// <summary>Total number of containers, independent of the current search filter.</summary>
     public int TotalCount => _allContainers.Count;
@@ -306,7 +316,14 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Logs(ContainerItem container)
     {
-        // Logs viewer is a later milestone.
+        if (_logsDialogFactory is null)
+        {
+            return;
+        }
+
+        ContainerLogsDialogViewModel dialogViewModel = _logsDialogFactory();
+        dialogViewModel.Reset(container.Id, container.Name);
+        LogsDialogRequested?.Invoke(this, dialogViewModel);
     }
 
     [RelayCommand]

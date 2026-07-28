@@ -1,16 +1,23 @@
 using System.Collections;
 using System.Collections.Specialized;
+using System.Globalization;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
+using Knarr.App.Converters;
+using Knarr.Service.Models;
 
 namespace Knarr.App.Controls;
 
 /// <summary>
 /// Lifecycle state of a <see cref="TerminalOutputView"/>. Drives the panel's status accent via
-/// pseudo-classes and lets host view-models describe the outcome of the streamed command.
+/// pseudo-classes and let's host view-models describe the outcome of the streamed command.
 /// </summary>
 public enum TerminalState
 {
@@ -49,6 +56,8 @@ public class TerminalOutputView : TemplatedControl
         AvaloniaProperty.Register<TerminalOutputView, bool>(nameof(HasOutput));
 
     private ScrollViewer? _scrollViewer;
+    private SelectableTextBlock? _outputText;
+    private Button? _copyButton;
     private INotifyCollectionChanged? _observedCollection;
     private bool _isCollectionSubscribed;
     private bool _isAttachedToVisualTree;
@@ -101,6 +110,7 @@ public class TerminalOutputView : TemplatedControl
         else if (change.Property == LinesProperty)
         {
             HookCollection(change.GetNewValue<IEnumerable?>());
+            RebuildInlines();
             ScrollToEnd();
         }
     }
@@ -108,9 +118,18 @@ public class TerminalOutputView : TemplatedControl
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
+
+        _copyButton?.Click -= OnCopyAllClick;
+
         _scrollViewer = e.NameScope.Find<ScrollViewer>("PART_ScrollViewer");
+        _outputText = e.NameScope.Find<SelectableTextBlock>("PART_OutputText");
+        _copyButton = e.NameScope.Find<Button>("PART_CopyButton");
+
+        _copyButton?.Click += OnCopyAllClick;
+
         UpdatePseudoClasses();
         HookCollection(Lines);
+        RebuildInlines();
         ScrollToEnd();
     }
 
@@ -195,7 +214,82 @@ public class TerminalOutputView : TemplatedControl
     private void OnLinesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         UpdateHasOutput();
+        RebuildInlines();
         ScrollToEnd();
+    }
+
+    /// <summary>
+    /// Rebuilds the selectable output text from the bound <see cref="Lines"/> collection, one
+    /// colored <see cref="Run"/> per line so the text remains selectable/copyable while keeping
+    /// the per-kind color coding. Rebuilt in full on every change for simplicity; output volumes
+    /// in this app are small enough that this is not a performance concern.
+    /// </summary>
+    private void RebuildInlines()
+    {
+        if (_outputText is null)
+        {
+            return;
+        }
+
+        _outputText.Inlines ??= new InlineCollection();
+        _outputText.Inlines.Clear();
+
+        if (Lines is not IEnumerable lines)
+        {
+            return;
+        }
+
+        List<CliOutputLine> outputLines = [];
+        foreach (object? item in lines)
+        {
+            if (item is CliOutputLine line)
+            {
+                outputLines.Add(line);
+            }
+        }
+
+        for (int i = 0; i < outputLines.Count; i++)
+        {
+            CliOutputLine line = outputLines[i];
+            IBrush? brush = CliOutputKindToBrushConverter.Instance.Convert(
+                line.Kind, typeof(IBrush), null, CultureInfo.InvariantCulture) as IBrush;
+
+            _outputText.Inlines.Add(new Run(line.Text) { Foreground = brush });
+
+            if (i < outputLines.Count - 1)
+            {
+                _outputText.Inlines.Add(new LineBreak());
+            }
+        }
+    }
+
+    private async void OnCopyAllClick(object? sender, RoutedEventArgs e)
+    {
+        if (Lines is not IEnumerable lines || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
+            return;
+        }
+
+        StringBuilder builder = new();
+        foreach (object? item in lines)
+        {
+            if (item is not CliOutputLine line)
+            {
+                continue;
+            }
+
+            if (builder.Length > 0)
+            {
+                builder.Append('\n');
+            }
+
+            builder.Append(line.Text);
+        }
+
+        if (builder.Length > 0)
+        {
+            await clipboard.SetTextAsync(builder.ToString());
+        }
     }
 
     private void ScrollToEnd()

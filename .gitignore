@@ -9,6 +9,7 @@ x86/
 *.suo
 artifacts/
 /packages/
+[Pp]ublish/
 
 ## Rider / JetBrains
 riderModule.iml
