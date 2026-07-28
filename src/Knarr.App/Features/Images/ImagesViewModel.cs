@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Knarr.App.Features.RunContainer;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,6 +13,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ImagesViewModel> _logger;
     private readonly Func<PullImageDialogViewModel>? _pullDialogFactory;
+    private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
     private readonly List<ImageItem> _allImages = [];
 
     private DispatcherTimer? _refreshTimer;
@@ -20,11 +22,13 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     public ImagesViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ImagesViewModel> logger,
-        Func<PullImageDialogViewModel>? pullDialogFactory = null)
+        Func<PullImageDialogViewModel>? pullDialogFactory = null,
+        Func<RunContainerDialogViewModel>? runDialogFactory = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
         _pullDialogFactory = pullDialogFactory;
+        _runDialogFactory = runDialogFactory;
         Images = [];
         _ = LoadAsync();
         StartAutoRefresh();
@@ -45,6 +49,12 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     /// the supplied, already-initialised dialog view model modally.
     /// </summary>
     public event EventHandler<PullImageDialogViewModel>? PullDialogRequested;
+
+    /// <summary>
+    /// Raised when a run-container dialog should be shown. The view resolves the owner window and
+    /// displays the supplied, already-initialised dialog view model modally.
+    /// </summary>
+    public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
 
     [ObservableProperty]
     public partial string SearchText { get; set; } = string.Empty;
@@ -204,8 +214,18 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Run(ImageItem image)
     {
-        // Run wizard is a later milestone.
+        if (_runDialogFactory is null)
+        {
+            return;
+        }
+
+        RunContainerDialogViewModel dialogViewModel = _runDialogFactory();
+        dialogViewModel.Reset(image.RepoTag, imageEditable: false);
+        dialogViewModel.ContainerStarted += OnContainerStarted;
+        RunDialogRequested?.Invoke(this, dialogViewModel);
     }
+
+    private void OnContainerStarted(object? sender, EventArgs e) => _ = LoadAsync();
 
     [RelayCommand]
     private void Tag(ImageItem image)

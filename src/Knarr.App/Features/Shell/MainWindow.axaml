@@ -11,7 +11,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/knarr.ico"
         Title="Knarr"
-        Width="1100" Height="720"
+        Width="1100" Height="560"
         MinWidth="880" MinHeight="560"
         TransparencyLevelHint="Mica,AcrylicBlur,Blur"
         Background="Transparent">

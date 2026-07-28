@@ -179,7 +179,7 @@
           </TableViewColumn>
 
           <!-- Actions (fixed width so it never shrinks) -->
-          <TableViewColumn Header="Actions" Width="120" HorizontalContentAlignment="Left">
+          <TableViewColumn Header="Actions" Width="140" HorizontalContentAlignment="Left">
             <TableViewColumn.CellTemplate>
               <DataTemplate x:DataType="models:ContainerItem">
                 <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
