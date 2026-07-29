@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Knarr.App.Features.ContainerLogs;
+namespace Knarr.App.Features.Containers.ContainerLogs;
 
 public partial class ContainerLogsDialog : Window
 {

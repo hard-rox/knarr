@@ -3,7 +3,7 @@ using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Knarr.App.Features.ContainerLogs;
+namespace Knarr.App.Features.Containers.ContainerLogs;
 
 public partial class ContainerLogsDialogViewModel : ViewModelBase
 {

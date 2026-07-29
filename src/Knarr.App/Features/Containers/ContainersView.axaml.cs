@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Knarr.App.Features.ContainerLogs;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.RunContainer;
 
 namespace Knarr.App.Features.Containers;

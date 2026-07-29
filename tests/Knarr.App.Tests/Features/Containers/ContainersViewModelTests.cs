@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Knarr.App.Features.ContainerLogs;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.Containers;
 using Knarr.App.Models;
 using Knarr.Service;

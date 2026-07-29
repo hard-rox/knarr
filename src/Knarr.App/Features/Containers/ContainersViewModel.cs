@@ -1,5 +1,5 @@
 using Avalonia.Threading;
-using Knarr.App.Features.ContainerLogs;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.RunContainer;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;

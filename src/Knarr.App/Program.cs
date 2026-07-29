@@ -54,7 +54,6 @@ sealed class Program
         return new LoggerConfiguration()
             .MinimumLevel.Debug()
             .Enrich.FromLogContext()
-            .WriteTo.Console(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
             .WriteTo.File(
                 Path.Combine(logDirectory, "knarr-.log"),
                 rollingInterval: RollingInterval.Day,

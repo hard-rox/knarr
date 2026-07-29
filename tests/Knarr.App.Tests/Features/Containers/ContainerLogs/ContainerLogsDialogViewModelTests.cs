@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Knarr.App.Controls;
-using Knarr.App.Features.ContainerLogs;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.Service;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
-namespace Knarr.App.Tests.Features.ContainerLogs;
+namespace Knarr.App.Tests.Features.Containers.ContainerLogs;
 
 public class ContainerLogsDialogViewModelTests
 {
