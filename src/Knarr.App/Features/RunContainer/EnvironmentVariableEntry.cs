@@ -1,6 +1,5 @@
 namespace Knarr.App.Features.RunContainer;
 
-/// <summary>An editable environment-variable row (<c>KEY=VALUE</c>) in the run-container dialog.</summary>
 public partial class EnvironmentVariableEntry : ObservableObject
 {
     [ObservableProperty]

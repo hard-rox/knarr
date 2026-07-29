@@ -15,8 +15,6 @@ public interface IContainerCliProvider
     /// </summary>
     bool SupportsPublishAllPorts { get; }
 
-    // ----- Containers -----
-
     /// <summary>Lists all containers (<c>list --all --format JSON</c>).</summary>
     Task<IReadOnlyList<Container>> ListContainersAsync(CancellationToken cancellationToken = default);
 
@@ -83,8 +81,6 @@ public interface IContainerCliProvider
     /// </summary>
     IAsyncEnumerable<CliOutputLine> StreamContainerLogsAsync(ContainerLogsOptions options, CancellationToken cancellationToken = default);
 
-    // ----- Images -----
-
     /// <summary>Lists local images (<c>images --format JSON</c>).</summary>
     Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default);
 
@@ -109,8 +105,6 @@ public interface IContainerCliProvider
     /// references), optionally forcing. No-ops on an empty list.
     /// </summary>
     Task RemoveImagesAsync(IReadOnlyList<string> references, bool force = false, CancellationToken cancellationToken = default);
-
-    // ----- Platform -----
 
     /// <summary>Probes the CLI (<c>--version</c>) for platform and version info. Never throws.</summary>
     Task<PlatformInfo> GetPlatformInfoAsync(CancellationToken cancellationToken = default);

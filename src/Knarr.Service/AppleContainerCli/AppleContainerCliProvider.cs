@@ -3,12 +3,6 @@ using System.Text.Json;
 
 namespace Knarr.Service.AppleContainerCli;
 
-/// <summary>
-/// <see cref="IContainerCliProvider"/> backed by Apple's first-party <c>container</c> CLI on macOS.
-/// Supplies the CLI-specific command verbs and JSON parsing; all process execution and formatting
-/// live in <see cref="ContainerCliProviderBase"/>. Every method maps 1:1 onto a single
-/// <c>container</c> invocation.
-/// </summary>
 internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvider> logger)
     : ContainerCliProviderBase(logger)
 {

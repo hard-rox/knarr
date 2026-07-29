@@ -12,9 +12,6 @@ using Serilog;
 
 namespace Knarr.App;
 
-/// <summary>
-/// Registers the application's services and view models with the DI container.
-/// </summary>
 public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection collection)

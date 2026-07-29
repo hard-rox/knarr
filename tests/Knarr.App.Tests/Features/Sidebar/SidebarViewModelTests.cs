@@ -55,7 +55,6 @@ public class SidebarViewModelTests
         return systemService;
     }
 
-    /// <summary>A CLI provider whose platform probe succeeds, so <c>InitializeAsync</c> can run.</summary>
     private static IContainerCliProvider CreateProbeableCliProvider()
     {
         IContainerCliProvider cliProvider = Substitute.For<IContainerCliProvider>();

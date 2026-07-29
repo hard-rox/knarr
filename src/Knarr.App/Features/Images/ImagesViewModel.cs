@@ -34,7 +34,6 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         StartAutoRefresh();
     }
 
-    /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ImagesViewModel()
     {
         _cliProvider = null!;
@@ -44,48 +43,33 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<ImageItem> Images { get; }
 
-    /// <summary>
-    /// Raised when a pull dialog should be shown. The view resolves the owner window and displays
-    /// the supplied, already-initialised dialog view model modally.
-    /// </summary>
     public event EventHandler<PullImageDialogViewModel>? PullDialogRequested;
 
-    /// <summary>
-    /// Raised when a run-container dialog should be shown. The view resolves the owner window and
-    /// displays the supplied, already-initialised dialog view model modally.
-    /// </summary>
     public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
 
     [ObservableProperty]
     public partial string SearchText { get; set; } = string.Empty;
 
-    /// <summary>True while a CLI list/refresh is in flight.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoResults))]
     [NotifyPropertyChangedFor(nameof(HasItems))]
     public partial bool IsLoading { get; set; }
 
-    /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoResults))]
     public partial string? ErrorMessage { get; set; }
 
-    /// <summary>True when the last CLI action failed and <see cref="ErrorMessage"/> is set.</summary>
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-    /// <summary>True when there are rows to display in the table.</summary>
     public bool HasItems => !IsLoading && !HasError && Images.Count > 0;
 
-    /// <summary>True when the CLI returned no images at all (not merely filtered out).</summary>
     public bool IsEmpty => !IsLoading && !HasError && _allImages.Count == 0;
 
-    /// <summary>True when images exist, but the current search filter matches none.</summary>
     public bool HasNoResults => !IsLoading && !HasError && _allImages.Count > 0 && Images.Count == 0;
 
-    /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ImageItem> SelectedImages =>
         [.. Images.Where(i => i.IsSelected)];
 
@@ -93,9 +77,6 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
     public bool HasSelection => SelectedCount > 0;
 
-    /// <summary>
-    /// Header "select all" checkbox state: true/false when uniform, null (indeterminate) when mixed.
-    /// </summary>
     public bool? AllSelected
     {
         get
@@ -258,12 +239,8 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         return image.RepoTag;
     }
 
-    /// <summary>
-    /// Loads (or reloads) the image list from the CLI. Safe to call repeatedly; concurrent calls
-    /// are coalesced. When <paramref name="showLoading"/> is false (background auto-refresh) the
-    /// loading indicator is not toggled, so the table stays visible without flicker. Failures are
-    /// surfaced via <see cref="ErrorMessage"/> and never throw.
-    /// </summary>
+    // Concurrent calls are coalesced; showLoading=false (background auto-refresh) skips the loading
+    // flag so the table stays visible without flicker.
     private async Task LoadAsync(bool showLoading = true, CancellationToken cancellationToken = default)
     {
         if (_loadInFlight)
@@ -313,7 +290,6 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         }
     }
 
-    /// <summary>Runs a mutating CLI action, surfacing failures via <see cref="ErrorMessage"/>, then reloads.</summary>
     private async Task ExecuteAndReloadAsync(Func<CancellationToken, Task> action)
     {
         try
@@ -329,7 +305,6 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         await LoadAsync().ConfigureAwait(true);
     }
 
-    /// <summary>Starts the periodic background refresh of the image list.</summary>
     private void StartAutoRefresh()
     {
         if (_refreshTimer is not null)

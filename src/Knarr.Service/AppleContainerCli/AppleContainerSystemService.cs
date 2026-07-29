@@ -5,11 +5,6 @@ using Knarr.Service.Exceptions;
 
 namespace Knarr.Service.AppleContainerCli;
 
-/// <summary>
-/// <see cref="IContainerSystemService"/> backed by Apple's first-party <c>container</c> CLI. The
-/// <c>container system</c> command group exists only on macOS, so this service is registered there
-/// exclusively. Every method maps 1:1 onto a single <c>container system</c> invocation.
-/// </summary>
 internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemService> logger)
     : IContainerSystemService
 {
@@ -58,11 +53,7 @@ internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemSe
     public Task StopAsync(CancellationToken cancellationToken = default)
         => RunAsync(cancellationToken, "system", "stop");
 
-    /// <summary>
-    /// Parses the <c>system status --format json</c> payload, which is a single object rather than
-    /// the arrays the list commands emit. Blank or malformed output yields
-    /// <see cref="ContainerSystemStatus.Unknown"/>.
-    /// </summary>
+    // Payload is a single object, unlike the list commands' arrays; blank/malformed input yields ContainerSystemStatus.Unknown.
     internal static ContainerSystemStatus ParseStatus(string json)
     {
         if (string.IsNullOrWhiteSpace(json))

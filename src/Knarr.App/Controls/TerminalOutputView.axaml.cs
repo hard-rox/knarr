@@ -15,10 +15,6 @@ using Knarr.Service.Models;
 
 namespace Knarr.App.Controls;
 
-/// <summary>
-/// Lifecycle state of a <see cref="TerminalOutputView"/>. Drives the panel's status accent via
-/// pseudo-classes and let's host view-models describe the outcome of the streamed command.
-/// </summary>
 public enum TerminalState
 {
     Idle,
@@ -28,13 +24,6 @@ public enum TerminalState
     Canceled
 }
 
-/// <summary>
-/// A reusable, feature-neutral terminal-style panel that renders a stream of CLI output lines
-/// (command / stdout / stderr / exit) with monospaced text and auto-scroll. Designed to be shared
-/// by any feature that surfaces live command output (image pull today; container logs/exec/build
-/// later). The exact command line appears first because it is the first line in the bound
-/// collection. Auto-scrolls to the newest line while output is arriving.
-/// </summary>
 public class TerminalOutputView : TemplatedControl
 {
     public static readonly StyledProperty<IEnumerable?> LinesProperty =
@@ -92,7 +81,6 @@ public class TerminalOutputView : TemplatedControl
         set => SetValue(PlaceholderProperty, value);
     }
 
-    /// <summary>True when the bound <see cref="Lines"/> collection currently contains any entries.</summary>
     public bool HasOutput
     {
         get => GetValue(HasOutputProperty);
@@ -218,12 +206,8 @@ public class TerminalOutputView : TemplatedControl
         ScrollToEnd();
     }
 
-    /// <summary>
-    /// Rebuilds the selectable output text from the bound <see cref="Lines"/> collection, one
-    /// colored <see cref="Run"/> per line so the text remains selectable/copyable while keeping
-    /// the per-kind color coding. Rebuilt in full on every change for simplicity; output volumes
-    /// in this app are small enough that this is not a performance concern.
-    /// </summary>
+    // Rebuilt in full on every change for simplicity; output volumes in this app are small enough
+    // that this is not a performance concern.
     private void RebuildInlines()
     {
         if (_outputText is null)

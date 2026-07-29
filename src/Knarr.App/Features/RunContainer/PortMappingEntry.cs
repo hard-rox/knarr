@@ -1,6 +1,5 @@
 namespace Knarr.App.Features.RunContainer;
 
-/// <summary>An editable port-mapping row (host port to container port) in the run-container dialog.</summary>
 public partial class PortMappingEntry : ObservableObject
 {
     [ObservableProperty]

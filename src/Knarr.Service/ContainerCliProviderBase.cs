@@ -103,13 +103,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     public IAsyncEnumerable<CliOutputLine> RunContainerStreamingAsync(RunContainerOptions options, CancellationToken cancellationToken = default)
         => RunStreamingAsync(cancellationToken, BuildRunArgs(options));
 
-    /// <summary>
-    /// Translates <paramref name="options"/> into the ordered <c>run</c> argument list: the run
-    /// verb, boolean flags (<c>--detach</c>/<c>--rm</c>), optional <c>--name</c>, each environment
-    /// variable (<c>--env KEY=VALUE</c>), volume (<c>--volume SOURCE:TARGET</c>) and port mapping
-    /// (<c>--publish HOST:CONTAINER</c>), and finally the image reference. Blank entries are skipped
-    /// so an empty in-progress row never emits an argument.
-    /// </summary>
+    // Blank entries (e.g. an empty in-progress row) are skipped so they never emit an argument.
     private string[] BuildRunArgs(RunContainerOptions options)
     {
         List<string> args = [.. RunContainerCommand];
@@ -175,12 +169,6 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     public IAsyncEnumerable<CliOutputLine> StreamContainerLogsAsync(ContainerLogsOptions options, CancellationToken cancellationToken = default)
         => RunStreamingAsync(cancellationToken, BuildLogsArgs(options));
 
-    /// <summary>
-    /// Translates <paramref name="options"/> into the ordered <c>logs</c> argument list: the logs
-    /// verb, boolean flags (<c>--follow</c>/<c>--timestamps</c>), optional <c>--tail</c>,
-    /// <c>--since</c> and <c>--until</c> (each formatted as RFC3339 UTC), and finally the container
-    /// id.
-    /// </summary>
     internal string[] BuildLogsArgs(ContainerLogsOptions options)
     {
         List<string> args = [.. LogsCommand];
@@ -217,7 +205,6 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
         return [.. args];
     }
 
-    /// <summary>Formats a timestamp as RFC3339 UTC (e.g. <c>2024-01-15T10:30:00Z</c>) for <c>--since</c>/<c>--until</c>.</summary>
     private static string FormatTimestamp(DateTimeOffset timestamp)
         => timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
 

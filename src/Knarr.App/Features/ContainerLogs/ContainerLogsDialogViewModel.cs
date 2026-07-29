@@ -5,13 +5,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.ContainerLogs;
 
-/// <summary>
-/// View model for the modal "container logs" dialog. Streams a single container's logs
-/// (<c>logs</c>) into a terminal panel, letting the user toggle <c>--follow</c>/<c>--timestamps</c>
-/// and limit output with <c>--tail</c> (defaults to the last 200 lines). Any option change cancels
-/// the in-flight stream and starts a fresh one with the updated options; a follow stream only ever
-/// stops via cancellation (the <see cref="StopCommand"/> or closing the dialog).
-/// </summary>
 public partial class ContainerLogsDialogViewModel : ViewModelBase
 {
     private readonly IContainerCliProvider? _cliProvider;
@@ -28,62 +21,45 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase
         OutputLines = [];
     }
 
-    /// <summary>Design-time constructor; renders the dialog without a container CLI.</summary>
     public ContainerLogsDialogViewModel()
         : this(null!, NullLogger<ContainerLogsDialogViewModel>.Instance)
     {
     }
 
-    /// <summary>Raised when the dialog should close.</summary>
     public event EventHandler? CloseRequested;
 
-    /// <summary>The id of the container whose logs are streamed.</summary>
     [ObservableProperty]
     public partial string ContainerId { get; set; } = string.Empty;
 
-    /// <summary>The display name of the container, shown in the dialog title.</summary>
     [ObservableProperty]
     public partial string ContainerName { get; set; } = string.Empty;
 
-    /// <summary>Whether to keep streaming new output as it is produced (<c>--follow</c>).</summary>
     [ObservableProperty]
     public partial bool Follow { get; set; }
 
-    /// <summary>Whether to prefix each log line with its timestamp (<c>--timestamps</c>).</summary>
     [ObservableProperty]
     public partial bool Timestamps { get; set; }
 
-    /// <summary>Whether output is limited to the last <see cref="TailLines"/> lines (<c>--tail</c>).</summary>
     [ObservableProperty]
     public partial bool LimitTail { get; set; }
 
-    /// <summary>The tail line count applied when <see cref="LimitTail"/> is checked.</summary>
     [ObservableProperty]
     public partial int TailLines { get; set; } = 200;
 
-    /// <summary>Drives the terminal panel accent while logs stream.</summary>
     [ObservableProperty]
     public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
 
-    /// <summary>True while a log stream is in flight (follow or a one-shot fetch).</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StopCommand))]
     public partial bool IsStreaming { get; set; }
 
-    /// <summary>Human-readable status shown to the user (stopped / error).</summary>
     [ObservableProperty]
     public partial string? StatusMessage { get; set; }
 
-    /// <summary>Live transcript of the streamed logs (command / stdout / stderr / exit).</summary>
     public ObservableCollection<CliOutputLine> OutputLines { get; }
 
-    /// <summary>Short 12-character id, matching the CLI's abbreviated form.</summary>
     public string ShortId => ContainerId.Length > 12 ? ContainerId[..12] : ContainerId;
 
-    /// <summary>
-    /// Resets the dialog to a fresh session for the given container and immediately starts
-    /// streaming its logs with default options (no follow, limited to the last 200 lines).
-    /// </summary>
     public void Reset(string containerId, string containerName)
     {
         RequestCancellation();
@@ -132,11 +108,7 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Requests cancellation of the in-flight stream on a background thread (see
-    /// <see cref="RunContainer.RunContainerDialogViewModel"/> for why this must not run on the UI
-    /// thread), then starts a fresh stream with the current options.
-    /// </summary>
+    // Cancellation must happen off the UI thread (see RunContainerDialogViewModel) before starting a fresh stream.
     private void RestartStream()
     {
         if (_cliProvider is null || string.IsNullOrWhiteSpace(ContainerId))

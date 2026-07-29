@@ -6,12 +6,6 @@ using Knarr.Service.Models;
 
 namespace Knarr.App.Converters;
 
-/// <summary>
-/// Maps a <see cref="CliOutputKind"/> to the brush used to render that line in a terminal panel.
-/// Command and exit lines are dimmed, standard error is emphasised, standard output uses the
-/// primary text colour. Brushes are resolved from the active theme's resource dictionary so the
-/// panel stays legible in both Light and Dark variants.
-/// </summary>
 public sealed class CliOutputKindToBrushConverter : IValueConverter
 {
     public static readonly CliOutputKindToBrushConverter Instance = new();

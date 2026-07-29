@@ -22,10 +22,7 @@ public partial class SidebarViewModel : ViewModelBase
     private readonly NavigationItem _containersItem;
     private readonly NavigationItem _imagesItem;
 
-    /// <summary>
-    /// Controls the host's container system services. Only registered on macOS, so this stays null
-    /// elsewhere and the sidebar's system control is hidden.
-    /// </summary>
+    // Only registered on macOS; stays null elsewhere and the sidebar's system control is hidden.
     private readonly IContainerSystemService? _systemService;
 
     private DispatcherTimer? _badgeTimer;
@@ -59,7 +56,6 @@ public partial class SidebarViewModel : ViewModelBase
         SelectedItem = NavigationItems[0];
     }
 
-    /// <summary>Design-time constructor; renders navigation without a container CLI.</summary>
     public SidebarViewModel()
         : this(null!, null!, NullLogger<SidebarViewModel>.Instance)
     {
@@ -93,10 +89,8 @@ public partial class SidebarViewModel : ViewModelBase
 
     public string CliDisplay => $"{CliName} {CliVersion}";
 
-    /// <summary>Whether the host exposes a controllable container system (macOS only).</summary>
     public bool IsSystemControlVisible => _systemService is not null;
 
-    /// <summary>Whether the collapsed icon rail should show the compact system status dot.</summary>
     public bool IsCollapsedSystemControlVisible => IsSystemControlVisible && IsSidebarCollapsed;
 
     [ObservableProperty]
@@ -107,7 +101,6 @@ public partial class SidebarViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(SystemActionTooltip))]
     private ContainerSystemState _systemState = ContainerSystemState.Unknown;
 
-    /// <summary>Last start/stop failure, or null when the most recent action succeeded.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SystemStatusText))]
     [NotifyPropertyChangedFor(nameof(SystemPillStatus))]
@@ -167,7 +160,6 @@ public partial class SidebarViewModel : ViewModelBase
     public string SystemActionTooltip => SystemErrorMessage
         ?? (IsSystemRunning ? "Stop the container system" : "Start the container system");
 
-    /// <summary>Probes the container CLI for its version. Call once after construction on the UI thread.</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         PlatformInfo info = await _cliProvider.GetPlatformInfoAsync(cancellationToken).ConfigureAwait(true);
@@ -180,7 +172,6 @@ public partial class SidebarViewModel : ViewModelBase
         StartBadgeRefresh();
     }
 
-    /// <summary>Starts the periodic refresh of the container/image count badges.</summary>
     private void StartBadgeRefresh()
     {
         if (_badgeTimer is not null)
@@ -193,7 +184,6 @@ public partial class SidebarViewModel : ViewModelBase
         _badgeTimer.Start();
     }
 
-    /// <summary>Refreshes the Containers and Images badge counts from the CLI. Never throws.</summary>
     private async Task RefreshBadgeCountsAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -214,10 +204,6 @@ public partial class SidebarViewModel : ViewModelBase
         await RefreshSystemStatusAsync(cancellationToken).ConfigureAwait(true);
     }
 
-    /// <summary>
-    /// Re-reads the container system status. No-ops when the platform has no system service or an
-    /// action is already in flight (the action refreshes on completion itself).
-    /// </summary>
     private async Task RefreshSystemStatusAsync(CancellationToken cancellationToken = default)
     {
         if (_systemService is null || IsSystemBusy)
@@ -229,10 +215,6 @@ public partial class SidebarViewModel : ViewModelBase
         SystemState = status.State;
     }
 
-    /// <summary>
-    /// Starts or stops the container system depending on its current state, then re-reads the
-    /// status. Failures are logged and surfaced inline on the status pill rather than thrown.
-    /// </summary>
     [RelayCommand(CanExecute = nameof(CanToggleSystem))]
     private async Task ToggleSystemAsync(CancellationToken cancellationToken)
     {

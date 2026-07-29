@@ -1,68 +1,126 @@
+# Top-most EditorConfig file - prevents looking at higher directory trees
 root = true
 
+# All files default formatting
 [*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
+tab_width = 4
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
 
-[*.{yml,yaml,json,md}]
+# JSON, XML, YAML and web-related overrides
+[*.{json,xml,yml,yaml,html,css}]
 indent_size = 2
+tab_width = 2
 
-[*.{axaml,xaml}]
-indent_size = 2
-
-[*.{csproj,props,targets,slnx}]
-indent_size = 2
-
+# C# Files configuration
 [*.cs]
-# .NET code style
-dotnet_sort_system_directives_first = true
-dotnet_separate_import_directive_groups = false
-dotnet_style_qualification_for_field = false:suggestion
-dotnet_style_qualification_for_property = false:suggestion
-dotnet_style_qualification_for_method = false:suggestion
-dotnet_style_qualification_for_event = false:suggestion
-dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
-dotnet_style_predefined_type_for_member_access = true:suggestion
+
+#### .NET Coding Conventions ####
+
+# Organize using directives
+dotnet_sort_system_directives_first = true:error
+dotnet_separate_import_directive_groups = false:suggestion
+
+# Modifier preferences
+dotnet_style_require_accessibility_modifiers = always:error
+dotnet_style_readonly_field = true:error
+
+# Parentheses preferences
+dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:silent
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:silent
+
+# Expression-level preferences
 dotnet_style_object_initializer = true:suggestion
 dotnet_style_collection_initializer = true:suggestion
-dotnet_style_prefer_auto_properties = true:suggestion
-dotnet_style_null_propagation = true:suggestion
+dotnet_style_explicit_tuple_names = true:error
 dotnet_style_coalesce_expression = true:suggestion
-dotnet_style_readonly_field = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:error
 
-# C# code style
-csharp_using_directive_placement = outside_namespace:suggestion
-csharp_style_namespace_declarations = file_scoped:suggestion
-csharp_prefer_braces = true:suggestion
-csharp_style_var_for_built_in_types = true:suggestion
-# csharp_style_var_when_type_is_apparent = true:suggestion
-# csharp_style_var_elsewhere = true:suggestion
-csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+#### C# Coding Conventions ####
+
+# Var preferences (Use var when type is apparent, explicit otherwise)
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:silent
+
+# Language keywords vs BCL types
+csharp_style_keyword_v_typeof_built_in_types = true:error
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = false:silent
+csharp_style_expression_bodied_constructors = false:silent
 csharp_style_expression_bodied_properties = true:suggestion
-csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+
+# Pattern matching preferences
 csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
-csharp_style_inlined_variable_declaration = true:suggestion
-csharp_prefer_simple_using_statement = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
 csharp_style_prefer_switch_expression = true:suggestion
-csharp_style_prefer_primary_constructors = true:suggestion
 
-# Naming: private fields with _ prefix
-dotnet_naming_rule.private_fields_underscore.symbols = private_fields
-dotnet_naming_rule.private_fields_underscore.style = underscore_prefix
-dotnet_naming_rule.private_fields_underscore.severity = suggestion
-dotnet_naming_symbols.private_fields.applicable_kinds = field
-dotnet_naming_symbols.private_fields.applicable_accessibilities = private
-dotnet_naming_style.underscore_prefix.required_prefix = _
-dotnet_naming_style.underscore_prefix.capitalization = camel_case
+# Null-checking preferences
+csharp_style_conditional_delegate_call = true:suggestion
 
-# Interfaces prefixed with I
-dotnet_naming_rule.interfaces_start_with_i.symbols = interfaces
-dotnet_naming_rule.interfaces_start_with_i.style = begins_with_i
-dotnet_naming_rule.interfaces_start_with_i.severity = suggestion
-dotnet_naming_symbols.interfaces.applicable_kinds = interface
-dotnet_naming_style.begins_with_i.required_prefix = I
-dotnet_naming_style.begins_with_i.capitalization = pascal_case
+# New features preferences
+csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+csharp_style_prefer_tuple_swap = true:suggestion
+csharp_style_throw_expression = true:suggestion
+
+#### C# Formatting Rules ####
+
+# New line preferences
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_between_query_expression_clauses = true
+
+# Indentation preferences
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = flush_left
+
+# Space preferences
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+
+#### Naming Conventions (Standard Microsoft Guidelines) ####
+
+# Interface naming rule: Must start with I
+dotnet_naming_rule.interface_should_be_prefixed_with_i.severity = error
+dotnet_naming_rule.interface_should_be_prefixed_with_i.symbols = interface_symbols
+dotnet_naming_rule.interface_should_be_prefixed_with_i.style = prefix_i
+
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_symbols.interface_symbols.applicable_accessibilities = *
+
+dotnet_naming_style.prefix_i.required_prefix = I
+dotnet_naming_style.prefix_i.capitalization = pascal_case
+
+# Private field naming rule: Must start with _
+dotnet_naming_rule.private_fields_should_start_with_underscore.severity = error
+dotnet_naming_rule.private_fields_should_start_with_underscore.symbols = private_field_symbols
+dotnet_naming_rule.private_fields_should_start_with_underscore.style = prefix_underscore
+
+dotnet_naming_symbols.private_field_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_field_symbols.applicable_accessibilities = private
+
+dotnet_naming_style.prefix_underscore.required_prefix = _
+dotnet_naming_style.prefix_underscore.capitalization = camel_case
+
+# Public/Internal/Protected members: PascalCase
+dotnet_naming_rule.public_members_should_be_pascal_case.severity = error
+dotnet_naming_rule.public_members_should_be_pascal_case.symbols = public_symbols
+dotnet_naming_rule.public_members_should_be_pascal_case.style = pascal_case_style
+
+dotnet_naming_symbols.public_symbols.applicable_kinds = method, property, event, class, struct, enum
+dotnet_naming_symbols.public_symbols.applicable_accessibilities = public, internal, protected, protected_internal
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case

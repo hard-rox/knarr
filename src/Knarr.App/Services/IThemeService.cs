@@ -1,15 +1,11 @@
 namespace Knarr.App.Services;
 
-/// <summary>Theme preference the user can choose from the menu.</summary>
 public enum AppTheme
 {
-    /// <summary>Follow the operating system setting.</summary>
     System,
 
-    /// <summary>Force the light variant.</summary>
     Light,
 
-    /// <summary>Force the dark variant.</summary>
     Dark,
 }
 
