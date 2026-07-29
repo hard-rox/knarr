@@ -75,7 +75,7 @@
             Classes="glass-panel"
             CornerRadius="16"
             ClipToBounds="True">
-      <Grid>
+      <Panel>
         <TableView ItemsSource="{Binding Images}"
                  Theme="{StaticResource GlassTableTheme}"
                  Background="Transparent"
@@ -289,7 +289,7 @@
                 Margin="0,4,0,0"
                 Command="{Binding RefreshCommand}" />
       </StackPanel>
-    </Grid>
+    </Panel>
     </Border>
   </Grid>
 

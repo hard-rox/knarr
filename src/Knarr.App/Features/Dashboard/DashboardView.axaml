@@ -8,11 +8,11 @@
         <vm:DashboardViewModel/>
     </Design.DataContext>
 
-    <Grid>
+    <Panel>
         <TextBlock Text="Dashboard"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource TextBrush}"/>
-    </Grid>
+    </Panel>
 
 </UserControl>

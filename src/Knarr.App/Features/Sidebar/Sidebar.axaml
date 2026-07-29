@@ -167,7 +167,7 @@
                      SelectedItem="{Binding SelectedItem}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="models:NavigationItem">
-                        <Grid>
+                        <Panel>
                             <Grid ColumnDefinitions="18,*,Auto"
                                   IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarExpanded}">
                                 <PathIcon Grid.Column="0"
@@ -195,7 +195,7 @@
                                       VerticalAlignment="Center"
                                       IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarCollapsed}"
                                       Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
-                        </Grid>
+                        </Panel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
