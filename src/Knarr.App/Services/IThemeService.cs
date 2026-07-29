@@ -3,9 +3,7 @@ namespace Knarr.App.Services;
 public enum AppTheme
 {
     System,
-
     Light,
-
     Dark,
 }
 

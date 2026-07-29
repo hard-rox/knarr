@@ -200,12 +200,12 @@ public partial class RunContainerDialogViewModel : ViewModelBase
 
     private async Task RunDetachedAsync(RunContainerOptions options)
     {
-        var started = false;
+        bool started = false;
         try
         {
-            var output = await _cliProvider!.RunContainerAsync(options, _cts!.Token).ConfigureAwait(true);
+            string output = await _cliProvider!.RunContainerAsync(options, _cts!.Token).ConfigureAwait(true);
             started = true;
-            var id = output.Trim();
+            string id = output.Trim();
             StatusMessage = string.IsNullOrEmpty(id) ? "Container started." : $"Started container {id}.";
             _logger.LogInformation("Ran container from {Image} (detached)", options.ImageReference);
         }
@@ -238,7 +238,7 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         OutputLines.Clear();
         TerminalState = TerminalState.Running;
 
-        var started = false;
+        bool started = false;
         int? exitCode = null;
         try
         {

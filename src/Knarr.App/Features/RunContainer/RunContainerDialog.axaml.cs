@@ -29,7 +29,7 @@ public partial class RunContainerDialog : Window
     private async void OnCopyCommand(object? sender, RoutedEventArgs e)
     {
         if (_viewModel is { CommandPreview: { Length: > 0 } command } &&
-            TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+            GetTopLevel(this)?.Clipboard is { } clipboard)
         {
             await clipboard.SetTextAsync(command);
         }

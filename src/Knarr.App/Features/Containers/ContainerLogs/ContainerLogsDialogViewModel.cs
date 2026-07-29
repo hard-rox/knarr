@@ -152,7 +152,7 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase
         IsStreaming = true;
         StatusMessage = null;
 
-        var completed = false;
+        bool completed = false;
         try
         {
             await foreach (CliOutputLine line in _cliProvider!

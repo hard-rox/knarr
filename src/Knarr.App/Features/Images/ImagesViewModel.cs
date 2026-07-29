@@ -86,7 +86,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
                 return false;
             }
 
-            var selected = SelectedCount;
+            int selected = SelectedCount;
             if (selected == 0)
             {
                 return false;
@@ -97,7 +97,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         set
         {
             // When the user clicks a checked box, Avalonia cycles it to null. Treat this as deselect all.
-            var target = value ?? false;
+            bool target = value ?? false;
             foreach (ImageItem image in Images)
             {
                 image.IsSelected = target;
@@ -124,7 +124,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
-            var term = SearchText.Trim();
+            string term = SearchText.Trim();
             filtered = _allImages.Where(i =>
                 i.Repository.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 i.Tag.Contains(term, StringComparison.OrdinalIgnoreCase));

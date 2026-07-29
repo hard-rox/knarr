@@ -44,9 +44,9 @@ sealed class Program
             .WithInterFont()
             .LogToTrace();
 
-    private static Serilog.ILogger CreateLogger()
+    private static ILogger CreateLogger()
     {
-        var logDirectory = Path.Combine(
+        string logDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Knarr",
             "logs");

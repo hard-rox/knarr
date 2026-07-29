@@ -124,7 +124,7 @@ public class RunContainerDialogViewModelTests
             .Returns(Task.FromResult("abc123"));
         vm.ImageReference = "alpine:3.20";
 
-        var started = false;
+        bool started = false;
         vm.ContainerStarted += (_, _) => started = true;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -143,7 +143,7 @@ public class RunContainerDialogViewModelTests
             .Returns(Task.FromResult("abc123"));
         vm.ImageReference = "alpine:3.20";
 
-        var closeRequested = false;
+        bool closeRequested = false;
         vm.CloseRequested += (_, _) => closeRequested = true;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -160,7 +160,7 @@ public class RunContainerDialogViewModelTests
             .Returns(Task.FromException<string>(new InvalidOperationException("boom")));
         vm.ImageReference = "alpine:3.20";
 
-        var started = false;
+        bool started = false;
         vm.ContainerStarted += (_, _) => started = true;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -196,7 +196,7 @@ public class RunContainerDialogViewModelTests
     {
         RunContainerDialogViewModel vm = CreateViewModel(out _);
 
-        var closed = false;
+        bool closed = false;
         vm.CloseRequested += (_, _) => closed = true;
 
         vm.CloseCommand.Execute(null);

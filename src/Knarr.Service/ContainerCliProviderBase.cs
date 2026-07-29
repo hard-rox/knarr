@@ -58,7 +58,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     public async Task<IReadOnlyList<Container>> ListContainersAsync(CancellationToken cancellationToken = default)
     {
-        var json = await RunAsync(cancellationToken, "list", "--all", "--format", "json").ConfigureAwait(false);
+        string json = await RunAsync(cancellationToken, "list", "--all", "--format", "json").ConfigureAwait(false);
         return ParseContainersCore(json);
     }
 
@@ -210,7 +210,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     public async Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default)
     {
-        var json = await RunAsync(cancellationToken, [.. ListImagesCommand, "--format", "json"]).ConfigureAwait(false);
+        string json = await RunAsync(cancellationToken, [.. ListImagesCommand, "--format", "json"]).ConfigureAwait(false);
         return ParseImagesCore(json);
     }
 
@@ -234,7 +234,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     public async Task<PlatformInfo> GetPlatformInfoAsync(CancellationToken cancellationToken = default)
     {
-        var (version, reachable) = await ProbeVersionAsync(cancellationToken).ConfigureAwait(false);
+        (string version, bool reachable) = await ProbeVersionAsync(cancellationToken).ConfigureAwait(false);
         return new PlatformInfo
         {
             PlatformName = PlatformName,
@@ -272,7 +272,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     private async Task<string> RunAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        var command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{Executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
         BufferedCommandResult result = await Cli.Wrap(Executable)
@@ -302,7 +302,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
         [EnumeratorCancellation] CancellationToken cancellationToken,
         params string[] arguments)
     {
-        var commandLine = $"{Executable} {string.Join(' ', arguments)}";
+        string commandLine = $"{Executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command (streaming): {Command}", commandLine);
         yield return CliOutputLine.ForCommand(commandLine);
 
@@ -343,7 +343,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     private static async Task RunBatchLoopAsync(Func<string, Task> action, IReadOnlyList<string> ids)
     {
         List<CliCommandException> failures = [];
-        foreach (var id in ids)
+        foreach (string id in ids)
         {
             try
             {
@@ -365,7 +365,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     protected static string StripDigestAlgorithm(string id)
     {
-        var colon = id.IndexOf(':');
+        int colon = id.IndexOf(':');
         return colon >= 0 ? id[(colon + 1)..] : id;
     }
 
@@ -378,7 +378,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
         string[] units = ["B", "KB", "MB", "GB", "TB"];
         double size = bytes;
-        var unit = 0;
+        int unit = 0;
         while (size >= 1024 && unit < units.Length - 1)
         {
             size /= 1024;
@@ -396,7 +396,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
             return $"v{match.Value}";
         }
 
-        var firstLine = output
+        string? firstLine = output
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .FirstOrDefault();
 

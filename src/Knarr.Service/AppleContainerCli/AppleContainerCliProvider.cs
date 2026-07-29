@@ -56,7 +56,7 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     private static ContainerImage MapImage(AppleImageElement element)
     {
-        var (repository, tag) = SplitReference(element.Configuration.Name);
+        (string repository, string tag) = SplitReference(element.Configuration.Name);
         return new ContainerImage
         {
             Repository = repository,
@@ -93,8 +93,8 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     private static (string Repository, string Tag) SplitReference(string reference)
     {
-        var lastColon = reference.LastIndexOf(':');
-        var lastSlash = reference.LastIndexOf('/');
+        int lastColon = reference.LastIndexOf(':');
+        int lastSlash = reference.LastIndexOf('/');
 
         // A colon only denotes a tag when it appears after the final path separator; otherwise it is
         // a registry port (e.g. "localhost:5000/img") and the reference carries no explicit tag.

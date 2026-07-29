@@ -60,14 +60,14 @@ public partial class PullImageDialogViewModel(
     [RelayCommand(CanExecute = nameof(CanPull))]
     private async Task Pull()
     {
-        var reference = ImageReference.Trim();
+        string reference = ImageReference.Trim();
 
         IsRunning = true;
         StatusMessage = $"Pulling {reference}\u2026";
         logger.LogInformation("Pulling image {Reference}", reference);
 
         _cts = new CancellationTokenSource();
-        var succeeded = false;
+        bool succeeded = false;
         try
         {
             await cliProvider.PullImageAsync(reference, _cts.Token).ConfigureAwait(true);

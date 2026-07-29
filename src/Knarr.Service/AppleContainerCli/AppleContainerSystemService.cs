@@ -15,7 +15,7 @@ internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemSe
     public async Task<ContainerSystemStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         string[] arguments = ["system", "status", "--format", "json"];
-        var command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{Executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
         try
@@ -95,7 +95,7 @@ internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemSe
 
     private async Task RunAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        var command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{Executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
         BufferedCommandResult result = await Cli.Wrap(Executable)

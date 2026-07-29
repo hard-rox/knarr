@@ -20,7 +20,7 @@ public class RunContainerCommandTests
     {
         IContainerCliProvider provider = CreateProvider();
 
-        var command = provider.BuildRunContainerCommand(new RunContainerOptions
+        string command = provider.BuildRunContainerCommand(new RunContainerOptions
         {
             ImageReference = "alpine:3.20",
         });
@@ -33,7 +33,7 @@ public class RunContainerCommandTests
     {
         IContainerCliProvider provider = CreateProvider();
 
-        var command = provider.BuildRunContainerCommand(new RunContainerOptions
+        string command = provider.BuildRunContainerCommand(new RunContainerOptions
         {
             ImageReference = "nginx:latest",
             Detach = false,
@@ -48,7 +48,7 @@ public class RunContainerCommandTests
     {
         IContainerCliProvider provider = CreateProvider();
 
-        var command = provider.BuildRunContainerCommand(new RunContainerOptions
+        string command = provider.BuildRunContainerCommand(new RunContainerOptions
         {
             ImageReference = "redis:7",
             Detach = true,
@@ -79,7 +79,7 @@ public class RunContainerCommandTests
     {
         IContainerCliProvider provider = CreateProvider();
 
-        var command = provider.BuildRunContainerCommand(new RunContainerOptions
+        string command = provider.BuildRunContainerCommand(new RunContainerOptions
         {
             ImageReference = "busybox",
             EnvironmentVariables =
@@ -107,7 +107,7 @@ public class RunContainerCommandTests
     {
         IContainerCliProvider provider = CreateAppleProvider();
 
-        var command = provider.BuildRunContainerCommand(new RunContainerOptions
+        string command = provider.BuildRunContainerCommand(new RunContainerOptions
         {
             ImageReference = "alpine:3.20",
             PublishAllPorts = true,

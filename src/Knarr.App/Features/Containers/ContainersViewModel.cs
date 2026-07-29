@@ -99,7 +99,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
                 return false;
             }
 
-            var selected = SelectedCount;
+            int selected = SelectedCount;
             if (selected == 0)
             {
                 return false;
@@ -110,7 +110,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
         set
         {
             // A null assignment comes from the indeterminate state; treat it as "select all".
-            var target = value ?? true;
+            bool target = value ?? true;
             foreach (ContainerItem container in Containers)
             {
                 container.IsSelected = target;
@@ -137,7 +137,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
-            var term = SearchText.Trim();
+            string term = SearchText.Trim();
             filtered = _allContainers.Where(c =>
                 c.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 c.Image.Contains(term, StringComparison.OrdinalIgnoreCase));

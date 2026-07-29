@@ -21,7 +21,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123" });
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123" });
 
         Assert.Equal(["logs", "abc123"], args);
     }
@@ -31,7 +31,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Follow = true });
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Follow = true });
 
         Assert.Equal(["logs", "--follow", "abc123"], args);
     }
@@ -41,7 +41,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Timestamps = true });
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Timestamps = true });
 
         Assert.Equal(["logs", "--timestamps", "abc123"], args);
     }
@@ -51,7 +51,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", TailLines = 200 });
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", TailLines = 200 });
 
         Assert.Equal(["logs", "--tail", "200", "abc123"], args);
     }
@@ -61,7 +61,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions
         {
             ContainerId = "abc123",
             Since = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero),
@@ -78,7 +78,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions
         {
             ContainerId = "abc123",
             Follow = true,
@@ -97,7 +97,7 @@ public class ContainerLogsCommandTests
     {
         var provider = CreateAppleProvider();
 
-        var args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Follow = true });
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Follow = true });
 
         Assert.Equal(["logs", "--follow", "abc123"], args);
     }

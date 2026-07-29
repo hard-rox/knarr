@@ -31,7 +31,7 @@ public sealed class CliOutputKindToBrushConverter : IValueConverter
     private static IBrush ResolveBrush(string key)
     {
         if (Application.Current is { } app
-            && app.TryGetResource(key, app.ActualThemeVariant, out var resource)
+            && app.TryGetResource(key, app.ActualThemeVariant, out object? resource)
             && resource is IBrush brush)
         {
             return brush;

@@ -16,7 +16,7 @@ public sealed class IconKeyToGeometryConverter : IValueConverter
     {
         if (value is string key
             && Application.Current is { } app
-            && app.TryGetResource(key, app.ActualThemeVariant, out var resource)
+            && app.TryGetResource(key, app.ActualThemeVariant, out object? resource)
             && resource is Geometry geometry)
         {
             return geometry;

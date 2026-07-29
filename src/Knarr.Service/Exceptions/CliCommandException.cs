@@ -18,7 +18,7 @@ public sealed class CliCommandException : Exception
 
     private static string BuildMessage(string command, int exitCode, string standardError)
     {
-        var detail = string.IsNullOrWhiteSpace(standardError) ? "(no error output)" : standardError.Trim();
+        string detail = string.IsNullOrWhiteSpace(standardError) ? "(no error output)" : standardError.Trim();
         return $"Command '{command}' failed with exit code {exitCode}: {detail}";
     }
 }

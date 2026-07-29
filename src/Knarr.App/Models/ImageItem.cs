@@ -51,17 +51,17 @@ public sealed partial class ImageItem : ObservableObject
 
         if (elapsed.TotalDays >= 1)
         {
-            var days = (int)elapsed.TotalDays;
+            int days = (int)elapsed.TotalDays;
             return days == 1 ? "1 day ago" : $"{days} days ago";
         }
 
         if (elapsed.TotalHours >= 1)
         {
-            var hours = (int)elapsed.TotalHours;
+            int hours = (int)elapsed.TotalHours;
             return hours == 1 ? "1 hour ago" : $"{hours} hours ago";
         }
 
-        var minutes = Math.Max(1, (int)elapsed.TotalMinutes);
+        int minutes = Math.Max(1, (int)elapsed.TotalMinutes);
         return minutes == 1 ? "1 minute ago" : $"{minutes} minutes ago";
     }
 }
