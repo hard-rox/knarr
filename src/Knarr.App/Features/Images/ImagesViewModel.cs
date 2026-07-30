@@ -1,5 +1,5 @@
-using Avalonia.Threading;
 using Knarr.App.Features.RunContainer;
+using Knarr.App.Services;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -8,22 +8,21 @@ namespace Knarr.App.Features.Images;
 
 public partial class ImagesViewModel : ViewModelBase, IDisposable
 {
-    private static readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
-
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ImagesViewModel> _logger;
     private readonly Func<PullImageDialogViewModel>? _pullDialogFactory;
     private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
     private readonly List<ImageItem> _allImages = [];
+    private readonly IDisposable? _refreshSubscription;
 
-    private DispatcherTimer? _refreshTimer;
     private bool _loadInFlight;
 
     public ImagesViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ImagesViewModel> logger,
         Func<PullImageDialogViewModel>? pullDialogFactory = null,
-        Func<RunContainerDialogViewModel>? runDialogFactory = null)
+        Func<RunContainerDialogViewModel>? runDialogFactory = null,
+        IAutoRefreshService? autoRefresh = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
@@ -31,7 +30,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         _runDialogFactory = runDialogFactory;
         Images = [];
         _ = LoadAsync();
-        StartAutoRefresh();
+        _refreshSubscription = autoRefresh?.Subscribe(ct => LoadAsync(showLoading: false, ct));
     }
 
     public ImagesViewModel()
@@ -107,13 +106,11 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
     private void OnImagePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ImageItem.IsSelected))
-        {
-            OnPropertyChanged(nameof(SelectedImages));
-            OnPropertyChanged(nameof(SelectedCount));
-            OnPropertyChanged(nameof(HasSelection));
-            OnPropertyChanged(nameof(AllSelected));
-        }
+        if (e.PropertyName != nameof(ImageItem.IsSelected)) return;
+        OnPropertyChanged(nameof(SelectedImages));
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(AllSelected));
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
@@ -231,12 +228,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
             return image.RepoTag;
         }
 
-        if (!string.IsNullOrWhiteSpace(image.Id))
-        {
-            return image.Id;
-        }
-
-        return image.RepoTag;
+        return !string.IsNullOrWhiteSpace(image.Id) ? image.Id : image.RepoTag;
     }
 
     // Concurrent calls are coalesced; showLoading=false (background auto-refresh) skips the loading
@@ -305,27 +297,9 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         await LoadAsync().ConfigureAwait(true);
     }
 
-    private void StartAutoRefresh()
-    {
-        if (_refreshTimer is not null)
-        {
-            return;
-        }
-
-        _refreshTimer = new DispatcherTimer { Interval = _refreshInterval };
-        _refreshTimer.Tick += async (_, _) => await LoadAsync(showLoading: false).ConfigureAwait(true);
-        _refreshTimer.Start();
-        _logger.LogDebug("Images auto-refresh started ({Interval}s)", _refreshInterval.TotalSeconds);
-    }
-
     public void Dispose()
     {
-        if (_refreshTimer is not null)
-        {
-            _refreshTimer.Stop();
-            _refreshTimer = null;
-            _logger.LogDebug("Images auto-refresh stopped");
-        }
+        _refreshSubscription?.Dispose();
 
         foreach (ImageItem item in _allImages)
         {

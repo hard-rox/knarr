@@ -1,9 +1,9 @@
-using Avalonia.Threading;
 using Knarr.App.Controls;
 using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
+using Knarr.App.Services;
 using Knarr.Service.Exceptions;
 using Knarr.Service.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,27 +14,28 @@ namespace Knarr.App.Features.Sidebar;
 
 public partial class SidebarViewModel : ViewModelBase
 {
-    private static readonly TimeSpan _badgeRefreshInterval = TimeSpan.FromSeconds(5);
-
     private readonly IServiceProvider _services;
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<SidebarViewModel> _logger;
+    private readonly IAutoRefreshService? _autoRefresh;
     private readonly NavigationItem _containersItem;
     private readonly NavigationItem _imagesItem;
 
     // Only registered on macOS; stays null elsewhere and the sidebar's system control is hidden.
     private readonly IContainerSystemService? _systemService;
 
-    private DispatcherTimer? _badgeTimer;
+    private IDisposable? _badgeSubscription;
 
     public SidebarViewModel(
         IServiceProvider services,
         IContainerCliProvider cliProvider,
-        ILogger<SidebarViewModel> logger)
+        ILogger<SidebarViewModel> logger,
+        IAutoRefreshService? autoRefresh = null)
     {
         _services = services;
         _cliProvider = cliProvider;
         _logger = logger;
+        _autoRefresh = autoRefresh;
         _systemService = services?.GetService<IContainerSystemService>();
 
         _containersItem = new NavigationItem(
@@ -169,19 +170,7 @@ public partial class SidebarViewModel : ViewModelBase
         IsCliReachable = info.IsCliReachable;
 
         await RefreshBadgeCountsAsync(cancellationToken).ConfigureAwait(true);
-        StartBadgeRefresh();
-    }
-
-    private void StartBadgeRefresh()
-    {
-        if (_badgeTimer is not null)
-        {
-            return;
-        }
-
-        _badgeTimer = new DispatcherTimer { Interval = _badgeRefreshInterval };
-        _badgeTimer.Tick += async (_, _) => await RefreshBadgeCountsAsync().ConfigureAwait(true);
-        _badgeTimer.Start();
+        _badgeSubscription ??= _autoRefresh?.Subscribe(RefreshBadgeCountsAsync);
     }
 
     private async Task RefreshBadgeCountsAsync(CancellationToken cancellationToken = default)

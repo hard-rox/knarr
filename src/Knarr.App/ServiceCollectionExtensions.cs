@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
             collection.AddLogging(builder => builder.AddSerilog(dispose: true));
 
             collection.AddSingleton<IThemeService, ThemeService>();
+            collection.AddSingleton<IAutoRefreshService, AutoRefreshService>();
 
             collection.AddContainerServices();
 

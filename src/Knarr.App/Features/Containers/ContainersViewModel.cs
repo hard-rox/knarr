@@ -1,6 +1,6 @@
-using Avalonia.Threading;
 using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.RunContainer;
+using Knarr.App.Services;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -10,32 +10,31 @@ namespace Knarr.App.Features.Containers;
 
 public partial class ContainersViewModel : ViewModelBase, IDisposable
 {
-    private static readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
-
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ContainersViewModel> _logger;
     private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
     private readonly Func<ContainerLogsDialogViewModel>? _logsDialogFactory;
     private readonly List<ContainerItem> _allContainers = [];
+    private readonly IDisposable? _refreshSubscription;
 
-    private DispatcherTimer? _refreshTimer;
     private bool _loadInFlight;
 
     public ContainersViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ContainersViewModel> logger,
         Func<RunContainerDialogViewModel>? runDialogFactory = null,
-        Func<ContainerLogsDialogViewModel>? logsDialogFactory = null)
+        Func<ContainerLogsDialogViewModel>? logsDialogFactory = null,
+        IAutoRefreshService? autoRefresh = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
         _runDialogFactory = runDialogFactory;
         _logsDialogFactory = logsDialogFactory;
-        Containers = new ObservableCollection<ContainerItem>();
+        Containers = [];
 
         // Kick off the initial load; property updates marshal back to the UI thread.
         _ = LoadAsync();
-        StartAutoRefresh();
+        _refreshSubscription = autoRefresh?.Subscribe(ct => LoadAsync(showLoading: false, ct));
     }
 
     public ContainersViewModel()
@@ -322,27 +321,9 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
         await LoadAsync().ConfigureAwait(true);
     }
 
-    private void StartAutoRefresh()
-    {
-        if (_refreshTimer is not null)
-        {
-            return;
-        }
-
-        _refreshTimer = new DispatcherTimer { Interval = _refreshInterval };
-        _refreshTimer.Tick += async (_, _) => await LoadAsync(showLoading: false).ConfigureAwait(true);
-        _refreshTimer.Start();
-        _logger.LogDebug("Containers auto-refresh started ({Interval}s)", _refreshInterval.TotalSeconds);
-    }
-
     public void Dispose()
     {
-        if (_refreshTimer is not null)
-        {
-            _refreshTimer.Stop();
-            _refreshTimer = null;
-            _logger.LogDebug("Containers auto-refresh stopped");
-        }
+        _refreshSubscription?.Dispose();
 
         foreach (ContainerItem item in _allContainers)
         {
