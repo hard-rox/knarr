@@ -101,6 +101,7 @@ jobs:
       - name: Publish
         run: >
           dotnet publish src/Knarr.App/Knarr.App.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish/win-x64
+      # dotnet publish src/Knarr.App/Knarr.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true -o ./publish
 
       - name: Install vpk
         run: dotnet tool install --global vpk

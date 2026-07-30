@@ -1,5 +1,11 @@
 # Knarr
 
+## SignPath Foundation Summary
+
+Knarr is a transparent desktop GUI that maps container tasks directly to native operating-system container CLIs.
+
+Knarr helps developers manage container workflows through a local-first interface that keeps command execution auditable and understandable. Its purpose is to reduce CLI friction while preserving trust and control by showing exactly what command is run for each action on macOS and Windows.
+
 Knarr is a cross-platform desktop application that provides a unified, native GUI over first-party
 OS containerization CLIs:
 
@@ -49,6 +55,10 @@ dotnet run --project src/Knarr.App
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Privacy
+
+See [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## License
 
