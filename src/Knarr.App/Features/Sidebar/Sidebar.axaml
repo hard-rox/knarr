@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Knarr.App.Features.Sidebar"
              xmlns:models="using:Knarr.App.Models"
+             xmlns:controls="using:Knarr.App.Controls"
              xmlns:conv="using:Knarr.App.Converters"
              x:Class="Knarr.App.Features.Sidebar.Sidebar"
              x:DataType="vm:SidebarViewModel">
@@ -110,6 +111,19 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Container system control: collapsed rail shows just the status dot -->
+            <Button DockPanel.Dock="Bottom"
+                    HorizontalAlignment="Center"
+                    Margin="0,8,0,0"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{Binding ToggleSystemCommand}"
+                    ToolTip.Tip="{Binding SystemActionTooltip}"
+                    IsVisible="{Binding IsCollapsedSystemControlVisible}">
+                <controls:Pill Status="{Binding SystemPillStatus}"/>
+            </Button>
+
             <!-- Platform + CLI version footer -->
             <Border DockPanel.Dock="Bottom"
                     Margin="4,8,4,0"
@@ -127,6 +141,22 @@
                     <TextBlock Text="{Binding CliDisplay}"
                                FontSize="12"
                                Foreground="{DynamicResource TextDimBrush}"/>
+
+                    <!-- Container system status + start/stop toggle (macOS only) -->
+                    <Grid ColumnDefinitions="*,Auto"
+                          Margin="0,4,0,0"
+                          IsVisible="{Binding IsSystemControlVisible}">
+                        <controls:Pill Grid.Column="0"
+                                       Text="{Binding SystemStatusText}"
+                                       Status="{Binding SystemPillStatus}"
+                                       ToolTip.Tip="{Binding SystemActionTooltip}"/>
+                        <Button Grid.Column="1"
+                                Classes="icon"
+                                Command="{Binding ToggleSystemCommand}"
+                                ToolTip.Tip="{Binding SystemActionTooltip}">
+                            <PathIcon Data="{Binding SystemActionIcon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
+                        </Button>
+                    </Grid>
                 </StackPanel>
             </Border>
 

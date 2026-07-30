@@ -1,6 +1,7 @@
 using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
+using Knarr.App.Features.RunContainer;
 using Knarr.App.Features.Settings;
 using Knarr.App.Features.Shell;
 using Knarr.App.Features.Sidebar;
@@ -37,6 +38,10 @@ public static class ServiceCollectionExtensions
             collection.AddTransient<PullImageDialogViewModel>();
             collection.AddTransient<Func<PullImageDialogViewModel>>(sp =>
                 sp.GetRequiredService<PullImageDialogViewModel>);
+
+            collection.AddTransient<RunContainerDialogViewModel>();
+            collection.AddTransient<Func<RunContainerDialogViewModel>>(sp =>
+                sp.GetRequiredService<RunContainerDialogViewModel>);
 
             collection.AddTransient<SidebarViewModel>();
             collection.AddTransient<MainWindowViewModel>();

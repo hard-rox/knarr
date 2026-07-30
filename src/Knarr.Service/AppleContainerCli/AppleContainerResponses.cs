@@ -37,3 +37,10 @@ internal sealed record AppleImageConfiguration(
     string Name);
 
 internal sealed record AppleImageVariant(long Size);
+
+// Shape emitted by `container system status --format json` (a single object, not an array).
+internal sealed record AppleSystemStatusResponse(
+    string? ApiServerVersion,
+    string? AppRoot,
+    string? InstallRoot,
+    string? Status);

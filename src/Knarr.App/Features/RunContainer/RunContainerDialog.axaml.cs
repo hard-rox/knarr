@@ -1,12 +1,14 @@
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 
-namespace Knarr.App.Features.Images;
+namespace Knarr.App.Features.RunContainer;
 
-public partial class PullImageDialog : Window
+public partial class RunContainerDialog : Window
 {
-    private PullImageDialogViewModel? _viewModel;
+    private RunContainerDialogViewModel? _viewModel;
 
-    public PullImageDialog()
+    public RunContainerDialog()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
@@ -17,12 +19,21 @@ public partial class PullImageDialog : Window
     {
         _viewModel?.CloseRequested -= OnCloseRequested;
 
-        _viewModel = DataContext as PullImageDialogViewModel;
+        _viewModel = DataContext as RunContainerDialogViewModel;
 
         _viewModel?.CloseRequested += OnCloseRequested;
     }
 
     private void OnCloseRequested(object? sender, EventArgs e) => Close();
+
+    private async void OnCopyCommand(object? sender, RoutedEventArgs e)
+    {
+        if (_viewModel is { CommandPreview: { Length: > 0 } command } &&
+            TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(command);
+        }
+    }
 
     private void OnClosed(object? sender, EventArgs e)
     {

@@ -23,6 +23,10 @@ public static class ServiceCollectionExtensions
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             services.AddSingleton<IContainerCliProvider, AppleContainerCli.AppleContainerCliProvider>();
+
+            // `container system` is macOS-only; consumers resolve this optionally and hide the
+            // corresponding UI on platforms where it is not registered.
+            services.AddSingleton<IContainerSystemService, AppleContainerCli.AppleContainerSystemService>();
         }
         else
         {

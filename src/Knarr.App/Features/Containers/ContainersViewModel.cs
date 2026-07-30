@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Knarr.App.Features.RunContainer;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,15 +18,20 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ContainersViewModel> _logger;
+    private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
     private readonly List<ContainerItem> _allContainers = [];
 
     private DispatcherTimer? _refreshTimer;
     private bool _loadInFlight;
 
-    public ContainersViewModel(IContainerCliProvider cliProvider, ILogger<ContainersViewModel> logger)
+    public ContainersViewModel(
+        IContainerCliProvider cliProvider,
+        ILogger<ContainersViewModel> logger,
+        Func<RunContainerDialogViewModel>? runDialogFactory = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
+        _runDialogFactory = runDialogFactory;
         Containers = new ObservableCollection<ContainerItem>();
 
         // Kick off the initial load; property updates marshal back to the UI thread.
@@ -42,6 +48,12 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     }
 
     public ObservableCollection<ContainerItem> Containers { get; }
+
+    /// <summary>
+    /// Raised when the run-container dialog should be shown. The view resolves the owner window and
+    /// displays the supplied, already-initialised dialog view model modally.
+    /// </summary>
+    public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
 
     /// <summary>Total number of containers, independent of the current search filter.</summary>
     public int TotalCount => _allContainers.Count;
@@ -234,8 +246,18 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void RunContainer()
     {
-        // Run wizard is a later milestone.
+        if (_runDialogFactory is null)
+        {
+            return;
+        }
+
+        RunContainerDialogViewModel dialogViewModel = _runDialogFactory();
+        dialogViewModel.Reset(initialImage: null, imageEditable: true);
+        dialogViewModel.ContainerStarted += OnContainerStarted;
+        RunDialogRequested?.Invoke(this, dialogViewModel);
     }
+
+    private void OnContainerStarted(object? sender, EventArgs e) => _ = LoadAsync();
 
     // Bulk (multiselect) commands — the provider runs each batch as a single command session.
     [RelayCommand]
