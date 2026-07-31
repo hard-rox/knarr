@@ -5,7 +5,7 @@ using Serilog;
 
 namespace Knarr.App;
 
-sealed class Program
+internal sealed class Program
 {
     private const int _attachParentProcess = -1;
 

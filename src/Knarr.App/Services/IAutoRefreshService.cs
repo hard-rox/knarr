@@ -6,7 +6,7 @@ namespace Knarr.App.Services;
 /// </summary>
 public interface IAutoRefreshService
 {
-    TimeSpan Interval { get; set; }
+    public TimeSpan Interval { get; set; }
 
-    IDisposable Subscribe(Func<CancellationToken, Task> onTick);
+    public IDisposable Subscribe(Func<CancellationToken, Task> onTick);
 }

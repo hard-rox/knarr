@@ -13,7 +13,7 @@ public enum AppTheme
 /// </summary>
 public interface IThemeService
 {
-    AppTheme CurrentTheme { get; }
+    public AppTheme CurrentTheme { get; }
 
-    void SetTheme(AppTheme theme);
+    public void SetTheme(AppTheme theme);
 }
