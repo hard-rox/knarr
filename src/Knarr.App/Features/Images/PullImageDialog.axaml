@@ -1,15 +1,15 @@
 <common:DialogWindow xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Knarr.App.Features.Images"
-        xmlns:common="using:Knarr.App.Common"
-        x:Class="Knarr.App.Features.Images.PullImageDialog"
-        x:DataType="vm:PullImageDialogViewModel"
-        Title="Pull image"
-        Width="620" Height="150"
-        MinWidth="480" MinHeight="130"
-        WindowStartupLocation="CenterOwner"
-        ShowInTaskbar="False"
-        Background="{DynamicResource BackgroundBaseBrush}">
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:vm="using:Knarr.App.Features.Images"
+                     xmlns:common="using:Knarr.App.Common"
+                     x:Class="Knarr.App.Features.Images.PullImageDialog"
+                     x:DataType="vm:PullImageDialogViewModel"
+                     Title="Pull image"
+                     Width="620" Height="150"
+                     MinWidth="480" MinHeight="130"
+                     WindowStartupLocation="CenterOwner"
+                     ShowInTaskbar="False"
+                     Background="{DynamicResource BackgroundBaseBrush}">
 
     <Design.DataContext>
         <vm:PullImageDialogViewModel />

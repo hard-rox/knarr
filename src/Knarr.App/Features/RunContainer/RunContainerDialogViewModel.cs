@@ -41,31 +41,24 @@ public partial class RunContainerDialogViewModel : ViewModelBase, IDialogViewMod
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
     public partial string ImageReference { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial bool Detach { get; set; } = true;
+    [ObservableProperty] public partial bool Detach { get; set; } = true;
 
-    [ObservableProperty]
-    public partial bool RemoveOnExit { get; set; }
+    [ObservableProperty] public partial bool RemoveOnExit { get; set; }
 
-    [ObservableProperty]
-    public partial string ContainerName { get; set; } = string.Empty;
+    [ObservableProperty] public partial string ContainerName { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial bool IsImageEditable { get; set; } = true;
+    [ObservableProperty] public partial bool IsImageEditable { get; set; } = true;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
     [NotifyPropertyChangedFor(nameof(CanAddPort))]
     public partial bool IsRunning { get; set; }
 
-    [ObservableProperty]
-    public partial string? StatusMessage { get; set; }
+    [ObservableProperty] public partial string? StatusMessage { get; set; }
 
-    [ObservableProperty]
-    public partial string CommandPreview { get; set; } = string.Empty;
+    [ObservableProperty] public partial string CommandPreview { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
+    [ObservableProperty] public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
 
     public ObservableCollection<EnvironmentVariableEntry> EnvironmentVariables { get; }
 
@@ -243,8 +236,8 @@ public partial class RunContainerDialogViewModel : ViewModelBase, IDialogViewMod
         try
         {
             await foreach (CliOutputLine line in _cliProvider!
-                .RunContainerStreamingAsync(options, _cts!.Token)
-                .ConfigureAwait(true))
+                               .RunContainerStreamingAsync(options, _cts!.Token)
+                               .ConfigureAwait(true))
             {
                 OutputLines.Add(line);
                 if (line.Kind == CliOutputKind.Exit)

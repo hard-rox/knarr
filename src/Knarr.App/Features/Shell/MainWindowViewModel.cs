@@ -10,7 +10,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IThemeService _themeService;
     private readonly ILogger<MainWindowViewModel> _logger;
 
-    public MainWindowViewModel(IThemeService themeService, SidebarViewModel sidebar, ILogger<MainWindowViewModel> logger)
+    public MainWindowViewModel(IThemeService themeService, SidebarViewModel sidebar,
+        ILogger<MainWindowViewModel> logger)
     {
         _themeService = themeService;
         _logger = logger;
@@ -27,8 +28,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public SidebarViewModel Sidebar { get; }
 
-    [ObservableProperty]
-    private ViewModelBase? _currentPage;
+    [ObservableProperty] private ViewModelBase? _currentPage;
 
     public Task InitializeAsync(CancellationToken cancellationToken = default)
         => Sidebar.InitializeAsync(cancellationToken);
@@ -38,15 +38,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnSidebarPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(SidebarViewModel.SelectedItem))
+        if (e.PropertyName != nameof(SidebarViewModel.SelectedItem)) return;
+        // Dispose the outgoing page so its background work (e.g. auto-refresh timers) stops.
+        if (CurrentPage is IDisposable disposable)
         {
-            // Dispose the outgoing page so its background work (e.g. auto-refresh timers) stops.
-            if (CurrentPage is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-
-            CurrentPage = Sidebar.SelectedItem?.CreatePage?.Invoke();
+            disposable.Dispose();
         }
+
+        CurrentPage = Sidebar.SelectedItem?.CreatePage?.Invoke();
     }
 }

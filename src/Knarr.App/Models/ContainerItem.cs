@@ -7,8 +7,7 @@ using Knarr.Service.Models;
 
 public sealed partial class ContainerItem : ObservableObject
 {
-    [ObservableProperty]
-    private bool _isSelected;
+    [ObservableProperty] private bool _isSelected;
 
     public ContainerItem()
     {

@@ -46,8 +46,8 @@ public sealed class DialogService(IServiceProvider services) : IDialogService
             .Replace("DialogViewModel", "Dialog", StringComparison.Ordinal);
 
         Type windowType = viewModelType.Assembly.GetType(windowTypeName)
-            ?? throw new InvalidOperationException(
-                $"No dialog window '{windowTypeName}' found for {viewModelType.Name}.");
+                          ?? throw new InvalidOperationException(
+                              $"No dialog window '{windowTypeName}' found for {viewModelType.Name}.");
 
         return (Window)Activator.CreateInstance(windowType)!;
     }

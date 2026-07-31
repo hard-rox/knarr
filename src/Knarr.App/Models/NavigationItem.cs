@@ -1,28 +1,20 @@
 namespace Knarr.App.Models;
 
-public sealed partial class NavigationItem : ObservableObject
+public sealed partial class NavigationItem(
+    string title,
+    string icon,
+    string? badge = null,
+    Func<ViewModelBase>? createPage = null)
+    : ObservableObject
 {
-    public NavigationItem(
-        string title,
-        string icon,
-        string? badge = null,
-        Func<ViewModelBase>? createPage = null)
-    {
-        Title = title;
-        Icon = icon;
-        _badge = badge;
-        CreatePage = createPage;
-    }
+    public string Title { get; } = title;
 
-    public string Title { get; }
+    public string Icon { get; } = icon;
 
-    public string Icon { get; }
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasBadge))]
+    private string? _badge = badge;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasBadge))]
-    private string? _badge;
-
-    public Func<ViewModelBase>? CreatePage { get; }
+    public Func<ViewModelBase>? CreatePage { get; } = createPage;
 
     public bool HasBadge => !string.IsNullOrEmpty(Badge);
 }

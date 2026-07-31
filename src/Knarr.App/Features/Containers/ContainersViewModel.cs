@@ -49,11 +49,9 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 
     public int StoppedCount => _allContainers.Count(c => c.Status == ContainerState.Exited);
 
-    [ObservableProperty]
-    private string _searchText = string.Empty;
+    [ObservableProperty] private string _searchText = string.Empty;
 
-    [ObservableProperty]
-    private ContainerItem? _selectedContainer;
+    [ObservableProperty] private ContainerItem? _selectedContainer;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -273,8 +271,8 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Logs(ContainerItem container)
     {
-        _dialogService?.Show<ContainerLogsDialogViewModel>(
-            dialogViewModel => dialogViewModel.Reset(container.Id, container.Name));
+        _dialogService?.Show<ContainerLogsDialogViewModel>(dialogViewModel =>
+            dialogViewModel.Reset(container.Id, container.Name));
     }
 
     [RelayCommand]

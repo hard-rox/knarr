@@ -39,8 +39,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<ImageItem> Images { get; }
 
-    [ObservableProperty]
-    public partial string SearchText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -234,7 +233,8 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
         ErrorMessage = null;
         try
         {
-            IReadOnlyList<ContainerImage> summaries = await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
+            IReadOnlyList<ContainerImage> summaries =
+                await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
 
             foreach (ImageItem existing in _allImages)
             {

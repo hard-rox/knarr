@@ -19,8 +19,7 @@ public sealed class CliOutputKindToBrushConverter : IValueConverter
         return kind switch
         {
             CliOutputKind.StandardError => _errorBrush,
-            CliOutputKind.Command => ResolveBrush("TextDimBrush"),
-            CliOutputKind.Exit => ResolveBrush("TextDimBrush"),
+            CliOutputKind.Command or CliOutputKind.Exit => ResolveBrush("TextDimBrush"),
             _ => ResolveBrush("TextBrush"),
         };
     }

@@ -3,20 +3,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Knarr.App.Services;
 
-public sealed class AutoRefreshService : IAutoRefreshService, IDisposable
+public sealed class AutoRefreshService(ILogger<AutoRefreshService> logger) : IAutoRefreshService, IDisposable
 {
     private static readonly TimeSpan _defaultInterval = TimeSpan.FromSeconds(5);
 
-    private readonly ILogger<AutoRefreshService> _logger;
     private readonly List<Subscription> _subscriptions = [];
     private DispatcherTimer? _timer;
     private TimeSpan _interval = _defaultInterval;
     private bool _tickInFlight;
-
-    public AutoRefreshService(ILogger<AutoRefreshService> logger)
-    {
-        _logger = logger;
-    }
 
     public TimeSpan Interval
     {
@@ -34,13 +28,12 @@ public sealed class AutoRefreshService : IAutoRefreshService, IDisposable
             _timer.Stop();
             _timer.Interval = _interval;
             _timer.Start();
-            _logger.LogDebug("Auto-refresh interval changed to {Interval}s", _interval.TotalSeconds);
+            logger.LogDebug("Auto-refresh interval changed to {Interval}s", _interval.TotalSeconds);
         }
     }
 
     public IDisposable Subscribe(Func<CancellationToken, Task> onTick)
     {
-        Console.WriteLine("Subscribing");
         Subscription sub = new(this, onTick);
         _subscriptions.Add(sub);
 
@@ -48,7 +41,7 @@ public sealed class AutoRefreshService : IAutoRefreshService, IDisposable
         _timer = new DispatcherTimer { Interval = _interval };
         _timer.Tick += OnTick;
         _timer.Start();
-        _logger.LogDebug("Auto-refresh timer started ({Interval}s)", _interval.TotalSeconds);
+        logger.LogDebug("Auto-refresh timer started ({Interval}s)", _interval.TotalSeconds);
 
         return sub;
     }
@@ -72,7 +65,7 @@ public sealed class AutoRefreshService : IAutoRefreshService, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Auto-refresh subscriber threw an exception");
+                    logger.LogWarning(ex, "Auto-refresh subscriber threw an exception");
                 }
             }
         }
@@ -84,14 +77,13 @@ public sealed class AutoRefreshService : IAutoRefreshService, IDisposable
 
     private void Unsubscribe(Subscription sub)
     {
-        Console.WriteLine("Unsubscribing");
         _subscriptions.Remove(sub);
 
         if (_subscriptions.Count != 0 || _timer is null) return;
         _timer.Stop();
         _timer.Tick -= OnTick;
         _timer = null;
-        _logger.LogDebug("Auto-refresh timer stopped (no subscribers)");
+        logger.LogDebug("Auto-refresh timer stopped (no subscribers)");
     }
 
     public void Dispose()

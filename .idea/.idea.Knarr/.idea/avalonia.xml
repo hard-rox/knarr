@@ -6,14 +6,20 @@
         <entry key="src/Knarr.App/App.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Controls/Pill.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Controls/PillControl.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Controls/TerminalOutputView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Controls/Tile.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Features/Containers/ContainerLogs/ContainerLogsDialog.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Containers/ContainersView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Dashboard/DashboardView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Images/ImagesView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Images/PullImageDialog.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Features/RunContainer/RunContainerDialog.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Features/Settings/SettingsView.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Shell/MainWindow.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Features/Sidebar/Sidebar.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Themes/Glass.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Themes/Icons.axaml" value="src/Knarr.App/Knarr.App.csproj" />
+        <entry key="src/Knarr.App/Themes/Styles.axaml" value="src/Knarr.App/Knarr.App.csproj" />
         <entry key="src/Knarr.App/Views/MainWindow.axaml" value="src/Knarr.App/Knarr.App.csproj" />
       </map>
     </option>

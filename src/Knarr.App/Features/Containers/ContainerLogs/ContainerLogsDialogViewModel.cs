@@ -5,21 +5,14 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.Containers.ContainerLogs;
 
-public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class ContainerLogsDialogViewModel(
+    IContainerCliProvider cliProvider,
+    ILogger<ContainerLogsDialogViewModel> logger)
+    : ViewModelBase, IDialogViewModel
 {
-    private readonly IContainerCliProvider? _cliProvider;
-    private readonly ILogger<ContainerLogsDialogViewModel> _logger;
+    private readonly IContainerCliProvider? _cliProvider = cliProvider;
     private CancellationTokenSource? _cts;
     private bool _suppressAutoRestart;
-
-    public ContainerLogsDialogViewModel(
-        IContainerCliProvider cliProvider,
-        ILogger<ContainerLogsDialogViewModel> logger)
-    {
-        _cliProvider = cliProvider;
-        _logger = logger;
-        OutputLines = [];
-    }
 
     public ContainerLogsDialogViewModel()
         : this(null!, NullLogger<ContainerLogsDialogViewModel>.Instance)
@@ -28,38 +21,29 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
 
     public event EventHandler? CloseRequested;
 
-    [ObservableProperty]
-    public partial string ContainerId { get; set; } = string.Empty;
+    [ObservableProperty] public partial string ContainerId { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial string ContainerName { get; set; } = string.Empty;
+    [ObservableProperty] public partial string ContainerName { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    public partial bool Follow { get; set; }
+    [ObservableProperty] public partial bool Follow { get; set; }
 
-    [ObservableProperty]
-    public partial bool Timestamps { get; set; }
+    [ObservableProperty] public partial bool Timestamps { get; set; }
 
-    [ObservableProperty]
-    public partial bool Boot { get; set; }
+    [ObservableProperty] public partial bool Boot { get; set; }
 
-    [ObservableProperty]
-    public partial bool LimitTail { get; set; }
+    [ObservableProperty] public partial bool LimitTail { get; set; }
 
-    [ObservableProperty]
-    public partial int TailLines { get; set; } = 200;
+    [ObservableProperty] public partial int TailLines { get; set; } = 200;
 
-    [ObservableProperty]
-    public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
+    [ObservableProperty] public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StopCommand))]
     public partial bool IsStreaming { get; set; }
 
-    [ObservableProperty]
-    public partial string? StatusMessage { get; set; }
+    [ObservableProperty] public partial string? StatusMessage { get; set; }
 
-    public ObservableCollection<CliOutputLine> OutputLines { get; }
+    public ObservableCollection<CliOutputLine> OutputLines { get; } = [];
 
     public string ShortId => ContainerId.Length > 12 ? ContainerId[..12] : ContainerId;
 
@@ -166,8 +150,8 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
         try
         {
             await foreach (CliOutputLine line in _cliProvider!
-                .StreamContainerLogsAsync(options, cts.Token)
-                .ConfigureAwait(true))
+                               .StreamContainerLogsAsync(options, cts.Token)
+                               .ConfigureAwait(true))
             {
                 OutputLines.Add(line);
             }
@@ -183,7 +167,7 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
         {
             TerminalState = TerminalState.Error;
             StatusMessage = ex.Message;
-            _logger.LogError(ex, "Failed to stream logs for container {ContainerId}", options.ContainerId);
+            logger.LogError(ex, "Failed to stream logs for container {ContainerId}", options.ContainerId);
         }
         finally
         {

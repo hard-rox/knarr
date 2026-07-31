@@ -38,8 +38,7 @@ public partial class PullImageDialogViewModel(
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     public partial bool IsRunning { get; set; }
 
-    [ObservableProperty]
-    public partial string? StatusMessage { get; set; }
+    [ObservableProperty] public partial string? StatusMessage { get; set; }
 
     private bool CanPull =>
         !IsRunning
