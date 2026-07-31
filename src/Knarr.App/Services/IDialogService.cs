@@ -9,6 +9,6 @@ public interface IDialogService
     /// Resolves <typeparamref name="TViewModel"/> from the container, applies
     /// <paramref name="configure"/> to it, then shows the matching dialog window.
     /// </summary>
-    void Show<TViewModel>(Action<TViewModel> configure)
+    public void Show<TViewModel>(Action<TViewModel> configure)
         where TViewModel : class, IDialogViewModel;
 }

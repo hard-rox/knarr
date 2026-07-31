@@ -101,4 +101,50 @@ public class ContainerLogsCommandTests
 
         Assert.Equal(["logs", "--follow", "abc123"], args);
     }
+
+    [Fact]
+    public void Build_OnAppleProvider_UsesShortTailFlag()
+    {
+        var provider = CreateAppleProvider();
+
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", TailLines = 200 });
+
+        Assert.Equal(["logs", "-n", "200", "abc123"], args);
+    }
+
+    [Fact]
+    public void Build_OnAppleProvider_Boot_AddsBootFlagBeforeFollow()
+    {
+        var provider = CreateAppleProvider();
+
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Boot = true, Follow = true });
+
+        Assert.Equal(["logs", "--boot", "--follow", "abc123"], args);
+    }
+
+    [Fact]
+    public void Build_OnAppleProvider_DropsUnsupportedOptions()
+    {
+        var provider = CreateAppleProvider();
+
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions
+        {
+            ContainerId = "abc123",
+            Timestamps = true,
+            Since = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero),
+            Until = new DateTimeOffset(2024, 1, 15, 12, 0, 0, TimeSpan.Zero),
+        });
+
+        Assert.Equal(["logs", "abc123"], args);
+    }
+
+    [Fact]
+    public void Build_OnWslcProvider_IgnoresBoot()
+    {
+        var provider = CreateProvider();
+
+        string[] args = provider.BuildLogsArgs(new ContainerLogsOptions { ContainerId = "abc123", Boot = true });
+
+        Assert.Equal(["logs", "abc123"], args);
+    }
 }

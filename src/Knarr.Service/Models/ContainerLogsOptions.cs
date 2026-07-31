@@ -8,6 +8,8 @@ public sealed record ContainerLogsOptions
 
     public bool Timestamps { get; init; }
 
+    public bool Boot { get; init; }
+
     public int? TailLines { get; init; }
 
     public DateTimeOffset? Since { get; init; }

@@ -47,8 +47,20 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>Command segment that streams a container's logs (e.g. <c>["logs"]</c>).</summary>
     protected abstract string[] LogsCommand { get; }
 
+    /// <summary>Flag that limits the log output to the last N lines (e.g. <c>--tail</c> or <c>-n</c>).</summary>
+    protected virtual string TailLinesFlag => "--tail";
+
     /// <inheritdoc />
     public virtual bool SupportsPublishAllPorts => true;
+
+    /// <inheritdoc />
+    public virtual bool SupportsLogTimestamps => true;
+
+    /// <inheritdoc />
+    public virtual bool SupportsLogTimeRange => true;
+
+    /// <inheritdoc />
+    public virtual bool SupportsBootLogs => false;
 
     /// <summary>Parses the <c>list --all --format JSON</c> payload into shaped containers.</summary>
     protected abstract IReadOnlyList<Container> ParseContainersCore(string json);
@@ -173,29 +185,34 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     {
         List<string> args = [.. LogsCommand];
 
+        if (options.Boot && SupportsBootLogs)
+        {
+            args.Add("--boot");
+        }
+
         if (options.Follow)
         {
             args.Add("--follow");
         }
 
-        if (options.Timestamps)
+        if (options.Timestamps && SupportsLogTimestamps)
         {
             args.Add("--timestamps");
         }
 
         if (options.TailLines is { } tail)
         {
-            args.Add("--tail");
+            args.Add(TailLinesFlag);
             args.Add(tail.ToString(CultureInfo.InvariantCulture));
         }
 
-        if (options.Since is { } since)
+        if (SupportsLogTimeRange && options.Since is { } since)
         {
             args.Add("--since");
             args.Add(FormatTimestamp(since));
         }
 
-        if (options.Until is { } until)
+        if (SupportsLogTimeRange && options.Until is { } until)
         {
             args.Add("--until");
             args.Add(FormatTimestamp(until));

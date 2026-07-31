@@ -7,5 +7,5 @@ namespace Knarr.App.Common;
 /// </summary>
 public interface IDialogViewModel
 {
-    event EventHandler? CloseRequested;
+    public event EventHandler? CloseRequested;
 }

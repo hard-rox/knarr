@@ -22,8 +22,8 @@ public class RunContainerDialogViewModelTests
         return new RunContainerDialogViewModel(provider, NullLogger<RunContainerDialogViewModel>.Instance);
     }
 
-    private static string Describe(RunContainerOptions options)
-        => $"{(options.Detach ? "d" : "-")}|{options.ImageReference}|env={options.EnvironmentVariables.Count}|vol={options.Volumes.Count}";
+    private static string Describe(RunContainerOptions? options)
+        => $"{(options is { Detach: true } ? "d" : "-")}|{options.ImageReference}|env={options.EnvironmentVariables.Count}|vol={options.Volumes.Count}";
 
     [Fact]
     public void Defaults_DetachOnRemoveOff()

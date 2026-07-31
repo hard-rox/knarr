@@ -15,6 +15,21 @@ public interface IContainerCliProvider
     /// </summary>
     public bool SupportsPublishAllPorts { get; }
 
+    /// <summary>
+    /// Whether this platform CLI supports <c>logs --timestamps</c>.
+    /// </summary>
+    public bool SupportsLogTimestamps { get; }
+
+    /// <summary>
+    /// Whether this platform CLI supports <c>logs --since</c>/<c>--until</c> filtering.
+    /// </summary>
+    public bool SupportsLogTimeRange { get; }
+
+    /// <summary>
+    /// Whether this platform CLI supports <c>logs --boot</c> (the container's boot log).
+    /// </summary>
+    public bool SupportsBootLogs { get; }
+
     /// <summary>Lists all containers (<c>list --all --format JSON</c>).</summary>
     public Task<IReadOnlyList<Container>> ListContainersAsync(CancellationToken cancellationToken = default);
 

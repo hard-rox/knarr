@@ -24,6 +24,14 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     public override bool SupportsPublishAllPorts => false;
 
+    public override bool SupportsLogTimestamps => false;
+
+    public override bool SupportsLogTimeRange => false;
+
+    public override bool SupportsBootLogs => true;
+
+    protected override string TailLinesFlag => "-n";
+
     protected override IReadOnlyList<Container> ParseContainersCore(string json) => ParseContainers(json);
 
     protected override IReadOnlyList<ContainerImage> ParseImagesCore(string json) => ParseImages(json);

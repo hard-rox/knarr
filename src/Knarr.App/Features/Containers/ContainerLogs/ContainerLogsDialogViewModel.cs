@@ -41,6 +41,9 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
     public partial bool Timestamps { get; set; }
 
     [ObservableProperty]
+    public partial bool Boot { get; set; }
+
+    [ObservableProperty]
     public partial bool LimitTail { get; set; }
 
     [ObservableProperty]
@@ -60,6 +63,10 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
 
     public string ShortId => ContainerId.Length > 12 ? ContainerId[..12] : ContainerId;
 
+    public bool SupportsTimestamps => _cliProvider?.SupportsLogTimestamps ?? true;
+
+    public bool SupportsBootLogs => _cliProvider?.SupportsBootLogs ?? false;
+
     public void Reset(string containerId, string containerName)
     {
         RequestCancellation();
@@ -71,6 +78,7 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
         ContainerName = containerName;
         Follow = false;
         Timestamps = false;
+        Boot = false;
         LimitTail = true;
         TailLines = 200;
         StatusMessage = null;
@@ -95,6 +103,8 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
     partial void OnFollowChanged(bool value) => RestartStreamIfNotSuppressed();
 
     partial void OnTimestampsChanged(bool value) => RestartStreamIfNotSuppressed();
+
+    partial void OnBootChanged(bool value) => RestartStreamIfNotSuppressed();
 
     partial void OnLimitTailChanged(bool value) => RestartStreamIfNotSuppressed();
 
@@ -199,6 +209,7 @@ public partial class ContainerLogsDialogViewModel : ViewModelBase, IDialogViewMo
         ContainerId = ContainerId,
         Follow = Follow,
         Timestamps = Timestamps,
+        Boot = Boot,
         TailLines = LimitTail ? TailLines : null,
     };
 }
