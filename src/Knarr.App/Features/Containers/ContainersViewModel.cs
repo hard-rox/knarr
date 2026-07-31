@@ -12,8 +12,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 {
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ContainersViewModel> _logger;
-    private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
-    private readonly Func<ContainerLogsDialogViewModel>? _logsDialogFactory;
+    private readonly IDialogService? _dialogService;
     private readonly List<ContainerItem> _allContainers = [];
     private readonly IDisposable? _refreshSubscription;
 
@@ -22,14 +21,12 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     public ContainersViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ContainersViewModel> logger,
-        Func<RunContainerDialogViewModel>? runDialogFactory = null,
-        Func<ContainerLogsDialogViewModel>? logsDialogFactory = null,
+        IDialogService? dialogService = null,
         IAutoRefreshService? autoRefresh = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
-        _runDialogFactory = runDialogFactory;
-        _logsDialogFactory = logsDialogFactory;
+        _dialogService = dialogService;
         Containers = [];
 
         // Kick off the initial load; property updates marshal back to the UI thread.
@@ -45,10 +42,6 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     }
 
     public ObservableCollection<ContainerItem> Containers { get; }
-
-    public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
-
-    public event EventHandler<ContainerLogsDialogViewModel>? LogsDialogRequested;
 
     public int TotalCount => _allContainers.Count;
 
@@ -224,15 +217,11 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void RunContainer()
     {
-        if (_runDialogFactory is null)
+        _dialogService?.Show<RunContainerDialogViewModel>(dialogViewModel =>
         {
-            return;
-        }
-
-        RunContainerDialogViewModel dialogViewModel = _runDialogFactory();
-        dialogViewModel.Reset(initialImage: null, imageEditable: true);
-        dialogViewModel.ContainerStarted += OnContainerStarted;
-        RunDialogRequested?.Invoke(this, dialogViewModel);
+            dialogViewModel.Reset(initialImage: null, imageEditable: true);
+            dialogViewModel.ContainerStarted += OnContainerStarted;
+        });
     }
 
     private void OnContainerStarted(object? sender, EventArgs e) => _ = LoadAsync();
@@ -284,14 +273,8 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Logs(ContainerItem container)
     {
-        if (_logsDialogFactory is null)
-        {
-            return;
-        }
-
-        ContainerLogsDialogViewModel dialogViewModel = _logsDialogFactory();
-        dialogViewModel.Reset(container.Id, container.Name);
-        LogsDialogRequested?.Invoke(this, dialogViewModel);
+        _dialogService?.Show<ContainerLogsDialogViewModel>(
+            dialogViewModel => dialogViewModel.Reset(container.Id, container.Name));
     }
 
     [RelayCommand]

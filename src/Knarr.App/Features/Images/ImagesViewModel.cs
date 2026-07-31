@@ -10,8 +10,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
 {
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ImagesViewModel> _logger;
-    private readonly Func<PullImageDialogViewModel>? _pullDialogFactory;
-    private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
+    private readonly IDialogService? _dialogService;
     private readonly List<ImageItem> _allImages = [];
     private readonly IDisposable? _refreshSubscription;
 
@@ -20,14 +19,12 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     public ImagesViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ImagesViewModel> logger,
-        Func<PullImageDialogViewModel>? pullDialogFactory = null,
-        Func<RunContainerDialogViewModel>? runDialogFactory = null,
+        IDialogService? dialogService = null,
         IAutoRefreshService? autoRefresh = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
-        _pullDialogFactory = pullDialogFactory;
-        _runDialogFactory = runDialogFactory;
+        _dialogService = dialogService;
         Images = [];
         _ = LoadAsync();
         _refreshSubscription = autoRefresh?.Subscribe(ct => LoadAsync(showLoading: false, ct));
@@ -41,10 +38,6 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     }
 
     public ObservableCollection<ImageItem> Images { get; }
-
-    public event EventHandler<PullImageDialogViewModel>? PullDialogRequested;
-
-    public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
 
     [ObservableProperty]
     public partial string SearchText { get; set; } = string.Empty;
@@ -159,15 +152,11 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Pull(string? initialReference)
     {
-        if (_pullDialogFactory is null)
+        _dialogService?.Show<PullImageDialogViewModel>(dialogViewModel =>
         {
-            return;
-        }
-
-        PullImageDialogViewModel dialogViewModel = _pullDialogFactory();
-        dialogViewModel.Reset(initialReference);
-        dialogViewModel.PullSucceeded += OnPullSucceeded;
-        PullDialogRequested?.Invoke(this, dialogViewModel);
+            dialogViewModel.Reset(initialReference);
+            dialogViewModel.PullSucceeded += OnPullSucceeded;
+        });
     }
 
     private void OnPullSucceeded(object? sender, EventArgs e) => _ = LoadAsync();
@@ -192,15 +181,11 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Run(ImageItem image)
     {
-        if (_runDialogFactory is null)
+        _dialogService?.Show<RunContainerDialogViewModel>(dialogViewModel =>
         {
-            return;
-        }
-
-        RunContainerDialogViewModel dialogViewModel = _runDialogFactory();
-        dialogViewModel.Reset(image.RepoTag, imageEditable: false);
-        dialogViewModel.ContainerStarted += OnContainerStarted;
-        RunDialogRequested?.Invoke(this, dialogViewModel);
+            dialogViewModel.Reset(image.RepoTag, imageEditable: false);
+            dialogViewModel.ContainerStarted += OnContainerStarted;
+        });
     }
 
     private void OnContainerStarted(object? sender, EventArgs e) => _ = LoadAsync();

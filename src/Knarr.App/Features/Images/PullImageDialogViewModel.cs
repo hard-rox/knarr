@@ -7,7 +7,7 @@ namespace Knarr.App.Features.Images;
 public partial class PullImageDialogViewModel(
     IContainerCliProvider cliProvider,
     ILogger<PullImageDialogViewModel> logger)
-    : ViewModelBase
+    : ViewModelBase, IDialogViewModel
 {
     // Pragmatic OCI/distribution reference grammar: optional registry host[:port]/, path, optional
     // :tag, optional @digest. Anchored and compiled for fast, allocation-light validation on input.

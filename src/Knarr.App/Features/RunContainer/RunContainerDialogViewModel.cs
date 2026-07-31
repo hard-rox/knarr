@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.RunContainer;
 
-public partial class RunContainerDialogViewModel : ViewModelBase
+public partial class RunContainerDialogViewModel : ViewModelBase, IDialogViewModel
 {
     private readonly IContainerCliProvider? _cliProvider;
     private readonly ILogger<RunContainerDialogViewModel> _logger;

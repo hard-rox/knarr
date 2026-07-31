@@ -1,7 +1,8 @@
-<Window xmlns="https://github.com/avaloniaui"
+<common:DialogWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Knarr.App.Features.RunContainer"
         xmlns:controls="using:Knarr.App.Controls"
+        xmlns:common="using:Knarr.App.Common"
         x:Class="Knarr.App.Features.RunContainer.RunContainerDialog"
         x:DataType="vm:RunContainerDialogViewModel"
         Title="Run container"
@@ -15,9 +16,9 @@
     <vm:RunContainerDialogViewModel />
   </Design.DataContext>
 
-  <Window.KeyBindings>
+  <common:DialogWindow.KeyBindings>
     <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
-  </Window.KeyBindings>
+  </common:DialogWindow.KeyBindings>
 
   <Grid Margin="20" RowDefinitions="*,Auto" RowSpacing="14">
 
@@ -224,7 +225,7 @@
                  TextWrapping="Wrap"
                  Foreground="{DynamicResource TextDimBrush}" />
 
-      <ProgressBar IsIndeterminate="True"
+      <ProgressBar IsIndeterminate="{Binding IsRunning}"
                    IsVisible="{Binding IsRunning}"
                    Foreground="{DynamicResource AccentBrush}" />
 
@@ -247,4 +248,4 @@
     </StackPanel>
 
   </Grid>
-</Window>
+</common:DialogWindow>

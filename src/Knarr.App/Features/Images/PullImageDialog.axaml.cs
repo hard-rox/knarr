@@ -1,35 +1,6 @@
-using Avalonia.Controls;
-
 namespace Knarr.App.Features.Images;
 
-public partial class PullImageDialog : Window
+public partial class PullImageDialog : DialogWindow
 {
-    private PullImageDialogViewModel? _viewModel;
-
-    public PullImageDialog()
-    {
-        InitializeComponent();
-        DataContextChanged += OnDataContextChanged;
-        Closed += OnClosed;
-    }
-
-    private void OnDataContextChanged(object? sender, EventArgs e)
-    {
-        _viewModel?.CloseRequested -= OnCloseRequested;
-
-        _viewModel = DataContext as PullImageDialogViewModel;
-
-        _viewModel?.CloseRequested += OnCloseRequested;
-    }
-
-    private void OnCloseRequested(object? sender, EventArgs e) => Close();
-
-    private void OnClosed(object? sender, EventArgs e)
-    {
-        _viewModel?.CloseRequested -= OnCloseRequested;
-        _viewModel = null;
-
-        DataContextChanged -= OnDataContextChanged;
-        Closed -= OnClosed;
-    }
+    public PullImageDialog() => InitializeComponent();
 }

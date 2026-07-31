@@ -1,7 +1,8 @@
-<Window xmlns="https://github.com/avaloniaui"
+<common:DialogWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Knarr.App.Features.Containers.ContainerLogs"
         xmlns:controls="using:Knarr.App.Controls"
+        xmlns:common="using:Knarr.App.Common"
         x:Class="Knarr.App.Features.Containers.ContainerLogs.ContainerLogsDialog"
         x:DataType="vm:ContainerLogsDialogViewModel"
         Title="Container logs"
@@ -15,9 +16,9 @@
     <vm:ContainerLogsDialogViewModel />
   </Design.DataContext>
 
-  <Window.KeyBindings>
+  <common:DialogWindow.KeyBindings>
     <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
-  </Window.KeyBindings>
+  </common:DialogWindow.KeyBindings>
 
   <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
 
@@ -82,4 +83,4 @@
     </StackPanel>
 
   </Grid>
-</Window>
+</common:DialogWindow>

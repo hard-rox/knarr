@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
 
             collection.AddSingleton<IThemeService, ThemeService>();
             collection.AddSingleton<IAutoRefreshService, AutoRefreshService>();
+            collection.AddSingleton<IDialogService, DialogService>();
 
             collection.AddContainerServices();
 
@@ -32,19 +33,11 @@ public static class ServiceCollectionExtensions
             collection.AddTransient<ImagesViewModel>();
             collection.AddTransient<SettingsViewModel>();
 
-            // Dialog view models are resolved per-open; ImagesViewModel takes a factory so each
-            // pull dialog starts as a fresh, independently-scoped session.
+            // Dialog view models are transient so each open starts an independently-scoped session;
+            // IDialogService resolves them on demand.
             collection.AddTransient<PullImageDialogViewModel>();
-            collection.AddTransient<Func<PullImageDialogViewModel>>(sp =>
-                sp.GetRequiredService<PullImageDialogViewModel>);
-
             collection.AddTransient<RunContainerDialogViewModel>();
-            collection.AddTransient<Func<RunContainerDialogViewModel>>(sp =>
-                sp.GetRequiredService<RunContainerDialogViewModel>);
-
             collection.AddTransient<ContainerLogsDialogViewModel>();
-            collection.AddTransient<Func<ContainerLogsDialogViewModel>>(sp =>
-                sp.GetRequiredService<ContainerLogsDialogViewModel>);
 
             collection.AddTransient<SidebarViewModel>();
             collection.AddTransient<MainWindowViewModel>();
