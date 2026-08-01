@@ -5,7 +5,7 @@ using Serilog;
 
 namespace Knarr.App;
 
-sealed class Program
+internal sealed class Program
 {
     private const int _attachParentProcess = -1;
 
@@ -21,7 +21,7 @@ sealed class Program
         {
             Log.Information("Knarr starting up");
             BuildAvaloniaApp()
-            .StartWithClassicDesktopLifetime(args);
+                .StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
         {
@@ -44,13 +44,9 @@ sealed class Program
             .WithInterFont()
             .LogToTrace();
 
-    /// <summary>
-    /// Builds the Serilog logger backing <see cref="Microsoft.Extensions.Logging"/>. Writes to the
-    /// console and a daily rolling file under the per-user local application data folder.
-    /// </summary>
-    private static Serilog.ILogger CreateLogger()
+    private static ILogger CreateLogger()
     {
-        var logDirectory = Path.Combine(
+        string logDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Knarr",
             "logs");
@@ -58,7 +54,6 @@ sealed class Program
         return new LoggerConfiguration()
             .MinimumLevel.Debug()
             .Enrich.FromLogContext()
-            .WriteTo.Console(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
             .WriteTo.File(
                 Path.Combine(logDirectory, "knarr-.log"),
                 rollingInterval: RollingInterval.Day,
@@ -67,11 +62,6 @@ sealed class Program
             .CreateLogger();
     }
 
-    /// <summary>
-    /// A <c>WinExe</c> has no console of its own, so the Serilog console sink is invisible when the
-    /// app is launched from a terminal. On Windows this attaches to the parent process's console
-    /// (when one exists) and rebinds stdout so console logs become visible. No-op elsewhere.
-    /// </summary>
     private static void AttachParentConsole()
     {
         if (!OperatingSystem.IsWindows())

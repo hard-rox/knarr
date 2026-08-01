@@ -5,14 +5,14 @@
              x:DataType="vm:DashboardViewModel">
 
     <Design.DataContext>
-        <vm:DashboardViewModel/>
+        <vm:DashboardViewModel />
     </Design.DataContext>
 
-    <Grid>
+    <Panel>
         <TextBlock Text="Dashboard"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   Foreground="{DynamicResource TextBrush}"/>
-    </Grid>
+                   Foreground="{DynamicResource TextBrush}" />
+    </Panel>
 
 </UserControl>

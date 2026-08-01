@@ -4,11 +4,6 @@ using System.Text.Json;
 
 namespace Knarr.Service.WslcCli;
 
-/// <summary>
-/// <see cref="IContainerCliProvider"/> backed by the <c>wslc</c> CLI on Windows. Supplies the
-/// CLI-specific command verbs and JSON parsing; all process execution and formatting live in
-/// <see cref="ContainerCliProviderBase"/>. Every method maps 1:1 onto a single <c>wslc</c> invocation.
-/// </summary>
 internal sealed class WslcCliProvider(ILogger<WslcCliProvider> logger)
     : ContainerCliProviderBase(logger)
 {
@@ -25,6 +20,8 @@ internal sealed class WslcCliProvider(ILogger<WslcCliProvider> logger)
     protected override string[] RemoveImageCommand => ["rmi"];
 
     protected override string[] RunContainerCommand => ["run"];
+
+    protected override string[] LogsCommand => ["logs"];
 
     protected override IReadOnlyList<Container> ParseContainersCore(string json) => ParseContainers(json);
 

@@ -4,9 +4,6 @@ using Avalonia.Controls.Primitives;
 
 namespace Knarr.App.Controls;
 
-/// <summary>
-/// Visual status conveyed by a <see cref="Pill"/>. Drives the control's colour via pseudo-classes.
-/// </summary>
 public enum PillStatus
 {
     Neutral,

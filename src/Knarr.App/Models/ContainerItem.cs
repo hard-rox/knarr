@@ -5,15 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using Controls;
 using Knarr.Service.Models;
 
-/// <summary>
-/// A single container row shown in the Containers feature. Wraps a service <see cref="Container"/>
-/// record and adds UI-only concerns such as selection state and display mapping.
-/// </summary>
 public sealed partial class ContainerItem : ObservableObject
 {
-    /// <summary>Whether the row is currently ticked for a bulk (multiselect) action.</summary>
-    [ObservableProperty]
-    private bool _isSelected;
+    [ObservableProperty] private bool _isSelected;
 
     public ContainerItem()
     {
@@ -44,7 +38,6 @@ public sealed partial class ContainerItem : ObservableObject
 
     public bool IsRunning => Status == ContainerState.Running;
 
-    /// <summary>Short 12-character id, matching the CLI's abbreviated form.</summary>
     public string ShortId => Id.Length > 12 ? Id[..12] : Id;
 
     public string StatusText => Status switch

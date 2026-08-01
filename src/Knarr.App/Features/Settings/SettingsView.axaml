@@ -5,14 +5,14 @@
              x:DataType="vm:SettingsViewModel">
 
     <Design.DataContext>
-        <vm:SettingsViewModel/>
+        <vm:SettingsViewModel />
     </Design.DataContext>
 
-    <Grid>
+    <Panel>
         <TextBlock Text="Settings"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   Foreground="{DynamicResource TextBrush}"/>
-    </Grid>
+                   Foreground="{DynamicResource TextBrush}" />
+    </Panel>
 
 </UserControl>

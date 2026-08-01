@@ -14,17 +14,17 @@ public interface IContainerSystemService
     /// Reads the current system status (<c>system status --format json</c>). Never throws: an
     /// unreachable CLI or unparsable payload yields <see cref="ContainerSystemStatus.Unknown"/>.
     /// </summary>
-    Task<ContainerSystemStatus> GetStatusAsync(CancellationToken cancellationToken = default);
+    public Task<ContainerSystemStatus> GetStatusAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Starts the container system services (<c>system start</c>). Throws
     /// <see cref="CliCommandException"/> when the command exits non-zero.
     /// </summary>
-    Task StartAsync(CancellationToken cancellationToken = default);
+    public Task StartAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Stops the container system services and deregisters them (<c>system stop</c>). Throws
     /// <see cref="CliCommandException"/> when the command exits non-zero.
     /// </summary>
-    Task StopAsync(CancellationToken cancellationToken = default);
+    public Task StopAsync(CancellationToken cancellationToken = default);
 }

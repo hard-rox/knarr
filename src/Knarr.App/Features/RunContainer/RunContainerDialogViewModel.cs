@@ -6,13 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.RunContainer;
 
-/// <summary>
-/// View model for the modal "run container" dialog. Collects run options (image, <c>--detach</c>,
-/// <c>--rm</c>, environment variables, volume mounts, optional name), surfaces a live read-only
-/// preview of the exact command that will run, and — when not detached — streams the container's
-/// interactive logs into a terminal panel. Each open starts a fresh session via <see cref="Reset"/>.
-/// </summary>
-public partial class RunContainerDialogViewModel : ViewModelBase
+public partial class RunContainerDialogViewModel : ViewModelBase, IDialogViewModel
 {
     private readonly IContainerCliProvider? _cliProvider;
     private readonly ILogger<RunContainerDialogViewModel> _logger;
@@ -34,89 +28,56 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         UpdateCommandPreview();
     }
 
-    /// <summary>Design-time constructor; renders the dialog without a container CLI.</summary>
     public RunContainerDialogViewModel()
         : this(null!, NullLogger<RunContainerDialogViewModel>.Instance)
     {
     }
 
-    /// <summary>Raised when the dialog should close.</summary>
     public event EventHandler? CloseRequested;
 
-    /// <summary>Raised after a run starts successfully so the host can refresh its lists.</summary>
     public event EventHandler? ContainerStarted;
 
-    /// <summary>The image reference to run (e.g. <c>docker.io/library/alpine:3.20</c>).</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
     public partial string ImageReference { get; set; } = string.Empty;
 
-    /// <summary>Whether the container runs in the background (<c>--detach</c>). Defaults to true.</summary>
-    [ObservableProperty]
-    public partial bool Detach { get; set; } = true;
+    [ObservableProperty] public partial bool Detach { get; set; } = true;
 
-    /// <summary>Whether the container is removed automatically after it exits (<c>--rm</c>).</summary>
-    [ObservableProperty]
-    public partial bool RemoveOnExit { get; set; }
+    [ObservableProperty] public partial bool RemoveOnExit { get; set; }
 
-    /// <summary>Optional container name (<c>--name</c>).</summary>
-    [ObservableProperty]
-    public partial string ContainerName { get; set; } = string.Empty;
+    [ObservableProperty] public partial string ContainerName { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Whether the image reference can be edited. False when the dialog is opened from the Images
-    /// view (the image is fixed to the selected row); true when opened from the Containers view.
-    /// </summary>
-    [ObservableProperty]
-    public partial bool IsImageEditable { get; set; } = true;
+    [ObservableProperty] public partial bool IsImageEditable { get; set; } = true;
 
-    /// <summary>True while a run is in flight.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
     [NotifyPropertyChangedFor(nameof(CanAddPort))]
     public partial bool IsRunning { get; set; }
 
-    /// <summary>Human-readable status shown to the user (success / error / canceled).</summary>
-    [ObservableProperty]
-    public partial string? StatusMessage { get; set; }
+    [ObservableProperty] public partial string? StatusMessage { get; set; }
 
-    /// <summary>The exact command that will run, recomputed live as inputs change.</summary>
-    [ObservableProperty]
-    public partial string CommandPreview { get; set; } = string.Empty;
+    [ObservableProperty] public partial string CommandPreview { get; set; } = string.Empty;
 
-    /// <summary>Drives the terminal panel accent while foreground logs stream.</summary>
-    [ObservableProperty]
-    public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
+    [ObservableProperty] public partial TerminalState TerminalState { get; set; } = TerminalState.Idle;
 
-    /// <summary>Editable environment-variable rows; starts empty, grown via <see cref="AddEnvironmentVariableCommand"/>.</summary>
     public ObservableCollection<EnvironmentVariableEntry> EnvironmentVariables { get; }
 
-    /// <summary>Editable volume-mount rows; starts empty, grown via <see cref="AddVolumeCommand"/>.</summary>
     public ObservableCollection<VolumeMountEntry> Volumes { get; }
 
-    /// <summary>Editable port-mapping rows; starts empty, grown via <see cref="AddPortCommand"/>.</summary>
     public ObservableCollection<PortMappingEntry> Ports { get; }
 
-    /// <summary>When true, publishes all exposed ports to random host ports (<c>--publish-all</c>).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanAddPort))]
     public partial bool PublishAllPorts { get; set; }
 
-    /// <summary>Whether the current platform supports publishing all ports via <c>--publish-all</c>.</summary>
     public bool SupportsPublishAllPorts => _cliProvider?.SupportsPublishAllPorts ?? true;
 
-    /// <summary>Whether a new port-mapping row may be added (disabled while running or publishing all).</summary>
     public bool CanAddPort => !IsRunning && (!PublishAllPorts || !SupportsPublishAllPorts);
 
-    /// <summary>Live transcript of the streamed foreground run (command / stdout / stderr / exit).</summary>
     public ObservableCollection<CliOutputLine> OutputLines { get; }
 
     private bool CanRun => !IsRunning && !string.IsNullOrWhiteSpace(ImageReference);
 
-    /// <summary>
-    /// Resets the dialog to a fresh session, seeding the image reference and whether it may be
-    /// edited (<paramref name="imageEditable"/> is false when launched from the Images view).
-    /// </summary>
     public void Reset(string? initialImage, bool imageEditable = true)
     {
         RequestCancellation();
@@ -206,12 +167,9 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>
-    /// Requests cancellation of the in-flight run on a background thread. CliWrap runs its graceful
-    /// (Ctrl+C) cancellation handler synchronously inside <see cref="CancellationTokenSource.Cancel()"/>;
-    /// on Windows that console signalling is blocking, so cancelling on the UI thread freezes the app.
-    /// Offloading keeps the UI responsive while the process is interrupted.
-    /// </summary>
+    // CliWrap runs its graceful (Ctrl+C) cancellation handler synchronously inside
+    // CancellationTokenSource.Cancel(); on Windows that console signalling is blocking, so cancelling
+    // on the UI thread would freeze the app. Offload to a background thread instead.
     private void RequestCancellation()
     {
         CancellationTokenSource? cts = _cts;
@@ -235,12 +193,12 @@ public partial class RunContainerDialogViewModel : ViewModelBase
 
     private async Task RunDetachedAsync(RunContainerOptions options)
     {
-        var started = false;
+        bool started = false;
         try
         {
-            var output = await _cliProvider!.RunContainerAsync(options, _cts!.Token).ConfigureAwait(true);
+            string output = await _cliProvider!.RunContainerAsync(options, _cts!.Token).ConfigureAwait(true);
             started = true;
-            var id = output.Trim();
+            string id = output.Trim();
             StatusMessage = string.IsNullOrEmpty(id) ? "Container started." : $"Started container {id}.";
             _logger.LogInformation("Ran container from {Image} (detached)", options.ImageReference);
         }
@@ -273,13 +231,13 @@ public partial class RunContainerDialogViewModel : ViewModelBase
         OutputLines.Clear();
         TerminalState = TerminalState.Running;
 
-        var started = false;
+        bool started = false;
         int? exitCode = null;
         try
         {
             await foreach (CliOutputLine line in _cliProvider!
-                .RunContainerStreamingAsync(options, _cts!.Token)
-                .ConfigureAwait(true))
+                               .RunContainerStreamingAsync(options, _cts!.Token)
+                               .ConfigureAwait(true))
             {
                 OutputLines.Add(line);
                 if (line.Kind == CliOutputKind.Exit)

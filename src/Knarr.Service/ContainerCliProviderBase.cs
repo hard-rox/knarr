@@ -44,8 +44,23 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>Command segment that runs a container from an image (e.g. <c>["run"]</c>).</summary>
     protected abstract string[] RunContainerCommand { get; }
 
+    /// <summary>Command segment that streams a container's logs (e.g. <c>["logs"]</c>).</summary>
+    protected abstract string[] LogsCommand { get; }
+
+    /// <summary>Flag that limits the log output to the last N lines (e.g. <c>--tail</c> or <c>-n</c>).</summary>
+    protected virtual string TailLinesFlag => "--tail";
+
     /// <inheritdoc />
     public virtual bool SupportsPublishAllPorts => true;
+
+    /// <inheritdoc />
+    public virtual bool SupportsLogTimestamps => true;
+
+    /// <inheritdoc />
+    public virtual bool SupportsLogTimeRange => true;
+
+    /// <inheritdoc />
+    public virtual bool SupportsBootLogs => false;
 
     /// <summary>Parses the <c>list --all --format JSON</c> payload into shaped containers.</summary>
     protected abstract IReadOnlyList<Container> ParseContainersCore(string json);
@@ -55,7 +70,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     public async Task<IReadOnlyList<Container>> ListContainersAsync(CancellationToken cancellationToken = default)
     {
-        var json = await RunAsync(cancellationToken, "list", "--all", "--format", "json").ConfigureAwait(false);
+        string json = await RunAsync(cancellationToken, "list", "--all", "--format", "json").ConfigureAwait(false);
         return ParseContainersCore(json);
     }
 
@@ -100,13 +115,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     public IAsyncEnumerable<CliOutputLine> RunContainerStreamingAsync(RunContainerOptions options, CancellationToken cancellationToken = default)
         => RunStreamingAsync(cancellationToken, BuildRunArgs(options));
 
-    /// <summary>
-    /// Translates <paramref name="options"/> into the ordered <c>run</c> argument list: the run
-    /// verb, boolean flags (<c>--detach</c>/<c>--rm</c>), optional <c>--name</c>, each environment
-    /// variable (<c>--env KEY=VALUE</c>), volume (<c>--volume SOURCE:TARGET</c>) and port mapping
-    /// (<c>--publish HOST:CONTAINER</c>), and finally the image reference. Blank entries are skipped
-    /// so an empty in-progress row never emits an argument.
-    /// </summary>
+    // Blank entries (e.g. an empty in-progress row) are skipped so they never emit an argument.
     private string[] BuildRunArgs(RunContainerOptions options)
     {
         List<string> args = [.. RunContainerCommand];
@@ -169,9 +178,56 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
         return [.. args];
     }
 
+    public IAsyncEnumerable<CliOutputLine> StreamContainerLogsAsync(ContainerLogsOptions options, CancellationToken cancellationToken = default)
+        => RunStreamingAsync(cancellationToken, BuildLogsArgs(options));
+
+    internal string[] BuildLogsArgs(ContainerLogsOptions options)
+    {
+        List<string> args = [.. LogsCommand];
+
+        if (options.Boot && SupportsBootLogs)
+        {
+            args.Add("--boot");
+        }
+
+        if (options.Follow)
+        {
+            args.Add("--follow");
+        }
+
+        if (options.Timestamps && SupportsLogTimestamps)
+        {
+            args.Add("--timestamps");
+        }
+
+        if (options.TailLines is { } tail)
+        {
+            args.Add(TailLinesFlag);
+            args.Add(tail.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (SupportsLogTimeRange && options.Since is { } since)
+        {
+            args.Add("--since");
+            args.Add(FormatTimestamp(since));
+        }
+
+        if (SupportsLogTimeRange && options.Until is { } until)
+        {
+            args.Add("--until");
+            args.Add(FormatTimestamp(until));
+        }
+
+        args.Add(options.ContainerId.Trim());
+        return [.. args];
+    }
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+
     public async Task<IReadOnlyList<ContainerImage>> ListImagesAsync(CancellationToken cancellationToken = default)
     {
-        var json = await RunAsync(cancellationToken, [.. ListImagesCommand, "--format", "json"]).ConfigureAwait(false);
+        string json = await RunAsync(cancellationToken, [.. ListImagesCommand, "--format", "json"]).ConfigureAwait(false);
         return ParseImagesCore(json);
     }
 
@@ -195,7 +251,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     public async Task<PlatformInfo> GetPlatformInfoAsync(CancellationToken cancellationToken = default)
     {
-        var (version, reachable) = await ProbeVersionAsync(cancellationToken).ConfigureAwait(false);
+        (string version, bool reachable) = await ProbeVersionAsync(cancellationToken).ConfigureAwait(false);
         return new PlatformInfo
         {
             PlatformName = PlatformName,
@@ -233,7 +289,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     private async Task<string> RunAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        var command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{Executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
         BufferedCommandResult result = await Cli.Wrap(Executable)
@@ -263,7 +319,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
         [EnumeratorCancellation] CancellationToken cancellationToken,
         params string[] arguments)
     {
-        var commandLine = $"{Executable} {string.Join(' ', arguments)}";
+        string commandLine = $"{Executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command (streaming): {Command}", commandLine);
         yield return CliOutputLine.ForCommand(commandLine);
 
@@ -304,7 +360,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     private static async Task RunBatchLoopAsync(Func<string, Task> action, IReadOnlyList<string> ids)
     {
         List<CliCommandException> failures = [];
-        foreach (var id in ids)
+        foreach (string id in ids)
         {
             try
             {
@@ -326,7 +382,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     protected static string StripDigestAlgorithm(string id)
     {
-        var colon = id.IndexOf(':');
+        int colon = id.IndexOf(':');
         return colon >= 0 ? id[(colon + 1)..] : id;
     }
 
@@ -339,7 +395,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
         string[] units = ["B", "KB", "MB", "GB", "TB"];
         double size = bytes;
-        var unit = 0;
+        int unit = 0;
         while (size >= 1024 && unit < units.Length - 1)
         {
             size /= 1024;
@@ -357,7 +413,7 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
             return $"v{match.Value}";
         }
 
-        var firstLine = output
+        string? firstLine = output
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .FirstOrDefault();
 

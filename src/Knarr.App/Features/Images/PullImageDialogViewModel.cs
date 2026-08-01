@@ -4,16 +4,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Knarr.App.Features.Images;
 
-/// <summary>
-/// View model for the modal image-pull dialog. Runs a single buffered pull command (the CLI does
-/// not stream output incrementally), gates the Pull action behind strict OCI-style reference
-/// validation, and supports cancellation. Stays open showing a status message after the command
-/// completes. Each dialog open starts a fresh session via <see cref="Reset"/>.
-/// </summary>
 public partial class PullImageDialogViewModel(
     IContainerCliProvider cliProvider,
     ILogger<PullImageDialogViewModel> logger)
-    : ViewModelBase
+    : ViewModelBase, IDialogViewModel
 {
     // Pragmatic OCI/distribution reference grammar: optional registry host[:port]/, path, optional
     // :tag, optional @digest. Anchored and compiled for fast, allocation-light validation on input.
@@ -27,39 +21,30 @@ public partial class PullImageDialogViewModel(
 
     private CancellationTokenSource? _cts;
 
-    /// <summary>Design-time constructor.</summary>
     public PullImageDialogViewModel() : this(null!, NullLogger<PullImageDialogViewModel>.Instance)
     {
     }
 
-    /// <summary>Raised after a pull completes successfully so the host can refresh its image list.</summary>
     public event EventHandler? PullSucceeded;
 
-    /// <summary>Raised when the dialog should close.</summary>
     public event EventHandler? CloseRequested;
 
-    /// <summary>The image reference the user intends to pull (e.g. <c>docker.io/library/alpine:3.20</c>).</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(PullCommand))]
     public partial string ImageReference { get; set; } = string.Empty;
 
-    /// <summary>True while a pull is in flight.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(PullCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     public partial bool IsRunning { get; set; }
 
-    /// <summary>Human-readable status shown to the user (in progress / success / error / canceled).</summary>
-    [ObservableProperty]
-    public partial string? StatusMessage { get; set; }
+    [ObservableProperty] public partial string? StatusMessage { get; set; }
 
-    /// <summary>True when the current <see cref="ImageReference"/> is a syntactically valid image reference.</summary>
     private bool CanPull =>
         !IsRunning
         && !string.IsNullOrWhiteSpace(ImageReference)
         && ReferenceRegex().IsMatch(ImageReference.Trim());
 
-    /// <summary>Resets the dialog to a fresh session, optionally seeding the reference input.</summary>
     public void Reset(string? initialReference)
     {
         _cts?.Cancel();
@@ -74,14 +59,14 @@ public partial class PullImageDialogViewModel(
     [RelayCommand(CanExecute = nameof(CanPull))]
     private async Task Pull()
     {
-        var reference = ImageReference.Trim();
+        string reference = ImageReference.Trim();
 
         IsRunning = true;
         StatusMessage = $"Pulling {reference}\u2026";
         logger.LogInformation("Pulling image {Reference}", reference);
 
         _cts = new CancellationTokenSource();
-        var succeeded = false;
+        bool succeeded = false;
         try
         {
             await cliProvider.PullImageAsync(reference, _cts.Token).ConfigureAwait(true);

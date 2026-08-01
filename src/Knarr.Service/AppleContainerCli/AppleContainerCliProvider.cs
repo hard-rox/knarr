@@ -3,12 +3,6 @@ using System.Text.Json;
 
 namespace Knarr.Service.AppleContainerCli;
 
-/// <summary>
-/// <see cref="IContainerCliProvider"/> backed by Apple's first-party <c>container</c> CLI on macOS.
-/// Supplies the CLI-specific command verbs and JSON parsing; all process execution and formatting
-/// live in <see cref="ContainerCliProviderBase"/>. Every method maps 1:1 onto a single
-/// <c>container</c> invocation.
-/// </summary>
 internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvider> logger)
     : ContainerCliProviderBase(logger)
 {
@@ -26,7 +20,17 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     protected override string[] RunContainerCommand => ["run"];
 
+    protected override string[] LogsCommand => ["logs"];
+
     public override bool SupportsPublishAllPorts => false;
+
+    public override bool SupportsLogTimestamps => false;
+
+    public override bool SupportsLogTimeRange => false;
+
+    public override bool SupportsBootLogs => true;
+
+    protected override string TailLinesFlag => "-n";
 
     protected override IReadOnlyList<Container> ParseContainersCore(string json) => ParseContainers(json);
 
@@ -60,7 +64,7 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     private static ContainerImage MapImage(AppleImageElement element)
     {
-        var (repository, tag) = SplitReference(element.Configuration.Name);
+        (string repository, string tag) = SplitReference(element.Configuration.Name);
         return new ContainerImage
         {
             Repository = repository,
@@ -97,8 +101,8 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     private static (string Repository, string Tag) SplitReference(string reference)
     {
-        var lastColon = reference.LastIndexOf(':');
-        var lastSlash = reference.LastIndexOf('/');
+        int lastColon = reference.LastIndexOf(':');
+        int lastSlash = reference.LastIndexOf('/');
 
         // A colon only denotes a tag when it appears after the final path separator; otherwise it is
         // a registry port (e.g. "localhost:5000/img") and the reference carries no explicit tag.

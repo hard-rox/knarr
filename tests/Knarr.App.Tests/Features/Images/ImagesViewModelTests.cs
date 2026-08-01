@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Knarr.App.Common;
 using Knarr.App.Features.Images;
 using Knarr.App.Models;
+using Knarr.App.Services;
 using Knarr.Service;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,6 +32,15 @@ public class ImagesViewModelTests
         provider.ListImagesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(images));
         return provider;
+    }
+
+    private static IDialogService DialogServiceFor<TViewModel>(TViewModel dialogViewModel)
+        where TViewModel : class, IDialogViewModel
+    {
+        IDialogService dialogService = Substitute.For<IDialogService>();
+        dialogService.When(d => d.Show(Arg.Any<Action<TViewModel>>()))
+            .Do(call => call.Arg<Action<TViewModel>>()!(dialogViewModel));
+        return dialogService;
     }
 
     private static ImagesViewModel CreateViewModel() => new(ProviderWith(_sampleImages), NullLogger<ImagesViewModel>.Instance);
@@ -93,18 +104,16 @@ public class ImagesViewModelTests
     }
 
     [Fact]
-    public void Pull_WithFactory_RaisesPullDialogRequestedWithEmptyReference()
+    public void Pull_ShowsDialog_WithEmptyReference()
     {
         IContainerCliProvider provider = ProviderWith(_sampleImages);
         PullImageDialogViewModel dialogVm = new(provider, NullLogger<PullImageDialogViewModel>.Instance);
-        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, () => dialogVm);
-
-        PullImageDialogViewModel? requested = null;
-        vm.PullDialogRequested += (_, d) => requested = d;
+        IDialogService dialogService = DialogServiceFor(dialogVm);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, dialogService);
 
         vm.PullCommand.Execute(null);
 
-        Assert.Same(dialogVm, requested);
+        dialogService.Received(1).Show(Arg.Any<Action<PullImageDialogViewModel>>());
         Assert.Equal(string.Empty, dialogVm.ImageReference);
     }
 
@@ -113,7 +122,7 @@ public class ImagesViewModelTests
     {
         IContainerCliProvider provider = ProviderWith(_sampleImages);
         PullImageDialogViewModel dialogVm = new(provider, NullLogger<PullImageDialogViewModel>.Instance);
-        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, () => dialogVm);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, DialogServiceFor(dialogVm));
 
         vm.PullCommand.Execute("redis");
 

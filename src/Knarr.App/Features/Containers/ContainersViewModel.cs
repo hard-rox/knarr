@@ -1,5 +1,6 @@
-using Avalonia.Threading;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.RunContainer;
+using Knarr.App.Services;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -7,39 +8,32 @@ using Container = Knarr.Service.Models.Container;
 
 namespace Knarr.App.Features.Containers;
 
-/// <summary>
-/// View model for the Containers feature. Presents the list of containers and exposes the
-/// lifecycle actions, each of which maps 1:1 onto a single CLI command via
-/// <see cref="IContainerCliProvider"/>. Data is loaded from the host container CLI.
-/// </summary>
 public partial class ContainersViewModel : ViewModelBase, IDisposable
 {
-    private static readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
-
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<ContainersViewModel> _logger;
-    private readonly Func<RunContainerDialogViewModel>? _runDialogFactory;
+    private readonly IDialogService? _dialogService;
     private readonly List<ContainerItem> _allContainers = [];
+    private readonly IDisposable? _refreshSubscription;
 
-    private DispatcherTimer? _refreshTimer;
     private bool _loadInFlight;
 
     public ContainersViewModel(
         IContainerCliProvider cliProvider,
         ILogger<ContainersViewModel> logger,
-        Func<RunContainerDialogViewModel>? runDialogFactory = null)
+        IDialogService? dialogService = null,
+        IAutoRefreshService? autoRefresh = null)
     {
         _cliProvider = cliProvider;
         _logger = logger;
-        _runDialogFactory = runDialogFactory;
-        Containers = new ObservableCollection<ContainerItem>();
+        _dialogService = dialogService;
+        Containers = [];
 
         // Kick off the initial load; property updates marshal back to the UI thread.
         _ = LoadAsync();
-        StartAutoRefresh();
+        _refreshSubscription = autoRefresh?.Subscribe(ct => LoadAsync(showLoading: false, ct));
     }
 
-    /// <summary>Design-time constructor; renders an empty list without a container CLI.</summary>
     public ContainersViewModel()
     {
         _cliProvider = null!;
@@ -49,54 +43,36 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<ContainerItem> Containers { get; }
 
-    /// <summary>
-    /// Raised when the run-container dialog should be shown. The view resolves the owner window and
-    /// displays the supplied, already-initialised dialog view model modally.
-    /// </summary>
-    public event EventHandler<RunContainerDialogViewModel>? RunDialogRequested;
-
-    /// <summary>Total number of containers, independent of the current search filter.</summary>
     public int TotalCount => _allContainers.Count;
 
-    /// <summary>Number of running containers.</summary>
     public int RunningCount => _allContainers.Count(c => c.Status == ContainerState.Running);
 
-    /// <summary>Number of stopped (exited) containers.</summary>
     public int StoppedCount => _allContainers.Count(c => c.Status == ContainerState.Exited);
 
-    [ObservableProperty]
-    private string _searchText = string.Empty;
+    [ObservableProperty] private string _searchText = string.Empty;
 
-    [ObservableProperty]
-    private ContainerItem? _selectedContainer;
+    [ObservableProperty] private ContainerItem? _selectedContainer;
 
-    /// <summary>True while a CLI list/refresh is in flight.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoResults))]
     [NotifyPropertyChangedFor(nameof(HasItems))]
     private bool _isLoading;
 
-    /// <summary>Message from the most recent failed CLI action, or null when the last action succeeded.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasNoResults))]
     private string? _errorMessage;
 
-    /// <summary>True when the last CLI action failed and <see cref="ErrorMessage"/> is set.</summary>
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-    /// <summary>True when there are rows to display in the table.</summary>
     public bool HasItems => !IsLoading && !HasError && Containers.Count > 0;
 
-    /// <summary>True when the CLI returned no containers at all (not merely filtered out).</summary>
     public bool IsEmpty => !IsLoading && !HasError && _allContainers.Count == 0;
 
-    /// <summary>True when containers exist but the current search filter matches none.</summary>
     public bool HasNoResults => !IsLoading && !HasError && _allContainers.Count > 0 && Containers.Count == 0;
 
-    /// <summary>Rows currently ticked for a bulk action.</summary>
     public IReadOnlyList<ContainerItem> SelectedContainers =>
         Containers.Where(c => c.IsSelected).ToList();
 
@@ -104,9 +80,6 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 
     public bool HasSelection => SelectedCount > 0;
 
-    /// <summary>
-    /// Header "select all" checkbox state: true/false when uniform, null (indeterminate) when mixed.
-    /// </summary>
     public bool? AllSelected
     {
         get
@@ -116,7 +89,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
                 return false;
             }
 
-            var selected = SelectedCount;
+            int selected = SelectedCount;
             if (selected == 0)
             {
                 return false;
@@ -127,7 +100,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
         set
         {
             // A null assignment comes from the indeterminate state; treat it as "select all".
-            var target = value ?? true;
+            bool target = value ?? true;
             foreach (ContainerItem container in Containers)
             {
                 container.IsSelected = target;
@@ -154,7 +127,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
 
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
-            var term = SearchText.Trim();
+            string term = SearchText.Trim();
             filtered = _allContainers.Where(c =>
                 c.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 c.Image.Contains(term, StringComparison.OrdinalIgnoreCase));
@@ -175,12 +148,8 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(HasNoResults));
     }
 
-    /// <summary>
-    /// Loads (or reloads) the container list from the CLI. Safe to call repeatedly; concurrent
-    /// calls are coalesced. When <paramref name="showLoading"/> is false (background auto-refresh)
-    /// the loading indicator is not toggled, so the table stays visible without flicker. Failures
-    /// are surfaced via <see cref="ErrorMessage"/> and never throw.
-    /// </summary>
+    // Concurrent calls are coalesced; showLoading=false (background auto-refresh) skips the loading
+    // flag so the table stays visible without flicker.
     private async Task LoadAsync(bool showLoading = true, CancellationToken cancellationToken = default)
     {
         if (_loadInFlight)
@@ -246,15 +215,11 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void RunContainer()
     {
-        if (_runDialogFactory is null)
+        _dialogService?.Show<RunContainerDialogViewModel>(dialogViewModel =>
         {
-            return;
-        }
-
-        RunContainerDialogViewModel dialogViewModel = _runDialogFactory();
-        dialogViewModel.Reset(initialImage: null, imageEditable: true);
-        dialogViewModel.ContainerStarted += OnContainerStarted;
-        RunDialogRequested?.Invoke(this, dialogViewModel);
+            dialogViewModel.Reset(initialImage: null, imageEditable: true);
+            dialogViewModel.ContainerStarted += OnContainerStarted;
+        });
     }
 
     private void OnContainerStarted(object? sender, EventArgs e) => _ = LoadAsync();
@@ -306,7 +271,8 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Logs(ContainerItem container)
     {
-        // Logs viewer is a later milestone.
+        _dialogService?.Show<ContainerLogsDialogViewModel>(dialogViewModel =>
+            dialogViewModel.Reset(container.Id, container.Name));
     }
 
     [RelayCommand]
@@ -321,7 +287,6 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
         // Inspect viewer is a later milestone.
     }
 
-    /// <summary>Runs a mutating CLI action, surfacing failures via <see cref="ErrorMessage"/>, then reloads.</summary>
     private async Task ExecuteAndReloadAsync(Func<CancellationToken, Task> action)
     {
         try
@@ -337,28 +302,9 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
         await LoadAsync().ConfigureAwait(true);
     }
 
-    /// <summary>Starts the periodic background refresh of the container list.</summary>
-    private void StartAutoRefresh()
-    {
-        if (_refreshTimer is not null)
-        {
-            return;
-        }
-
-        _refreshTimer = new DispatcherTimer { Interval = _refreshInterval };
-        _refreshTimer.Tick += async (_, _) => await LoadAsync(showLoading: false).ConfigureAwait(true);
-        _refreshTimer.Start();
-        _logger.LogDebug("Containers auto-refresh started ({Interval}s)", _refreshInterval.TotalSeconds);
-    }
-
     public void Dispose()
     {
-        if (_refreshTimer is not null)
-        {
-            _refreshTimer.Stop();
-            _refreshTimer = null;
-            _logger.LogDebug("Containers auto-refresh stopped");
-        }
+        _refreshSubscription?.Dispose();
 
         foreach (ContainerItem item in _allContainers)
         {

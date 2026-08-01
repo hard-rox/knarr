@@ -4,26 +4,26 @@
              xmlns:local="using:Knarr.App"
              x:Name="Knarr"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows the system theme variant. "Dark" or "Light" are other available options. -->
+    <!-- "Default" ThemeVariant follows the system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
-        <local:ViewLocator/>
+        <local:ViewLocator />
     </Application.DataTemplates>
 
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://Knarr.App/Themes/Glass.axaml"/>
-                <ResourceInclude Source="avares://Knarr.App/Themes/Icons.axaml"/>
-                <ResourceInclude Source="avares://Knarr.App/Controls/Pill.axaml"/>
-                <ResourceInclude Source="avares://Knarr.App/Controls/Tile.axaml"/>
-                <ResourceInclude Source="avares://Knarr.App/Controls/TerminalOutputView.axaml"/>
+                <ResourceInclude Source="avares://Knarr.App/Themes/Glass.axaml" />
+                <ResourceInclude Source="avares://Knarr.App/Themes/Icons.axaml" />
+                <ResourceInclude Source="avares://Knarr.App/Controls/Pill.axaml" />
+                <ResourceInclude Source="avares://Knarr.App/Controls/Tile.axaml" />
+                <ResourceInclude Source="avares://Knarr.App/Controls/TerminalOutputView.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
-        <StyleInclude Source="avares://Knarr.App/Themes/Styles.axaml"/>
+        <StyleInclude Source="avares://Knarr.App/Themes/Styles.axaml" />
     </Application.Styles>
 </Application>

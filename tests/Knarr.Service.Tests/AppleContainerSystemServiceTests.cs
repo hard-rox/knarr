@@ -61,7 +61,7 @@ public class AppleContainerSystemServiceTests
     [InlineData("something else", ContainerSystemState.Unknown)]
     public void ParseStatus_MapsStatusStringCaseInsensitively(string status, ContainerSystemState expected)
     {
-        var json = $$"""{ "status": "{{status}}" }""";
+        string json = $$"""{ "status": "{{status}}" }""";
 
         Assert.Equal(expected, AppleContainerSystemService.ParseStatus(json).State);
     }

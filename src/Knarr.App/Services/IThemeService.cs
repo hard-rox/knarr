@@ -1,15 +1,9 @@
 namespace Knarr.App.Services;
 
-/// <summary>Theme preference the user can choose from the menu.</summary>
 public enum AppTheme
 {
-    /// <summary>Follow the operating system setting.</summary>
     System,
-
-    /// <summary>Force the light variant.</summary>
     Light,
-
-    /// <summary>Force the dark variant.</summary>
     Dark,
 }
 
@@ -19,7 +13,7 @@ public enum AppTheme
 /// </summary>
 public interface IThemeService
 {
-    AppTheme CurrentTheme { get; }
+    public AppTheme CurrentTheme { get; }
 
-    void SetTheme(AppTheme theme);
+    public void SetTheme(AppTheme theme);
 }

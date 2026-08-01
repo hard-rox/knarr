@@ -1,4 +1,5 @@
 using Knarr.App.Features.Containers;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
 using Knarr.App.Features.RunContainer;
@@ -11,9 +12,6 @@ using Serilog;
 
 namespace Knarr.App;
 
-/// <summary>
-/// Registers the application's services and view models with the DI container.
-/// </summary>
 public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection collection)
@@ -23,6 +21,8 @@ public static class ServiceCollectionExtensions
             collection.AddLogging(builder => builder.AddSerilog(dispose: true));
 
             collection.AddSingleton<IThemeService, ThemeService>();
+            collection.AddSingleton<IAutoRefreshService, AutoRefreshService>();
+            collection.AddSingleton<IDialogService, DialogService>();
 
             collection.AddContainerServices();
 
@@ -33,15 +33,11 @@ public static class ServiceCollectionExtensions
             collection.AddTransient<ImagesViewModel>();
             collection.AddTransient<SettingsViewModel>();
 
-            // Dialog view models are resolved per-open; ImagesViewModel takes a factory so each
-            // pull dialog starts as a fresh, independently-scoped session.
+            // Dialog view models are transient so each open starts an independently-scoped session;
+            // IDialogService resolves them on demand.
             collection.AddTransient<PullImageDialogViewModel>();
-            collection.AddTransient<Func<PullImageDialogViewModel>>(sp =>
-                sp.GetRequiredService<PullImageDialogViewModel>);
-
             collection.AddTransient<RunContainerDialogViewModel>();
-            collection.AddTransient<Func<RunContainerDialogViewModel>>(sp =>
-                sp.GetRequiredService<RunContainerDialogViewModel>);
+            collection.AddTransient<ContainerLogsDialogViewModel>();
 
             collection.AddTransient<SidebarViewModel>();
             collection.AddTransient<MainWindowViewModel>();

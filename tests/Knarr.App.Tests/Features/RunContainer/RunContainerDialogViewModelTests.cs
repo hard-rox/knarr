@@ -7,7 +7,6 @@ using Knarr.Service;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Xunit;
 
 namespace Knarr.App.Tests.Features.RunContainer;
 
@@ -23,8 +22,8 @@ public class RunContainerDialogViewModelTests
         return new RunContainerDialogViewModel(provider, NullLogger<RunContainerDialogViewModel>.Instance);
     }
 
-    private static string Describe(RunContainerOptions options)
-        => $"{(options.Detach ? "d" : "-")}|{options.ImageReference}|env={options.EnvironmentVariables.Count}|vol={options.Volumes.Count}";
+    private static string Describe(RunContainerOptions? options)
+        => $"{(options is { Detach: true } ? "d" : "-")}|{options.ImageReference}|env={options.EnvironmentVariables.Count}|vol={options.Volumes.Count}";
 
     [Fact]
     public void Defaults_DetachOnRemoveOff()
@@ -125,7 +124,7 @@ public class RunContainerDialogViewModelTests
             .Returns(Task.FromResult("abc123"));
         vm.ImageReference = "alpine:3.20";
 
-        var started = false;
+        bool started = false;
         vm.ContainerStarted += (_, _) => started = true;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -144,7 +143,7 @@ public class RunContainerDialogViewModelTests
             .Returns(Task.FromResult("abc123"));
         vm.ImageReference = "alpine:3.20";
 
-        var closeRequested = false;
+        bool closeRequested = false;
         vm.CloseRequested += (_, _) => closeRequested = true;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -161,7 +160,7 @@ public class RunContainerDialogViewModelTests
             .Returns(Task.FromException<string>(new InvalidOperationException("boom")));
         vm.ImageReference = "alpine:3.20";
 
-        var started = false;
+        bool started = false;
         vm.ContainerStarted += (_, _) => started = true;
 
         await vm.RunCommand.ExecuteAsync(null);
@@ -197,7 +196,7 @@ public class RunContainerDialogViewModelTests
     {
         RunContainerDialogViewModel vm = CreateViewModel(out _);
 
-        var closed = false;
+        bool closed = false;
         vm.CloseRequested += (_, _) => closed = true;
 
         vm.CloseCommand.Execute(null);

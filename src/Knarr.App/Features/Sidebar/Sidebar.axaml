@@ -8,69 +8,69 @@
              x:DataType="vm:SidebarViewModel">
 
     <Design.DataContext>
-        <vm:SidebarViewModel/>
+        <vm:SidebarViewModel />
     </Design.DataContext>
 
     <UserControl.Styles>
         <!-- Collapsible sidebar: animates between the icon rail and the full panel -->
         <Style Selector="Border.sidebar">
-            <Setter Property="Width" Value="64"/>
+            <Setter Property="Width" Value="64" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <DoubleTransition Property="Width" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Width" Duration="0:0:0.18" Easing="CubicEaseOut" />
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="Border.sidebar.expanded">
-            <Setter Property="Width" Value="240"/>
+            <Setter Property="Width" Value="240" />
         </Style>
 
         <!-- Navigation icons -->
         <Style Selector="PathIcon.nav-icon">
-            <Setter Property="Width" Value="18"/>
-            <Setter Property="Height" Value="18"/>
-            <Setter Property="Foreground" Value="{Binding $parent[ListBoxItem].Foreground}"/>
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Foreground" Value="{Binding $parent[ListBoxItem].Foreground}" />
         </Style>
 
         <!-- Sidebar navigation list -->
         <Style Selector="ListBox.nav">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem">
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected">
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
 
         <!-- In collapsed mode, nav items behave like round icon buttons. -->
         <Style Selector="ListBox.nav.collapsed ListBoxItem">
-            <Setter Property="Width" Value="36"/>
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="CornerRadius" Value="18"/>
-            <Setter Property="Background" Value="{DynamicResource IconButtonIdleBrush}"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Background" Value="{DynamicResource IconButtonIdleBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
         <Style Selector="ListBox.nav.collapsed ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+            <Setter Property="CornerRadius" Value="18" />
         </Style>
     </UserControl.Styles>
 
@@ -94,7 +94,7 @@
                     <Border Width="36" Height="36" CornerRadius="11"
                             Background="White" Padding="4">
                         <Image Source="avares://Knarr.App/Assets/knarr-logo.png"
-                               Stretch="Uniform"/>
+                               Stretch="Uniform" />
                     </Border>
                 </Button>
                 <StackPanel Grid.Column="1"
@@ -104,10 +104,10 @@
                     <TextBlock Text="knǫrr"
                                FontSize="18"
                                FontWeight="Bold"
-                               Foreground="{DynamicResource TextBrush}"/>
+                               Foreground="{DynamicResource TextBrush}" />
                     <TextBlock Text="v1.0.0"
                                FontSize="10"
-                               Foreground="{DynamicResource TextDimBrush}"/>
+                               Foreground="{DynamicResource TextDimBrush}" />
                 </StackPanel>
             </Grid>
 
@@ -121,7 +121,7 @@
                     Command="{Binding ToggleSystemCommand}"
                     ToolTip.Tip="{Binding SystemActionTooltip}"
                     IsVisible="{Binding IsCollapsedSystemControlVisible}">
-                <controls:Pill Status="{Binding SystemPillStatus}"/>
+                <controls:Pill Status="{Binding SystemPillStatus}" />
             </Button>
 
             <!-- Platform + CLI version footer -->
@@ -137,10 +137,10 @@
                     <TextBlock Text="{Binding PlatformName}"
                                FontSize="12"
                                FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextBrush}"/>
+                               Foreground="{DynamicResource TextBrush}" />
                     <TextBlock Text="{Binding CliDisplay}"
                                FontSize="12"
-                               Foreground="{DynamicResource TextDimBrush}"/>
+                               Foreground="{DynamicResource TextDimBrush}" />
 
                     <!-- Container system status + start/stop toggle (macOS only) -->
                     <Grid ColumnDefinitions="*,Auto"
@@ -149,12 +149,13 @@
                         <controls:Pill Grid.Column="0"
                                        Text="{Binding SystemStatusText}"
                                        Status="{Binding SystemPillStatus}"
-                                       ToolTip.Tip="{Binding SystemActionTooltip}"/>
+                                       ToolTip.Tip="{Binding SystemActionTooltip}" />
                         <Button Grid.Column="1"
                                 Classes="icon"
                                 Command="{Binding ToggleSystemCommand}"
                                 ToolTip.Tip="{Binding SystemActionTooltip}">
-                            <PathIcon Data="{Binding SystemActionIcon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
+                            <PathIcon
+                                Data="{Binding SystemActionIcon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}" />
                         </Button>
                     </Grid>
                 </StackPanel>
@@ -167,17 +168,17 @@
                      SelectedItem="{Binding SelectedItem}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="models:NavigationItem">
-                        <Grid>
+                        <Panel>
                             <Grid ColumnDefinitions="18,*,Auto"
                                   IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarExpanded}">
                                 <PathIcon Grid.Column="0"
                                           Classes="nav-icon"
                                           HorizontalAlignment="Center"
-                                          Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
+                                          Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}" />
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding Title}"
                                            Margin="11,0,0,0"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center" />
                                 <Border Grid.Column="2"
                                         Background="{DynamicResource GlassStrongBrush}"
                                         CornerRadius="10"
@@ -186,7 +187,7 @@
                                         IsVisible="{Binding HasBadge}">
                                     <TextBlock Text="{Binding Badge}"
                                                FontSize="11"
-                                               Foreground="{DynamicResource TextDimBrush}"/>
+                                               Foreground="{DynamicResource TextDimBrush}" />
                                 </Border>
                             </Grid>
 
@@ -194,8 +195,8 @@
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
                                       IsVisible="{Binding $parent[ListBox].((vm:SidebarViewModel)DataContext).IsSidebarCollapsed}"
-                                      Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}"/>
-                        </Grid>
+                                      Data="{Binding Icon, Converter={x:Static conv:IconKeyToGeometryConverter.Instance}}" />
+                        </Panel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

@@ -4,10 +4,6 @@ using Avalonia.Controls.Primitives;
 
 namespace Knarr.App.Controls;
 
-/// <summary>
-/// A compact stat card showing a caption and a large value (e.g. "Running" / "3"). Mirrors
-/// <see cref="Pill"/>; the <see cref="Status"/> drives the value colour via pseudo-classes.
-/// </summary>
 public class Tile : TemplatedControl
 {
     public static readonly StyledProperty<string?> LabelProperty =

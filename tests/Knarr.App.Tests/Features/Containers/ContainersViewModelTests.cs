@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Knarr.App.Common;
 using Knarr.App.Features.Containers;
+using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Models;
+using Knarr.App.Services;
 using Knarr.Service;
 using Knarr.Service.Models;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -275,5 +278,23 @@ public class ContainersViewModelTests
 
         Assert.False(vm.IsLoading);
         Assert.True(vm.IsEmpty);
+    }
+
+    [Fact]
+    public void Logs_ShowsLogsDialog_ForSelectedContainer()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleContainers);
+        ContainerLogsDialogViewModel dialogViewModel = new(provider, NullLogger<ContainerLogsDialogViewModel>.Instance);
+        IDialogService dialogService = Substitute.For<IDialogService>();
+        dialogService.When(d => d.Show(Arg.Any<Action<ContainerLogsDialogViewModel>>()))
+            .Do(call => call.Arg<Action<ContainerLogsDialogViewModel>>()!(dialogViewModel));
+        ContainersViewModel vm = new(provider, NullLogger<ContainersViewModel>.Instance, dialogService);
+        ContainerItem running = vm.Containers.First(c => c.IsRunning);
+
+        vm.LogsCommand.Execute(running);
+
+        dialogService.Received(1).Show(Arg.Any<Action<ContainerLogsDialogViewModel>>());
+        Assert.Equal(running.Id, dialogViewModel.ContainerId);
+        Assert.Equal(running.Name, dialogViewModel.ContainerName);
     }
 }

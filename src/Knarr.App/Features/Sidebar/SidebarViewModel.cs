@@ -1,9 +1,9 @@
-using Avalonia.Threading;
 using Knarr.App.Controls;
 using Knarr.App.Features.Containers;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
 using Knarr.App.Features.Settings;
+using Knarr.App.Services;
 using Knarr.Service.Exceptions;
 using Knarr.Service.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,52 +14,50 @@ namespace Knarr.App.Features.Sidebar;
 
 public partial class SidebarViewModel : ViewModelBase
 {
-    private static readonly TimeSpan _badgeRefreshInterval = TimeSpan.FromSeconds(5);
-
-    private readonly IServiceProvider _services;
     private readonly IContainerCliProvider _cliProvider;
     private readonly ILogger<SidebarViewModel> _logger;
+    private readonly IAutoRefreshService? _autoRefresh;
     private readonly NavigationItem _containersItem;
     private readonly NavigationItem _imagesItem;
 
-    /// <summary>
-    /// Controls the host's container system services. Only registered on macOS, so this stays null
-    /// elsewhere and the sidebar's system control is hidden.
-    /// </summary>
+    // Only registered on macOS; stays null elsewhere and the sidebar's system control is hidden.
     private readonly IContainerSystemService? _systemService;
 
-    private DispatcherTimer? _badgeTimer;
+    private IDisposable? _badgeSubscription;
 
     public SidebarViewModel(
         IServiceProvider services,
         IContainerCliProvider cliProvider,
-        ILogger<SidebarViewModel> logger)
+        ILogger<SidebarViewModel> logger,
+        IAutoRefreshService? autoRefresh = null)
     {
-        _services = services;
+        IServiceProvider services1 = services;
         _cliProvider = cliProvider;
         _logger = logger;
-        _systemService = services?.GetService<IContainerSystemService>();
+        _autoRefresh = autoRefresh;
+        _systemService = services.GetService<IContainerSystemService>();
 
         _containersItem = new NavigationItem(
-            "Containers", "CubeRegular", createPage: () => _services.GetRequiredService<ContainersViewModel>());
+            "Containers", "CubeRegular", createPage: () => services1.GetRequiredService<ContainersViewModel>());
         _imagesItem = new NavigationItem(
-            "Images", "CloudRegular", createPage: () => _services.GetRequiredService<ImagesViewModel>());
+            "Images", "CloudRegular", createPage: () => services1.GetRequiredService<ImagesViewModel>());
 
         NavigationItems =
         [
-            new NavigationItem("Dashboard", "BoardRegular", createPage: () => _services.GetRequiredService<DashboardViewModel>()),
+            new NavigationItem("Dashboard", "BoardRegular",
+                createPage: () => services1.GetRequiredService<DashboardViewModel>()),
             _containersItem,
             _imagesItem,
             new NavigationItem("Networks", "GlobeRegular", "3"),
             new NavigationItem("Volumes", "StorageRegular", "5"),
             new NavigationItem("Registries", "LibraryRegular"),
-            new NavigationItem("Settings", "SettingsRegular", createPage: () => _services.GetRequiredService<SettingsViewModel>()),
+            new NavigationItem("Settings", "SettingsRegular",
+                createPage: () => services1.GetRequiredService<SettingsViewModel>()),
         ];
 
         SelectedItem = NavigationItems[0];
     }
 
-    /// <summary>Design-time constructor; renders navigation without a container CLI.</summary>
     public SidebarViewModel()
         : this(null!, null!, NullLogger<SidebarViewModel>.Instance)
     {
@@ -67,8 +65,7 @@ public partial class SidebarViewModel : ViewModelBase
 
     public ObservableCollection<NavigationItem> NavigationItems { get; }
 
-    [ObservableProperty]
-    private NavigationItem? _selectedItem;
+    [ObservableProperty] private NavigationItem? _selectedItem;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSidebarCollapsed))]
@@ -77,8 +74,7 @@ public partial class SidebarViewModel : ViewModelBase
 
     public bool IsSidebarCollapsed => !IsSidebarExpanded;
 
-    [ObservableProperty]
-    private string _platformName = "Windows";
+    [ObservableProperty] private string _platformName = "Windows";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CliDisplay))]
@@ -88,15 +84,12 @@ public partial class SidebarViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CliDisplay))]
     private string _cliVersion = "detecting\u2026";
 
-    [ObservableProperty]
-    private bool _isCliReachable;
+    [ObservableProperty] private bool _isCliReachable;
 
     public string CliDisplay => $"{CliName} {CliVersion}";
 
-    /// <summary>Whether the host exposes a controllable container system (macOS only).</summary>
     public bool IsSystemControlVisible => _systemService is not null;
 
-    /// <summary>Whether the collapsed icon rail should show the compact system status dot.</summary>
     public bool IsCollapsedSystemControlVisible => IsSystemControlVisible && IsSidebarCollapsed;
 
     [ObservableProperty]
@@ -107,7 +100,6 @@ public partial class SidebarViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(SystemActionTooltip))]
     private ContainerSystemState _systemState = ContainerSystemState.Unknown;
 
-    /// <summary>Last start/stop failure, or null when the most recent action succeeded.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SystemStatusText))]
     [NotifyPropertyChangedFor(nameof(SystemPillStatus))]
@@ -165,9 +157,10 @@ public partial class SidebarViewModel : ViewModelBase
     public string SystemActionIcon => IsSystemRunning ? "StopRegular" : "PlayRegular";
 
     public string SystemActionTooltip => SystemErrorMessage
-        ?? (IsSystemRunning ? "Stop the container system" : "Start the container system");
+                                         ?? (IsSystemRunning
+                                             ? "Stop the container system"
+                                             : "Start the container system");
 
-    /// <summary>Probes the container CLI for its version. Call once after construction on the UI thread.</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         PlatformInfo info = await _cliProvider.GetPlatformInfoAsync(cancellationToken).ConfigureAwait(true);
@@ -177,34 +170,23 @@ public partial class SidebarViewModel : ViewModelBase
         IsCliReachable = info.IsCliReachable;
 
         await RefreshBadgeCountsAsync(cancellationToken).ConfigureAwait(true);
-        StartBadgeRefresh();
+        _badgeSubscription ??= _autoRefresh?.Subscribe(RefreshBadgeCountsAsync);
     }
 
-    /// <summary>Starts the periodic refresh of the container/image count badges.</summary>
-    private void StartBadgeRefresh()
-    {
-        if (_badgeTimer is not null)
-        {
-            return;
-        }
-
-        _badgeTimer = new DispatcherTimer { Interval = _badgeRefreshInterval };
-        _badgeTimer.Tick += async (_, _) => await RefreshBadgeCountsAsync().ConfigureAwait(true);
-        _badgeTimer.Start();
-    }
-
-    /// <summary>Refreshes the Containers and Images badge counts from the CLI. Never throws.</summary>
     private async Task RefreshBadgeCountsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            IReadOnlyList<Knarr.Service.Models.Container> containers = await _cliProvider.ListContainersAsync(cancellationToken).ConfigureAwait(true);
+            IReadOnlyList<Knarr.Service.Models.Container> containers =
+                await _cliProvider.ListContainersAsync(cancellationToken).ConfigureAwait(true);
             _containersItem.Badge = containers.Count > 0 ? containers.Count.ToString() : null;
 
-            IReadOnlyList<ContainerImage> images = await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
+            IReadOnlyList<ContainerImage> images =
+                await _cliProvider.ListImagesAsync(cancellationToken).ConfigureAwait(true);
             _imagesItem.Badge = images.Count > 0 ? images.Count.ToString() : null;
 
-            _logger.LogDebug("Sidebar badges updated: {Containers} containers, {Images} images", containers.Count, images.Count);
+            _logger.LogDebug("Sidebar badges updated: {Containers} containers, {Images} images", containers.Count,
+                images.Count);
         }
         catch (Exception ex)
         {
@@ -214,10 +196,6 @@ public partial class SidebarViewModel : ViewModelBase
         await RefreshSystemStatusAsync(cancellationToken).ConfigureAwait(true);
     }
 
-    /// <summary>
-    /// Re-reads the container system status. No-ops when the platform has no system service or an
-    /// action is already in flight (the action refreshes on completion itself).
-    /// </summary>
     private async Task RefreshSystemStatusAsync(CancellationToken cancellationToken = default)
     {
         if (_systemService is null || IsSystemBusy)
@@ -229,10 +207,6 @@ public partial class SidebarViewModel : ViewModelBase
         SystemState = status.State;
     }
 
-    /// <summary>
-    /// Starts or stops the container system depending on its current state, then re-reads the
-    /// status. Failures are logged and surfaced inline on the status pill rather than thrown.
-    /// </summary>
     [RelayCommand(CanExecute = nameof(CanToggleSystem))]
     private async Task ToggleSystemAsync(CancellationToken cancellationToken)
     {

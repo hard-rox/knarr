@@ -1,0 +1,90 @@
+<common:DialogWindow xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:vm="using:Knarr.App.Features.Containers.ContainerLogs"
+                     xmlns:controls="using:Knarr.App.Controls"
+                     xmlns:common="using:Knarr.App.Common"
+                     x:Class="Knarr.App.Features.Containers.ContainerLogs.ContainerLogsDialog"
+                     x:DataType="vm:ContainerLogsDialogViewModel"
+                     Title="Container logs"
+                     Width="720" Height="560"
+                     MinWidth="560" MinHeight="420"
+                     WindowStartupLocation="CenterOwner"
+                     ShowInTaskbar="False"
+                     Background="{DynamicResource BackgroundBaseBrush}">
+
+    <Design.DataContext>
+        <vm:ContainerLogsDialogViewModel />
+    </Design.DataContext>
+
+    <common:DialogWindow.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+    </common:DialogWindow.KeyBindings>
+
+    <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Text="{Binding ContainerName}" FontSize="16" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextBrush}" />
+            <TextBlock Text="{Binding ShortId}" FontSize="12"
+                       FontFamily="Cascadia Code,Consolas,monospace"
+                       Foreground="{DynamicResource TextDimBrush}" />
+        </StackPanel>
+
+        <!-- Options -->
+        <StackPanel Grid.Row="1" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ToggleSwitch IsChecked="{Binding Follow}" />
+                    <TextBlock VerticalAlignment="Center" Text="Follow" Foreground="{DynamicResource TextBrush}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding SupportsTimestamps}">
+                    <ToggleSwitch IsChecked="{Binding Timestamps}" />
+                    <TextBlock VerticalAlignment="Center" Text="Timestamps" Foreground="{DynamicResource TextBrush}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding SupportsBootLogs}">
+                    <ToggleSwitch IsChecked="{Binding Boot}" />
+                    <TextBlock VerticalAlignment="Center" Text="Boot log" Foreground="{DynamicResource TextBrush}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <CheckBox IsChecked="{Binding LimitTail}" Content="Limit lines" />
+                    <NumericUpDown Value="{Binding TailLines}"
+                                   IsEnabled="{Binding LimitTail}"
+                                   Minimum="1" Maximum="100000" Increment="50"
+                                   Width="120" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Logs -->
+        <controls:TerminalOutputView Grid.Row="2"
+                                     Lines="{Binding OutputLines}"
+                                     State="{Binding TerminalState}"
+                                     Placeholder="Container logs will appear here." />
+
+        <!-- Footer: status + actions -->
+        <StackPanel Grid.Row="3" Spacing="10">
+            <TextBlock Text="{Binding StatusMessage}"
+                       IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       FontSize="12"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextDimBrush}" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Command="{Binding StopCommand}" IsVisible="{Binding IsStreaming}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource StopRegular}" Width="14" Height="14" />
+                        <TextBlock Text="Stop" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding CloseCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource DismissRegular}" Width="14" Height="14" />
+                        <TextBlock Text="Close" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+    </Grid>
+</common:DialogWindow>

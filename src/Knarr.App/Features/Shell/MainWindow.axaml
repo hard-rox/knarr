@@ -17,7 +17,7 @@
         Background="Transparent">
 
     <Design.DataContext>
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
     <NativeMenu.Menu>
@@ -39,13 +39,13 @@
                                 <NativeMenu>
                                     <NativeMenuItem Header="System"
                                                     Command="{Binding SetThemeCommand}"
-                                                    CommandParameter="{x:Static svc:AppTheme.System}"/>
+                                                    CommandParameter="{x:Static svc:AppTheme.System}" />
                                     <NativeMenuItem Header="Light"
                                                     Command="{Binding SetThemeCommand}"
-                                                    CommandParameter="{x:Static svc:AppTheme.Light}"/>
+                                                    CommandParameter="{x:Static svc:AppTheme.Light}" />
                                     <NativeMenuItem Header="Dark"
                                                     Command="{Binding SetThemeCommand}"
-                                                    CommandParameter="{x:Static svc:AppTheme.Dark}"/>
+                                                    CommandParameter="{x:Static svc:AppTheme.Dark}" />
                                 </NativeMenu>
                             </NativeMenuItem.Menu>
                         </NativeMenuItem>
@@ -65,12 +65,12 @@
     <Panel Background="{DynamicResource BackgroundBaseBrush}">
         <DockPanel>
             <!-- Menu bar: in-window on Windows/Linux, system menu bar on macOS -->
-            <NativeMenuBar DockPanel.Dock="Top"/>
+            <NativeMenuBar DockPanel.Dock="Top" />
 
             <!-- Body: sidebar + resizable content area -->
             <Grid ColumnDefinitions="Auto,*">
                 <!-- LEFT SIDEBAR -->
-                <sidebar:Sidebar Grid.Column="0" DataContext="{Binding Sidebar}"/>
+                <sidebar:Sidebar Grid.Column="0" DataContext="{Binding Sidebar}" />
 
                 <!-- CONTENT AREA: swaps page views with a fade when the sidebar selection changes -->
                 <Border Grid.Column="1" Background="Transparent">
@@ -81,12 +81,12 @@
                                    FontSize="22"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextBrush}"
-                                   Text="{Binding Sidebar.SelectedItem.Title}"/>
+                                   Text="{Binding Sidebar.SelectedItem.Title}" />
 
                         <Panel>
                             <TransitioningContentControl Content="{Binding CurrentPage}">
                                 <TransitioningContentControl.PageTransition>
-                                    <CrossFade Duration="0:0:0.2"/>
+                                    <CrossFade Duration="0:0:0.2" />
                                 </TransitioningContentControl.PageTransition>
                             </TransitioningContentControl>
 
@@ -95,7 +95,7 @@
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource TextDimBrush}"
-                                       IsVisible="{Binding CurrentPage, Converter={x:Static aconv:ObjectConverters.IsNull}}"/>
+                                       IsVisible="{Binding CurrentPage, Converter={x:Static aconv:ObjectConverters.IsNull}}" />
                         </Panel>
                     </DockPanel>
                 </Border>

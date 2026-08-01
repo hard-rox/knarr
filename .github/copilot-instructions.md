@@ -56,6 +56,9 @@ action maps 1:1 onto an underlying CLI command.
 - `ViewLocator.cs` resolves views by reflection convention (`{Name}ViewModel` -> `{Name}View` in the same namespace), so no manual registration is needed as long as the view/view model follow the naming convention.
 - Do NOT add a `NavigationItem` to `SidebarViewModel` unless explicitly requested.
 
+## Comments and documentation
+- Use the `better-code` skill (`.github/skills/better-code/SKILL.md`) whenever writing or editing code: keep names self-explanatory, avoid comments/XML docs on private or internal members, and only add `///` XML docs to public interfaces and shared abstract base classes.
+
 ## Conventions
 - Respect `.editorconfig`: file-scoped namespaces, 4-space C# indent, 2-space AXAML/XML, `_camelCase` private fields, `I`-prefixed interfaces.
 - Nullable reference types are enabled.

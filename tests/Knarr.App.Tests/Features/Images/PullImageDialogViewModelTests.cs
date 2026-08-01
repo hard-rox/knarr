@@ -56,7 +56,7 @@ public class PullImageDialogViewModelTests
             .Returns(Task.CompletedTask);
         vm.ImageReference = _validReference;
 
-        var succeeded = false;
+        bool succeeded = false;
         vm.PullSucceeded += (_, _) => succeeded = true;
 
         await vm.PullCommand.ExecuteAsync(null);
@@ -76,7 +76,7 @@ public class PullImageDialogViewModelTests
             .Returns(Task.FromException(exception));
         vm.ImageReference = _validReference;
 
-        var succeeded = false;
+        bool succeeded = false;
         vm.PullSucceeded += (_, _) => succeeded = true;
 
         await vm.PullCommand.ExecuteAsync(null);
@@ -119,7 +119,7 @@ public class PullImageDialogViewModelTests
     {
         PullImageDialogViewModel vm = CreateViewModel(out _);
 
-        var closed = false;
+        bool closed = false;
         vm.CloseRequested += (_, _) => closed = true;
 
         vm.CloseCommand.Execute(null);

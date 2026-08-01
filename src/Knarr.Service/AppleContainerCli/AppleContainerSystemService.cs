@@ -5,27 +5,22 @@ using Knarr.Service.Exceptions;
 
 namespace Knarr.Service.AppleContainerCli;
 
-/// <summary>
-/// <see cref="IContainerSystemService"/> backed by Apple's first-party <c>container</c> CLI. The
-/// <c>container system</c> command group exists only on macOS, so this service is registered there
-/// exclusively. Every method maps 1:1 onto a single <c>container system</c> invocation.
-/// </summary>
 internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemService> logger)
     : IContainerSystemService
 {
-    private const string Executable = "container";
+    private const string _executable = "container";
 
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<ContainerSystemStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         string[] arguments = ["system", "status", "--format", "json"];
-        var command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{_executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
         try
         {
-            BufferedCommandResult result = await Cli.Wrap(Executable)
+            BufferedCommandResult result = await Cli.Wrap(_executable)
                 .WithArguments(arguments)
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteBufferedAsync(cancellationToken)
@@ -58,11 +53,7 @@ internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemSe
     public Task StopAsync(CancellationToken cancellationToken = default)
         => RunAsync(cancellationToken, "system", "stop");
 
-    /// <summary>
-    /// Parses the <c>system status --format json</c> payload, which is a single object rather than
-    /// the arrays the list commands emit. Blank or malformed output yields
-    /// <see cref="ContainerSystemStatus.Unknown"/>.
-    /// </summary>
+    // Payload is a single object, unlike the list commands' arrays; blank/malformed input yields ContainerSystemStatus.Unknown.
     internal static ContainerSystemStatus ParseStatus(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -104,10 +95,10 @@ internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemSe
 
     private async Task RunAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        var command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{_executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
-        BufferedCommandResult result = await Cli.Wrap(Executable)
+        BufferedCommandResult result = await Cli.Wrap(_executable)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync(cancellationToken)
