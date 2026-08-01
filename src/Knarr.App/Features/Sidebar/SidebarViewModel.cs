@@ -76,10 +76,12 @@ public partial class SidebarViewModel : ViewModelBase
 
     [ObservableProperty] private string _platformName = "Windows";
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(CliDisplay))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CliDisplay))]
     private string _cliName = "wslc";
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(CliDisplay))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CliDisplay))]
     private string _cliVersion = "detecting\u2026";
 
     [ObservableProperty] private bool _isCliReachable;

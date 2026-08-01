@@ -11,7 +11,8 @@ public sealed partial class NavigationItem(
 
     public string Icon { get; } = icon;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasBadge))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBadge))]
     private string? _badge = badge;
 
     public Func<ViewModelBase>? CreatePage { get; } = createPage;

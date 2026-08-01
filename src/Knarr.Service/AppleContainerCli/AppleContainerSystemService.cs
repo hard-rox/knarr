@@ -8,19 +8,19 @@ namespace Knarr.Service.AppleContainerCli;
 internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemService> logger)
     : IContainerSystemService
 {
-    private const string Executable = "container";
+    private const string _executable = "container";
 
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<ContainerSystemStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         string[] arguments = ["system", "status", "--format", "json"];
-        string command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{_executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
         try
         {
-            BufferedCommandResult result = await Cli.Wrap(Executable)
+            BufferedCommandResult result = await Cli.Wrap(_executable)
                 .WithArguments(arguments)
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteBufferedAsync(cancellationToken)
@@ -95,10 +95,10 @@ internal sealed class AppleContainerSystemService(ILogger<AppleContainerSystemSe
 
     private async Task RunAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        string command = $"{Executable} {string.Join(' ', arguments)}";
+        string command = $"{_executable} {string.Join(' ', arguments)}";
         logger.LogDebug("Executing CLI command: {Command}", command);
 
-        BufferedCommandResult result = await Cli.Wrap(Executable)
+        BufferedCommandResult result = await Cli.Wrap(_executable)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync(cancellationToken)
