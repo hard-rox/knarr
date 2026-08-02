@@ -198,7 +198,7 @@ public partial class ImagesViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Inspect(ImageItem image)
     {
-        // Inspect viewer is a later milestone.
+        _dialogService?.Show<ImageInspectDialogViewModel>(vm => vm.Reset(ResolveImageReference(image)));
     }
 
     [RelayCommand]

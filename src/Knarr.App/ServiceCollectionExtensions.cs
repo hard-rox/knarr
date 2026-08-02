@@ -1,4 +1,5 @@
 using Knarr.App.Features.Containers;
+using Knarr.App.Features.Containers.ContainerInspect;
 using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.Dashboard;
 using Knarr.App.Features.Images;
@@ -38,6 +39,8 @@ public static class ServiceCollectionExtensions
             collection.AddTransient<PullImageDialogViewModel>();
             collection.AddTransient<RunContainerDialogViewModel>();
             collection.AddTransient<ContainerLogsDialogViewModel>();
+            collection.AddTransient<ImageInspectDialogViewModel>();
+            collection.AddTransient<ContainerInspectDialogViewModel>();
 
             collection.AddTransient<SidebarViewModel>();
             collection.AddTransient<MainWindowViewModel>();

@@ -30,6 +30,12 @@ public interface IContainerCliProvider
     /// </summary>
     public bool SupportsBootLogs { get; }
 
+    /// <summary>Returns the command line that <see cref="InspectContainerAsync"/> would run.</summary>
+    public string BuildContainerInspectCommand(string containerId);
+
+    /// <summary>Inspects a container (<c>container inspect</c>), returning shaped details.</summary>
+    public Task<ContainerInspection> InspectContainerAsync(string containerId, CancellationToken cancellationToken = default);
+
     /// <summary>Lists all containers (<c>list --all --format JSON</c>).</summary>
     public Task<IReadOnlyList<Container>> ListContainersAsync(CancellationToken cancellationToken = default);
 
@@ -111,6 +117,12 @@ public interface IContainerCliProvider
     /// reported via the terminating <see cref="CliOutputKind.Exit"/> line rather than by throwing.
     /// </summary>
     public IAsyncEnumerable<CliOutputLine> PullImageStreamingAsync(string reference, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns the command line that <see cref="InspectImageAsync"/> would run.</summary>
+    public string BuildImageInspectCommand(string reference);
+
+    /// <summary>Inspects a local image (<c>image inspect</c>), returning shaped configuration details.</summary>
+    public Task<ImageInspection> InspectImageAsync(string reference, CancellationToken cancellationToken = default);
 
     /// <summary>Removes an image (<c>rmi</c>), optionally forcing.</summary>
     public Task RemoveImageAsync(string reference, bool force = false, CancellationToken cancellationToken = default);

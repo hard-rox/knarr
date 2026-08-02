@@ -18,6 +18,10 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     protected override string[] RemoveImageCommand => ["image", "delete"];
 
+    protected override string[] InspectImageCommand => ["image", "inspect"];
+
+    protected override string[] InspectContainerCommand => ["inspect"];
+
     protected override string[] RunContainerCommand => ["run"];
 
     protected override string[] LogsCommand => ["logs"];
@@ -36,6 +40,10 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
 
     protected override IReadOnlyList<ContainerImage> ParseImagesCore(string json) => ParseImages(json);
 
+    protected override ImageInspection ParseImageInspectionCore(string json) => ParseAppleImageInspection(json);
+
+    protected override ContainerInspection ParseContainerInspectionCore(string json) => ParseAppleContainerInspection(json);
+
     internal static IReadOnlyList<Container> ParseContainers(string json)
     {
         List<AppleContainerElement> elements =
@@ -48,6 +56,70 @@ internal sealed class AppleContainerCliProvider(ILogger<AppleContainerCliProvide
         List<AppleImageElement> elements =
             JsonSerializer.Deserialize<List<AppleImageElement>>(json, JsonOptions) ?? [];
         return elements.Select(MapImage).ToList();
+    }
+
+    // Best-effort: maps identity fields from the Apple image descriptor shape; raw JSON always present.
+    internal static ImageInspection ParseAppleImageInspection(string json)
+    {
+        string rawJson = PrettyPrintJson(json);
+        try
+        {
+            AppleImageElement? element =
+                (JsonSerializer.Deserialize<List<AppleImageElement>>(json, JsonOptions) ?? []).FirstOrDefault();
+
+            if (element is null)
+            {
+                return new ImageInspection { Id = string.Empty, RawJson = rawJson };
+            }
+
+            long size = element.Variants?.Sum(v => v.Size) ?? 0;
+            return new ImageInspection
+            {
+                Id = element.Id,
+                ShortId = ShortenId(StripDigestAlgorithm(element.Id)),
+                RepoTags = [element.Configuration.Name],
+                Created = element.Configuration.CreationDate,
+                SizeBytes = size,
+                Size = FormatSize(size),
+                RawJson = rawJson,
+            };
+        }
+        catch (JsonException)
+        {
+            return new ImageInspection { Id = string.Empty, RawJson = rawJson };
+        }
+    }
+
+    // Best-effort: macOS container inspect schema differs; always populate RawJson.
+    internal static ContainerInspection ParseAppleContainerInspection(string json)
+    {
+        string rawJson = PrettyPrintJson(json);
+        try
+        {
+            AppleContainerElement? element =
+                (JsonSerializer.Deserialize<List<AppleContainerElement>>(json, JsonOptions) ?? []).FirstOrDefault();
+
+            if (element is null)
+            {
+                return new ContainerInspection { Id = string.Empty, RawJson = rawJson };
+            }
+
+            return new ContainerInspection
+            {
+                Id = element.Id,
+                ShortId = element.Id.Length > 12 ? element.Id[..12] : element.Id,
+                Name = element.Id,
+                Image = element.Configuration.Image.Reference,
+                Created = element.Configuration.CreationDate,
+                Status = element.Status.State,
+                IsRunning = MapState(element.Status.State) == ContainerState.Running,
+                RawJson = rawJson,
+            };
+        }
+        catch (JsonException)
+        {
+            return new ContainerInspection { Id = string.Empty, RawJson = rawJson };
+        }
     }
 
     private static Container MapContainer(AppleContainerElement element) => new()
