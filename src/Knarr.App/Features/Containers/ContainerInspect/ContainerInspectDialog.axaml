@@ -1,0 +1,264 @@
+<common:DialogWindow xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:vm="using:Knarr.App.Features.Containers.ContainerInspect"
+                     xmlns:models="using:Knarr.Service.Models"
+                     xmlns:controls="using:Knarr.App.Controls"
+                     xmlns:common="using:Knarr.App.Common"
+                     x:Class="Knarr.App.Features.Containers.ContainerInspect.ContainerInspectDialog"
+                     x:DataType="vm:ContainerInspectDialogViewModel"
+                     Title="Inspect container"
+                     Width="760" Height="620"
+                     MinWidth="560" MinHeight="440"
+                     WindowStartupLocation="CenterOwner"
+                     ShowInTaskbar="False"
+                     Background="{DynamicResource BackgroundBaseBrush}">
+
+  <Design.DataContext>
+    <vm:ContainerInspectDialogViewModel />
+  </Design.DataContext>
+
+  <common:DialogWindow.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+  </common:DialogWindow.KeyBindings>
+
+  <common:DialogWindow.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+    </Style>
+    <Style Selector="SelectableTextBlock.value">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="SelectableTextBlock.mono">
+      <Setter Property="FontFamily" Value="Cascadia Code,Consolas,monospace" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.none">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+    </Style>
+  </common:DialogWindow.Styles>
+
+  <Grid Margin="20" RowDefinitions="Auto,*" RowSpacing="14">
+
+    <!-- Header: container name only -->
+    <SelectableTextBlock Grid.Row="0"
+                         Text="{Binding ContainerName}"
+                         FontSize="16" FontWeight="SemiBold"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource TextBrush}" />
+
+    <Panel Grid.Row="1">
+
+      <!-- Loading -->
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14"
+                  IsVisible="{Binding IsLoading}">
+        <ProgressBar Width="180" IsIndeterminate="True" Foreground="{DynamicResource AccentBrush}" />
+        <TextBlock Text="Inspecting container&#x2026;" HorizontalAlignment="Center"
+                   FontSize="13" Foreground="{DynamicResource TextDimBrush}" />
+      </StackPanel>
+
+      <!-- Error -->
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14"
+                  MaxWidth="460" IsVisible="{Binding HasError}">
+        <PathIcon Data="{StaticResource WarningRegular}" Width="24" Height="24"
+                  Foreground="{DynamicResource TextDimBrush}" />
+        <SelectableTextBlock Text="{Binding ErrorMessage}"
+                             HorizontalAlignment="Center" TextAlignment="Center"
+                             TextWrapping="Wrap" FontSize="13"
+                             Foreground="{DynamicResource TextDimBrush}" />
+        <Button Classes="accent" HorizontalAlignment="Center" Command="{Binding RefreshCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource ArrowClockwiseRegular}" Width="14" Height="14" />
+            <TextBlock Text="Retry" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+
+      <!-- Content tabs -->
+      <TabControl IsVisible="{Binding HasInspection}">
+
+        <!-- Overview -->
+        <TabItem Header="Overview">
+          <ScrollViewer>
+            <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                  ColumnSpacing="16" RowSpacing="12" Margin="4,8,12,8">
+
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="label" Text="ID" />
+              <SelectableTextBlock Grid.Row="0" Grid.Column="1" Classes="value mono" FontSize="11"
+                                   Text="{Binding FullId}" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="label" Text="Image" />
+              <SelectableTextBlock Grid.Row="1" Grid.Column="1" Classes="value mono"
+                                   Text="{Binding ImageText}" />
+
+              <TextBlock Grid.Row="2" Grid.Column="0" Classes="label" Text="Status" />
+              <controls:Pill Grid.Row="2" Grid.Column="1"
+                              Text="{Binding StatusText}"
+                              Status="{Binding StatusPillStatus}" />
+
+              <TextBlock Grid.Row="3" Grid.Column="0" Classes="label" Text="Created" />
+              <SelectableTextBlock Grid.Row="3" Grid.Column="1" Classes="value"
+                                   Text="{Binding CreatedText}" />
+
+              <TextBlock Grid.Row="4" Grid.Column="0" Classes="label" Text="Started" />
+              <SelectableTextBlock Grid.Row="4" Grid.Column="1" Classes="value"
+                                   Text="{Binding StartedText}" />
+
+              <TextBlock Grid.Row="5" Grid.Column="0" Classes="label" Text="Finished" />
+              <SelectableTextBlock Grid.Row="5" Grid.Column="1" Classes="value"
+                                   Text="{Binding FinishedText}" />
+
+              <TextBlock Grid.Row="6" Grid.Column="0" Classes="label" Text="Exit code" />
+              <SelectableTextBlock Grid.Row="6" Grid.Column="1" Classes="value mono"
+                                   Text="{Binding ExitCodeText}"
+                                   IsVisible="{Binding !IsRunning}" />
+              <TextBlock Grid.Row="6" Grid.Column="1" Classes="none" Text="—"
+                         IsVisible="{Binding IsRunning}" />
+
+              <TextBlock Grid.Row="7" Grid.Column="0" Classes="label" Text="Network mode" />
+              <SelectableTextBlock Grid.Row="7" Grid.Column="1" Classes="value"
+                                   Text="{Binding NetworkModeText}" />
+
+              <TextBlock Grid.Row="8" Grid.Column="0" Classes="label" Text="Memory limit" />
+              <SelectableTextBlock Grid.Row="8" Grid.Column="1" Classes="value"
+                                   Text="{Binding MemoryText}" />
+            </Grid>
+          </ScrollViewer>
+        </TabItem>
+
+        <!-- Configuration -->
+        <TabItem Header="Configuration">
+          <ScrollViewer>
+            <StackPanel Spacing="18" Margin="4,8,12,8">
+
+              <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto"
+                    ColumnSpacing="16" RowSpacing="12">
+                <TextBlock Grid.Row="0" Grid.Column="0" Classes="label" Text="Entrypoint" />
+                <SelectableTextBlock Grid.Row="0" Grid.Column="1" Classes="value mono"
+                                     Text="{Binding EntrypointText}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Classes="label" Text="Command" />
+                <SelectableTextBlock Grid.Row="1" Grid.Column="1" Classes="value mono"
+                                     Text="{Binding CommandText}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Classes="label" Text="Working directory" />
+                <SelectableTextBlock Grid.Row="2" Grid.Column="1" Classes="value mono"
+                                     Text="{Binding WorkingDirectoryText}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Classes="label" Text="User" />
+                <SelectableTextBlock Grid.Row="3" Grid.Column="1" Classes="value"
+                                     Text="{Binding UserText}" />
+              </Grid>
+
+              <!-- Port bindings -->
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section" Text="Ports" />
+                <TextBlock Classes="none" Text="None" IsVisible="{Binding !HasPorts}" />
+                <ItemsControl ItemsSource="{Binding Ports}" IsVisible="{Binding HasPorts}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                      <SelectableTextBlock Classes="value mono" Margin="0,0,0,4" Text="{Binding}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
+              <!-- Environment variables -->
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section" Text="Environment" />
+                <TextBlock Classes="none" Text="None" IsVisible="{Binding !HasEnvironmentVariables}" />
+                <ItemsControl ItemsSource="{Binding EnvironmentVariables}"
+                              IsVisible="{Binding HasEnvironmentVariables}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:InspectionEntry">
+                      <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Margin="0,0,0,4">
+                        <SelectableTextBlock Grid.Column="0" Classes="value mono" FontSize="12"
+                                             Text="{Binding Key}" />
+                        <SelectableTextBlock Grid.Column="1" Classes="value mono" FontSize="12"
+                                             Foreground="{DynamicResource TextDimBrush}"
+                                             Text="{Binding Value}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
+              <!-- Labels -->
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section" Text="Labels" />
+                <TextBlock Classes="none" Text="None" IsVisible="{Binding !HasLabels}" />
+                <ItemsControl ItemsSource="{Binding Labels}" IsVisible="{Binding HasLabels}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:InspectionEntry">
+                      <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Margin="0,0,0,4">
+                        <SelectableTextBlock Grid.Column="0" Classes="value mono" FontSize="12"
+                                             Text="{Binding Key}" />
+                        <SelectableTextBlock Grid.Column="1" Classes="value" FontSize="12"
+                                             Foreground="{DynamicResource TextDimBrush}"
+                                             Text="{Binding Value}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
+        <!-- Networks -->
+        <TabItem Header="Networks">
+          <Panel Margin="4,8,4,4">
+            <TextBlock Classes="none" Text="No networks." VerticalAlignment="Top"
+                       IsVisible="{Binding !HasNetworks}" />
+            <ScrollViewer IsVisible="{Binding HasNetworks}">
+              <ItemsControl ItemsSource="{Binding Networks}" Margin="0,0,12,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="models:ContainerNetworkInfo">
+                    <Border Classes="glass-panel" CornerRadius="12" Padding="14,10" Margin="0,0,0,10">
+                      <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextBrush}" />
+                        <Grid ColumnDefinitions="140,*" ColumnSpacing="12"
+                              RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
+                          <TextBlock Grid.Row="0" Grid.Column="0" Classes="label" Text="IP Address" />
+                          <SelectableTextBlock Grid.Row="0" Grid.Column="1" Classes="value mono" FontSize="12"
+                                               Text="{Binding IPAddress, StringFormat='{}{0}/{1}', ConverterParameter={Binding IPPrefixLen}}" />
+
+                          <TextBlock Grid.Row="1" Grid.Column="0" Classes="label" Text="Gateway" />
+                          <SelectableTextBlock Grid.Row="1" Grid.Column="1" Classes="value mono" FontSize="12"
+                                               Text="{Binding Gateway}" />
+
+                          <TextBlock Grid.Row="2" Grid.Column="0" Classes="label" Text="MAC address" />
+                          <SelectableTextBlock Grid.Row="2" Grid.Column="1" Classes="value mono" FontSize="12"
+                                               Text="{Binding MacAddress}" />
+                        </Grid>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Panel>
+        </TabItem>
+
+        <!-- Raw JSON -->
+        <TabItem Header="Raw JSON">
+          <Border Classes="glass-panel" CornerRadius="12" ClipToBounds="True" Margin="0,4,0,0">
+            <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Auto">
+              <SelectableTextBlock Classes="mono" FontSize="11"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   Text="{Binding RawJson}" />
+            </ScrollViewer>
+          </Border>
+        </TabItem>
+      </TabControl>
+    </Panel>
+  </Grid>
+</common:DialogWindow>
