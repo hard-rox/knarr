@@ -23,6 +23,9 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     protected static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    private static readonly JsonSerializerOptions IndentedJsonOptions =
+        new(JsonSerializerDefaults.Web) { WriteIndented = true };
+
     /// <summary>The CLI executable name (e.g. <c>container</c> or <c>wslc</c>).</summary>
     protected abstract string Executable { get; }
 
@@ -40,6 +43,12 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
 
     /// <summary>Command segment that removes an image (e.g. <c>["image", "delete"]</c> or <c>["rmi"]</c>).</summary>
     protected abstract string[] RemoveImageCommand { get; }
+
+    /// <summary>Command segment that inspects an image (e.g. <c>["image", "inspect"]</c>).</summary>
+    protected abstract string[] InspectImageCommand { get; }
+
+    /// <summary>Command segment that inspects a container (e.g. <c>["container", "inspect"]</c>).</summary>
+    protected abstract string[] InspectContainerCommand { get; }
 
     /// <summary>Command segment that runs a container from an image (e.g. <c>["run"]</c>).</summary>
     protected abstract string[] RunContainerCommand { get; }
@@ -68,11 +77,39 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
     /// <summary>Parses the image-list JSON payload into shaped images.</summary>
     protected abstract IReadOnlyList<ContainerImage> ParseImagesCore(string json);
 
+    /// <summary>Parses the <c>image inspect</c> JSON payload into a shaped result.</summary>
+    protected abstract ImageInspection ParseImageInspectionCore(string json);
+
+    /// <summary>Parses the <c>container inspect</c> JSON payload into a shaped result.</summary>
+    protected abstract ContainerInspection ParseContainerInspectionCore(string json);
+
     public async Task<IReadOnlyList<Container>> ListContainersAsync(CancellationToken cancellationToken = default)
     {
         string json = await RunAsync(cancellationToken, "list", "--all", "--format", "json").ConfigureAwait(false);
         return ParseContainersCore(json);
     }
+
+    public string BuildContainerInspectCommand(string containerId)
+        => $"{Executable} {string.Join(' ', BuildContainerInspectArgs(containerId))}";
+
+    public async Task<ContainerInspection> InspectContainerAsync(string containerId, CancellationToken cancellationToken = default)
+    {
+        string json = await RunAsync(cancellationToken, BuildContainerInspectArgs(containerId)).ConfigureAwait(false);
+        return ParseContainerInspectionCore(json);
+    }
+
+    internal string[] BuildContainerInspectArgs(string containerId) => [.. InspectContainerCommand, containerId.Trim()];
+
+    public string BuildImageInspectCommand(string reference)
+        => $"{Executable} {string.Join(' ', BuildImageInspectArgs(reference))}";
+
+    public async Task<ImageInspection> InspectImageAsync(string reference, CancellationToken cancellationToken = default)
+    {
+        string json = await RunAsync(cancellationToken, BuildImageInspectArgs(reference)).ConfigureAwait(false);
+        return ParseImageInspectionCore(json);
+    }
+
+    internal string[] BuildImageInspectArgs(string reference) => [.. InspectImageCommand, reference.Trim()];
 
     public Task StartContainerAsync(string id, CancellationToken cancellationToken = default)
         => RunAsync(cancellationToken, "start", id);
@@ -375,6 +412,20 @@ internal abstract partial class ContainerCliProviderBase(ILogger logger) : ICont
         if (failures.Count > 0)
         {
             throw new AggregateCliCommandException(failures);
+        }
+    }
+
+    /// <summary>Re-serializes <paramref name="json"/> with indentation; returns it verbatim on parse failure.</summary>
+    protected static string PrettyPrintJson(string json)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(doc.RootElement, IndentedJsonOptions);
+        }
+        catch (JsonException)
+        {
+            return json;
         }
     }
 

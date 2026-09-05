@@ -172,6 +172,21 @@ public class ImagesViewModelTests
     }
 
     [Fact]
+    public void Inspect_WithDialogService_ShowsInspectDialogForImage()
+    {
+        IContainerCliProvider provider = ProviderWith(_sampleImages);
+        ImageInspectDialogViewModel dialogVm = new(provider, NullLogger<ImageInspectDialogViewModel>.Instance);
+        IDialogService dialogService = DialogServiceFor(dialogVm);
+        ImagesViewModel vm = new(provider, NullLogger<ImagesViewModel>.Instance, dialogService);
+
+        ImageItem image = vm.Images.First(i => i.Repository == "redis");
+        vm.InspectCommand.Execute(image);
+
+        dialogService.Received(1).Show(Arg.Any<Action<ImageInspectDialogViewModel>>());
+        Assert.Equal("redis:7-alpine", dialogVm.ImageReference);
+    }
+
+    [Fact]
     public void Selection_TracksCountAndHasSelection()
     {
         ImagesViewModel vm = CreateViewModel();

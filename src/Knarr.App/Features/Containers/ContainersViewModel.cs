@@ -1,3 +1,4 @@
+using Knarr.App.Features.Containers.ContainerInspect;
 using Knarr.App.Features.Containers.ContainerLogs;
 using Knarr.App.Features.RunContainer;
 using Knarr.App.Services;
@@ -284,7 +285,7 @@ public partial class ContainersViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void Inspect(ContainerItem container)
     {
-        // Inspect viewer is a later milestone.
+        _dialogService?.Show<ContainerInspectDialogViewModel>(vm => vm.Reset(container.Id, container.Name));
     }
 
     private async Task ExecuteAndReloadAsync(Func<CancellationToken, Task> action)
